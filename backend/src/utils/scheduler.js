@@ -2,188 +2,214 @@ const coingecko = require('../services/coingecko');
 const blockchaininfo = require('../services/blockchaininfo');
 const websocketServer = require('../websocket/server');
 
-const UPDATE_INTERVAL = {
-  MARKET_DATA_MS: 30000, // 30s
-  OHLC_SHORT_MS: 30000, // 30s - for 5M, 1H
-  OHLC_MEDIUM_MS: 120000, // 2min - for 4H
-  OHLC_LONG_MS: 300000, // 5min - for 1D, 1W
-  BLOCKCHAIN_DATA_MS: 30000, // 30s
-};
+const UPDATE_INTERVAL_MS = 60000; // 60s - unified interval for all updates
+
+// Available timeframes for rotation
+const TIMEFRAMES = ['5M', '1H', '4H', '1D', '1W'];
 
 class Scheduler {
   constructor() {
     this._cache = {};
-    this._updateCycle = 0; // Track update cycles for staggered updates
+    this._currentTimeframeIndex = 0; // Track which timeframe is currently active
+    this._updateCycle = 0; // Track update cycles
+    this._isUpdating = false; // Prevent overlapping updates
   }
 
   start() {
-    this.updateAllData();
-    // Staggered updates to reduce API load
+    this.updateInitialData();
+    
+    // Main update loop - every 60 seconds
     setInterval(() => {
-      this._updateCycle++;
-      this.updateCriticalData(); // Market data + short timeframes every 30s
-
-      // Medium timeframes every 2 minutes (4 cycles)
-      if (this._updateCycle % 4 === 0) {
-        this.updateMediumTimeframes();
+      if (!this._isUpdating) {
+        this._updateCycle++;
+        this.updateData();
+      } else {
+        console.log('Skipping update cycle - previous update still in progress');
       }
-
-      // Long timeframes every 5 minutes (10 cycles)
-      if (this._updateCycle % 10 === 0) {
-        this.updateLongTimeframes();
-      }
-    }, UPDATE_INTERVAL.MARKET_DATA_MS);
+    }, UPDATE_INTERVAL_MS);
   }
 
-  async updateCriticalData() {
+  getCurrentTimeframe() {
+    return TIMEFRAMES[this._currentTimeframeIndex];
+  }
+
+  rotateTimeframe() {
+    const oldTimeframe = this.getCurrentTimeframe();
+    this._currentTimeframeIndex = (this._currentTimeframeIndex + 1) % TIMEFRAMES.length;
+    const newTimeframe = this.getCurrentTimeframe();
+    console.log(`Timeframe rotated: ${oldTimeframe} → ${newTimeframe}`);
+  }
+
+  async updateData() {
+    if (this._isUpdating) {
+      console.log('Update already in progress, skipping');
+      return;
+    }
+
+    this._isUpdating = true;
+    
     try {
-      console.log('Updating critical data (market + short timeframes)...');
+      // Rotate to next timeframe at the start of the update cycle
+      this.rotateTimeframe();
+      
+      console.log(`Updating data for timeframe: ${this.getCurrentTimeframe()}...`);
 
-      // Fetch critical data: market, short timeframes, blockchain
-      const [market, shortOhlc, blockchainData] = await Promise.allSettled([
-        this.fetchMarketData(),
-        this.fetchShortTimeframeOHLC(),
-        this.fetchBlockchainData(),
-      ]);
+      // Fetch market data, current timeframe OHLC, and blockchain data with delays
+      const results = [];
+      
+      // Fetch market data first
+      try {
+        console.log('Fetching market data...');
+        const market = await this.fetchMarketData();
+        results.push({ type: 'market', status: 'fulfilled', value: market });
+      } catch (error) {
+        console.error('Market data fetch failed:', error.message);
+        results.push({ type: 'market', status: 'rejected', reason: error });
+      }
 
-      // Combine all data into cache
+      // Wait 2 seconds before next API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Fetch OHLC data
+      try {
+        console.log('Fetching OHLC data...');
+        const ohlc = await this.fetchCurrentTimeframeOHLC();
+        results.push({ type: 'ohlc', status: 'fulfilled', value: ohlc });
+      } catch (error) {
+        console.error('OHLC data fetch failed:', error.message);
+        results.push({ type: 'ohlc', status: 'rejected', reason: error });
+      }
+
+      // Wait 2 seconds before next API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Fetch blockchain data (this makes 2 more API calls to CoinGecko)
+      try {
+        console.log('Fetching blockchain data...');
+        const blockchainData = await this.fetchBlockchainData();
+        results.push({ type: 'blockchain', status: 'fulfilled', value: blockchainData });
+      } catch (error) {
+        console.error('Blockchain data fetch failed:', error.message);
+        results.push({ type: 'blockchain', status: 'rejected', reason: error });
+      }
+
+      // Process results
       let hasUpdates = false;
       const newCache = { ...this._cache };
 
-      if (
-        market.status === 'fulfilled' &&
-        market.value &&
-        market.value.currentPrice
-      ) {
-        Object.assign(newCache, market.value);
-        hasUpdates = true;
-        console.log('Market data updated');
-      } else if (market.status === 'rejected') {
-        console.error('Market data fetch failed:', market.reason);
+      for (const result of results) {
+        if (result.type === 'market' && result.status === 'fulfilled' && result.value?.currentPrice) {
+          Object.assign(newCache, result.value);
+          hasUpdates = true;
+          console.log('Market data updated');
+        } else if (result.type === 'ohlc' && result.status === 'fulfilled' && result.value?.length > 0) {
+          if (!newCache.ohlcData) {
+            newCache.ohlcData = {};
+          }
+          newCache.ohlcData[this.getCurrentTimeframe()] = result.value;
+          hasUpdates = true;
+          console.log(`OHLC data updated for ${this.getCurrentTimeframe()}`);
+        } else if (result.type === 'blockchain' && result.status === 'fulfilled' && result.value?.blockHeight) {
+          Object.assign(newCache, result.value);
+          hasUpdates = true;
+          console.log('Blockchain data updated');
+        }
       }
 
-      if (
-        shortOhlc.status === 'fulfilled' &&
-        shortOhlc.value &&
-        Object.keys(shortOhlc.value).length > 0
-      ) {
-        newCache.ohlcData = { ...this._cache.ohlcData, ...shortOhlc.value };
-        hasUpdates = true;
-        console.log('Short timeframe OHLC data updated');
-      } else if (shortOhlc.status === 'rejected') {
-        console.error(
-          'Short timeframe OHLC data fetch failed:',
-          shortOhlc.reason
-        );
-      }
+      // Add current timeframe to the data being sent
+      newCache.currentTimeframe = this.getCurrentTimeframe();
 
-      if (
-        blockchainData.status === 'fulfilled' &&
-        blockchainData.value &&
-        blockchainData.value.blockHeight &&
-        blockchainData.value.marketDominance &&
-        blockchainData.value.totalSupply
-      ) {
-        Object.assign(newCache, blockchainData.value);
-        hasUpdates = true;
-        console.log('Blockchain data updated');
-      } else if (blockchainData.status === 'rejected') {
-        console.error('Blockchain data fetch failed:', blockchainData.reason);
-      }
-
-      // Send single update with all data
+      // Send update with all data
       if (hasUpdates) {
         this._cache = newCache;
+        console.log(`Broadcasting timeframe ${this.getCurrentTimeframe()} with data to frontend`);
         websocketServer.updateData(this._cache);
-        console.log('Critical data updated and broadcasted');
+        console.log('Data updated and broadcasted');
       } else {
         console.warn('No data updates available');
       }
+
     } catch (e) {
-      console.error('Error updating critical data:', e.message);
+      console.error('Error updating data:', e.message);
+    } finally {
+      this._isUpdating = false;
     }
   }
 
-  async updateMediumTimeframes() {
-    try {
-      console.log('Updating medium timeframes (4H)...');
-      const mediumOhlc = await this.fetchMediumTimeframeOHLC();
+  // Initial data fetch for first load - only fetch current timeframe
+  async updateInitialData() {
+    if (this._isUpdating) {
+      console.log('Initial data fetch already in progress, skipping');
+      return;
+    }
 
-      if (mediumOhlc && Object.keys(mediumOhlc).length > 0) {
-        this._cache.ohlcData = { ...this._cache.ohlcData, ...mediumOhlc };
-        websocketServer.updateData(this._cache);
-        console.log('Medium timeframe OHLC data updated');
+    this._isUpdating = true;
+
+    try {
+      console.log(`Initial data fetch - loading timeframe: ${this.getCurrentTimeframe()}...`);
+
+      // Stagger the API calls to prevent rate limiting
+      let market, ohlc, blockchainData;
+
+      try {
+        market = await this.fetchMarketData();
+        console.log('Initial market data fetched');
+      } catch (error) {
+        console.error('Initial market data fetch failed:', error.message);
       }
-    } catch (e) {
-      console.error('Error updating medium timeframes:', e.message);
-    }
-  }
 
-  async updateLongTimeframes() {
-    try {
-      console.log('Updating long timeframes (1D, 1W)...');
-      const longOhlc = await this.fetchLongTimeframeOHLC();
+      // Wait 3 seconds before next call
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
-      if (longOhlc && Object.keys(longOhlc).length > 0) {
-        this._cache.ohlcData = { ...this._cache.ohlcData, ...longOhlc };
-        websocketServer.updateData(this._cache);
-        console.log('Long timeframe OHLC data updated');
+      try {
+        ohlc = await this.fetchCurrentTimeframeOHLC();
+        console.log('Initial OHLC data fetched');
+      } catch (error) {
+        console.error('Initial OHLC data fetch failed:', error.message);
       }
-    } catch (e) {
-      console.error('Error updating long timeframes:', e.message);
-    }
-  }
 
-  // Initial data fetch for first load
-  async updateAllData() {
-    try {
-      console.log('Initial data fetch - loading all timeframes...');
+      // Wait 3 seconds before next call
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
-      const [market, allOhlc, blockchainData] = await Promise.allSettled([
-        this.fetchMarketData(),
-        this.fetchAllTimeframeOHLC(),
-        this.fetchBlockchainData(),
-      ]);
+      try {
+        blockchainData = await this.fetchBlockchainData();
+        console.log('Initial blockchain data fetched');
+      } catch (error) {
+        console.error('Initial blockchain data fetch failed:', error.message);
+      }
 
       let hasUpdates = false;
       const newCache = { ...this._cache };
 
-      if (
-        market.status === 'fulfilled' &&
-        market.value &&
-        market.value.currentPrice
-      ) {
-        Object.assign(newCache, market.value);
+      if (market?.currentPrice) {
+        Object.assign(newCache, market);
         hasUpdates = true;
       }
 
-      if (
-        allOhlc.status === 'fulfilled' &&
-        allOhlc.value &&
-        Object.keys(allOhlc.value).length > 0
-      ) {
-        newCache.ohlcData = allOhlc.value;
+      if (ohlc?.length > 0) {
+        newCache.ohlcData = {};
+        newCache.ohlcData[this.getCurrentTimeframe()] = ohlc;
         hasUpdates = true;
       }
 
-      if (
-        blockchainData.status === 'fulfilled' &&
-        blockchainData.value &&
-        blockchainData.value.blockHeight &&
-        blockchainData.value.marketDominance &&
-        blockchainData.value.totalSupply
-      ) {
-        Object.assign(newCache, blockchainData.value);
+      if (blockchainData?.blockHeight) {
+        Object.assign(newCache, blockchainData);
         hasUpdates = true;
       }
+
+      // Add current timeframe to the data being sent
+      newCache.currentTimeframe = this.getCurrentTimeframe();
 
       if (hasUpdates) {
         this._cache = newCache;
+        console.log(`Broadcasting initial timeframe ${this.getCurrentTimeframe()} with data to frontend`);
         websocketServer.updateData(this._cache);
         console.log('Initial data loaded and broadcasted');
       }
     } catch (e) {
       console.error('Error in initial data fetch:', e.message);
+    } finally {
+      this._isUpdating = false;
     }
   }
 
@@ -192,51 +218,9 @@ class Scheduler {
     return market;
   }
 
-  async fetchShortTimeframeOHLC() {
-    const timeframes = ['5M', '1H'];
-    return this.fetchOHLCForTimeframes(timeframes);
-  }
-
-  async fetchMediumTimeframeOHLC() {
-    const timeframes = ['4H'];
-    return this.fetchOHLCForTimeframes(timeframes);
-  }
-
-  async fetchLongTimeframeOHLC() {
-    const timeframes = ['1D', '1W'];
-    return this.fetchOHLCForTimeframes(timeframes);
-  }
-
-  async fetchAllTimeframeOHLC() {
-    const timeframes = ['5M', '1H', '4H', '1D', '1W'];
-    return this.fetchOHLCForTimeframes(timeframes);
-  }
-
-  async fetchOHLCForTimeframes(timeframes) {
-    const ohlcData = {};
-
-    // Add delays between requests to avoid rate limiting
-    const ohlcPromises = timeframes.map(async (timeframe) => {
-      try {
-        // Add 200ms delay between each request
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        const data = await coingecko.getOHLC(timeframe);
-        return { timeframe, data };
-      } catch (error) {
-        console.error(`Error fetching OHLC for ${timeframe}:`, error.message);
-        return { timeframe, data: null };
-      }
-    });
-
-    const results = await Promise.allSettled(ohlcPromises);
-
-    results.forEach((result) => {
-      if (result.status === 'fulfilled' && result.value.data) {
-        ohlcData[result.value.timeframe] = result.value.data;
-      }
-    });
-
-    return ohlcData;
+  async fetchCurrentTimeframeOHLC() {
+    const currentTimeframe = this.getCurrentTimeframe();
+    return await coingecko.getOHLC(currentTimeframe);
   }
 
   async fetchBlockchainData() {
@@ -250,3 +234,4 @@ class Scheduler {
 }
 
 module.exports = new Scheduler();
+

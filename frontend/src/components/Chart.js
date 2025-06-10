@@ -9,9 +9,113 @@ const Chart = ({ sampleData, timeframe }) => {
   const theme = useTheme();
   const { brand } = theme.colors;
 
+  // Get time interval and formatting based on timeframe
+  const getTimeConfig = (timeframe) => {
+    const configs = {
+      '5M': {
+        interval: 300, // 5 minutes in seconds
+        tickFormatter: (time) => {
+          const date = new Date(time * 1000);
+          return date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          });
+        },
+        timeFormatter: (time) => {
+          const date = new Date(time * 1000);
+          return date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          });
+        },
+      },
+      '1H': {
+        interval: 3600, // 1 hour in seconds
+        tickFormatter: (time) => {
+          const date = new Date(time * 1000);
+          return date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          });
+        },
+        timeFormatter: (time) => {
+          const date = new Date(time * 1000);
+          return date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          });
+        },
+      },
+      '4H': {
+        interval: 14400, // 4 hours in seconds
+        tickFormatter: (time) => {
+          const date = new Date(time * 1000);
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            hour12: false,
+          });
+        },
+        timeFormatter: (time) => {
+          const date = new Date(time * 1000);
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            hour12: false,
+          });
+        },
+      },
+      '1D': {
+        interval: 86400, // 1 day in seconds
+        tickFormatter: (time) => {
+          const date = new Date(time * 1000);
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+          });
+        },
+        timeFormatter: (time) => {
+          const date = new Date(time * 1000);
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+          });
+        },
+      },
+      '1W': {
+        interval: 604800, // 1 week in seconds
+        tickFormatter: (time) => {
+          const date = new Date(time * 1000);
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: '2-digit',
+          });
+        },
+        timeFormatter: (time) => {
+          const date = new Date(time * 1000);
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: '2-digit',
+          });
+        },
+      },
+    };
+    return configs[timeframe] || configs['1H'];
+  };
+
   // Initialize and update chart
   useEffect(() => {
     if (!chartContainerRef.current) return;
+
+    const timeConfig = getTimeConfig(timeframe);
 
     // Chart configuration with dark theme
     const chartOptions = {
@@ -42,19 +146,12 @@ const Chart = ({ sampleData, timeframe }) => {
         borderColor: brand.darkBorder,
         timeVisible: true,
         secondsVisible: false,
-        barSpacing: 12,
-        tickMarkFormatter: (time) => {
-          const date = new Date(time * 1000);
-          const hours = date.getHours().toString().padStart(2, '0');
-          return `${hours}:00`;
-        },
+        barSpacing: 12, // Better spacing for candlestick visibility
+        minBarSpacing: 6,
+        tickMarkFormatter: timeConfig.tickFormatter,
       },
       localization: {
-        timeFormatter: (time) => {
-          const date = new Date(time * 1000);
-          const hours = date.getHours().toString().padStart(2, '0');
-          return `${hours}:00`;
-        },
+        timeFormatter: timeConfig.timeFormatter,
       },
       rightPriceScale: {
         borderColor: brand.darkBorder,
@@ -81,25 +178,47 @@ const Chart = ({ sampleData, timeframe }) => {
     const chart = createChart(chartContainerRef.current, chartOptions);
     chartRef.current = chart;
 
-    // Add bar series with custom colors
-    const barSeries = chart.addBarSeries({
+    // Add candlestick series with proper styling
+    const candlestickSeries = chart.addCandlestickSeries({
       upColor: brand.pastelMint,
       downColor: brand.pastelCoral,
-      openVisible: true,
+      borderUpColor: brand.pastelMint,
+      borderDownColor: brand.pastelCoral,
+      wickUpColor: brand.pastelMint,
+      wickDownColor: brand.pastelCoral,
+      priceScaleId: 'right',
     });
-    seriesRef.current = barSeries;
+    seriesRef.current = candlestickSeries;
 
-    // Convert data format for lightweight-charts (use Unix timestamps)
-    const baseTime = Math.floor(Date.now() / 1000) - sampleData.length * 900; // 15-minute intervals
-    const formattedData = sampleData.map((item, index) => ({
-      time: baseTime + index * 900, // 15-minute intervals in seconds
+    // Convert data format for lightweight-charts using proper timestamps
+    const formattedData = sampleData.map((item) => ({
+      time: item.time, // Backend already provides timestamps in seconds
       open: item.open,
       high: item.high,
       low: item.low,
       close: item.close,
     }));
 
-    barSeries.setData(formattedData);
+    // Add debugging for chart data
+    console.log(
+      `Chart: formatting ${sampleData.length} data points for timeframe ${timeframe}`
+    );
+    if (formattedData.length > 0) {
+      console.log(
+        `Chart: first timestamp = ${formattedData[0].time}, last = ${formattedData[formattedData.length - 1].time}`
+      );
+    }
+
+    // Verify data is sorted
+    for (let i = 1; i < formattedData.length; i++) {
+      if (formattedData[i].time <= formattedData[i - 1].time) {
+        console.error(
+          `Chart: ERROR - found duplicate/out-of-order timestamp at index ${i}: current=${formattedData[i].time}, prev=${formattedData[i - 1].time}`
+        );
+      }
+    }
+
+    candlestickSeries.setData(formattedData);
     chart.timeScale().fitContent();
 
     // Handle resize
@@ -123,7 +242,7 @@ const Chart = ({ sampleData, timeframe }) => {
         seriesRef.current = null;
       }
     };
-  }, [sampleData, brand]);
+  }, [sampleData, timeframe, brand]);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-US', {

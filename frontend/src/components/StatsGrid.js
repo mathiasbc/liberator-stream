@@ -2,21 +2,6 @@ import React from 'react';
 import { Box, Grid, Text } from '@chakra-ui/react';
 
 const StatsGrid = ({ sentiment, marketDominance, totalSupply }) => {
-  const formatLargeNumber = (value) => {
-    if (!value) return 'N/A';
-    const num =
-      typeof value === 'string'
-        ? parseFloat(value.replace(/[^0-9.-]+/g, ''))
-        : value;
-
-    if (num >= 1e6) {
-      return `${(num / 1e6).toFixed(1)}M`;
-    } else if (num >= 1e3) {
-      return `${(num / 1e3).toFixed(1)}K`;
-    }
-    return num.toLocaleString();
-  };
-
   const getSentimentStatus = (value) => {
     if (!value) return 'Unknown';
     if (value >= 80) return 'Very Bullish';

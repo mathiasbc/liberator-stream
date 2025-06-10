@@ -34,7 +34,7 @@ const server = http.createServer(app.callback());
 (async () => {
   try {
     console.log('Fetching initial data...');
-    await scheduler.updateAllData();
+    await scheduler.updateInitialData();
     console.log('Initial data loaded');
 
     // Initialize WebSocket server

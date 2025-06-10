@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Box } from '@chakra-ui/react';
 import Header from './Header';
 import PriceSection from './PriceSection';
@@ -18,13 +18,13 @@ const Dashboard = () => {
   const [totalSupply, setTotalSupply] = useState(null);
   const [sentiment, setSentiment] = useState(null);
   const [ohlcData, setOhlcData] = useState({});
-  const [timeframe, setTimeframe] = useState('5M');
+  const [timeframe, setTimeframe] = useState('5M'); // This will be controlled by backend
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
 
-  const connectWebSocket = () => {
+  const connectWebSocket = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       return;
     }
@@ -95,6 +95,18 @@ const Dashboard = () => {
           hasUpdate = true;
         }
 
+        // Update timeframe from backend
+        if (
+          data.currentTimeframe !== undefined &&
+          data.currentTimeframe !== timeframe
+        ) {
+          console.log(
+            `Frontend timeframe update: ${timeframe} → ${data.currentTimeframe}`
+          );
+          setTimeframe(data.currentTimeframe);
+          hasUpdate = true;
+        }
+
         if (hasUpdate) {
           console.log('Dashboard updated with new data');
           setLastUpdate(new Date());
@@ -116,7 +128,17 @@ const Dashboard = () => {
         RECONNECT_DELAY
       );
     };
-  };
+  }, [
+    currentPrice,
+    priceChange,
+    volume,
+    marketCap,
+    blockHeight,
+    marketDominance,
+    totalSupply,
+    sentiment,
+    timeframe,
+  ]);
 
   useEffect(() => {
     connectWebSocket();
@@ -127,11 +149,11 @@ const Dashboard = () => {
       }
       wsRef.current && wsRef.current.close();
     };
-  }, []);
+  }, [connectWebSocket]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setSecondsSinceUpdate((prev) => (prev < 30 ? prev + 1 : prev));
+      setSecondsSinceUpdate((prev) => (prev < 60 ? prev + 1 : prev));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -153,7 +175,6 @@ const Dashboard = () => {
           volume={volume || 0}
           marketCap={marketCap || 0}
           timeframe={timeframe}
-          setTimeframe={setTimeframe}
         />
         <Chart sampleData={currentOhlcData} timeframe={timeframe} />
         <StatsGrid

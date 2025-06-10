@@ -1,6 +1,6 @@
 const WebSocket = require('ws');
 
-const BROADCAST_INTERVAL_MS = 30000; // 30s
+const BROADCAST_INTERVAL_MS = 60000; // 60s
 
 class WebSocketServer {
   constructor() {

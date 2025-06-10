@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Flex, Text } from '@chakra-ui/react';
+import { Box, Flex, Text } from '@chakra-ui/react';
 
 const PriceSection = ({
   currentPrice,
@@ -7,10 +7,7 @@ const PriceSection = ({
   volume,
   marketCap,
   timeframe,
-  setTimeframe,
 }) => {
-  const timeframes = ['5M', '1H', '4H', '1D', '1W'];
-
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -34,6 +31,9 @@ const PriceSection = ({
     }
     return `$${num.toLocaleString()}`;
   };
+
+  // Static list of all timeframes
+  const timeframes = ['5M', '1H', '4H', '1D', '1W'];
 
   return (
     <Flex mb='32px' justifyContent='space-between' alignItems='center'>
@@ -105,31 +105,49 @@ const PriceSection = ({
       </Flex>
 
       <Flex
-        p='8px'
+        p='16px 24px'
         borderRadius='12px'
         bgGradient='linear(135deg, brand.darkCard, #1F1F1F)'
         boxShadow='0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 brand.darkBorder'
-        gap='8px'
+        alignItems='center'
+        gap='12px'
+        flexDirection='column'
       >
-        {timeframes.map((tf) => (
-          <Button
-            key={tf}
-            variant='timeframe'
-            bg={timeframe === tf ? 'brand.pastelPink' : 'transparent'}
-            color={timeframe === tf ? 'brand.darkBg' : 'brand.pastelBlue'}
-            boxShadow={
-              timeframe === tf ? '0 8px 25px rgba(248, 187, 217, 0.3)' : 'none'
-            }
-            transform={timeframe === tf ? 'translateY(-1px)' : 'none'}
-            _hover={{
-              bg:
-                timeframe !== tf ? 'rgba(255,255,255,0.1)' : 'brand.pastelPink',
-            }}
-            onClick={() => setTimeframe(tf)}
-          >
-            {tf}
-          </Button>
-        ))}
+        <Text fontSize='14px' fontWeight='300' color='brand.pastelBlue'>
+          Auto-rotating timeframes:
+        </Text>
+        <Flex alignItems='center' gap='8px'>
+          {timeframes.map((item, index) => (
+            <React.Fragment key={item}>
+              <Box
+                px='12px'
+                py='6px'
+                borderRadius='8px'
+                bg={item === timeframe ? 'brand.pastelPink' : 'transparent'}
+                color={item === timeframe ? 'brand.darkBg' : 'brand.pastelBlue'}
+                fontSize='14px'
+                fontWeight={item === timeframe ? '600' : '400'}
+                border={item !== timeframe ? '1px solid' : 'none'}
+                borderColor={
+                  item !== timeframe ? 'brand.darkBorder' : 'transparent'
+                }
+                boxShadow={
+                  item === timeframe
+                    ? '0 4px 15px rgba(248, 187, 217, 0.3)'
+                    : 'none'
+                }
+                transition='all 0.3s ease'
+              >
+                {item}
+              </Box>
+              {index < timeframes.length - 1 && (
+                <Text fontSize='12px' color='brand.pastelLavender'>
+                  →
+                </Text>
+              )}
+            </React.Fragment>
+          ))}
+        </Flex>
       </Flex>
     </Flex>
   );

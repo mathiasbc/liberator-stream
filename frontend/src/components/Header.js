@@ -61,14 +61,22 @@ const Header = ({ blockHeight, lastUpdate, secondsSinceUpdate }) => {
             Live
           </Text>
           <CircularProgress
-            value={(secondsSinceUpdate / 30) * 100}
+            value={(secondsSinceUpdate / 60) * 100}
             size='24px'
             thickness='8px'
-            color='brand.pastelPink'
+            color='brand.pastelCoral'
             trackColor='brand.darkBorder'
             ml='8px'
             capIsRound
           />
+          <Text
+            fontSize='12px'
+            fontWeight='300'
+            color='brand.pastelBlue'
+            ml='8px'
+          >
+            (updates every 60s)
+          </Text>
         </Flex>
       </Flex>
 
