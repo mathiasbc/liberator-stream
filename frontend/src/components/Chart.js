@@ -153,7 +153,7 @@ const Chart = ({ sampleData, timeframe }) => {
             <Flex alignItems="center" gap="12px" fontSize="14px">
               <Text color="brand.pastelBlue">Timeframe:</Text>
               <Box
-                bg="brand.pastelMint"
+                bg="brand.pastelPink"
                 color="brand.darkBg"
                 px="12px"
                 py="4px"
@@ -221,4 +221,4 @@ const Chart = ({ sampleData, timeframe }) => {
   );
 };
 
-export default Chart; 
+export default Chart;

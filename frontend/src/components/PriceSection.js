@@ -35,14 +35,14 @@ const PriceSection = ({
           <Flex alignItems="center" gap="12px">
             <Text
               fontSize="24px"
-              color={priceChange >= 0 ? 'brand.pastelGreen' : 'brand.pastelCoral'}
+              color={priceChange >= 0 ? 'brand.pastelMint' : 'brand.pastelCoral'}
             >
               {priceChange >= 0 ? '↗' : '↘'}
             </Text>
             <Text
               fontSize="20px"
               fontWeight="500"
-              color={priceChange >= 0 ? 'brand.pastelGreen' : 'brand.pastelCoral'}
+              color={priceChange >= 0 ? 'brand.pastelMint' : 'brand.pastelCoral'}
             >
               {priceChange >= 0 ? '+' : ''}
               {priceChange.toFixed(2)}%
@@ -56,7 +56,7 @@ const PriceSection = ({
         <Box w="1px" h="80px" bg="brand.darkBorder" />
 
         <Flex flexDirection="column" gap="4px">
-          <Text fontSize="14px" fontWeight="300" color="brand.pastelBlue" m={0}>
+          <Text fontSize="14px" fontWeight="300" color="brand.pastelLavender" m={0}>
             Volume (24h)
           </Text>
           <Text fontSize="32px" fontWeight="500" m={0} color="brand.pastelLavender">
@@ -65,7 +65,7 @@ const PriceSection = ({
         </Flex>
 
         <Flex flexDirection="column" gap="4px">
-          <Text fontSize="14px" fontWeight="300" color="brand.pastelBlue" m={0}>
+          <Text fontSize="14px" fontWeight="300" color="brand.pastelMint" m={0}>
             Market Cap
           </Text>
           <Text fontSize="32px" fontWeight="500" m={0} color="brand.pastelMint">
