@@ -1,0 +1,39 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - BINANCE_API_URL=https://api.binance.com
+    volumes:
+      - ./backend/src:/app/src
+      - /app/node_modules
+    networks:
+      - bitcoin-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3001
+      - REACT_APP_WS_URL=ws://localhost:3001
+    volumes:
+      - ./frontend/src:/app/src
+      - /app/node_modules
+    networks:
+      - bitcoin-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  bitcoin-network:
+    driver: bridge
