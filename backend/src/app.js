@@ -6,7 +6,6 @@ const bodyParser = require('koa-bodyparser');
 const logger = require('koa-logger');
 const http = require('http');
 
-const bitcoinRoutes = require('./routes/bitcoin');
 const websocketServer = require('./websocket/server');
 const scheduler = require('./utils/scheduler');
 
@@ -19,7 +18,6 @@ app.use(bodyParser());
 app.use(logger());
 
 // Routes
-router.use('/api', bitcoinRoutes.routes());
 app.use(router.routes());
 app.use(router.allowedMethods());
 
@@ -28,15 +26,28 @@ router.get('/health', (ctx) => {
   ctx.body = { status: 'OK', timestamp: new Date().toISOString() };
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
+if (!PORT) throw new Error('PORT must be set in .env');
 const server = http.createServer(app.callback());
 
-// Initialize WebSocket server
-websocketServer.init(server);
+// Start server with initial data fetch
+(async () => {
+  try {
+    console.log('Fetching initial data...');
+    await scheduler.updateAllData();
+    console.log('Initial data loaded');
 
-// Start scheduler for periodic data updates
-scheduler.start();
+    // Initialize WebSocket server
+    websocketServer.init(server);
 
-server.listen(PORT, () => {
-  console.log(`🚀 Bitcoin Dashboard Backend running on port ${PORT}`);
-});
+    // Start scheduler for periodic data updates
+    scheduler.start();
+
+    server.listen(PORT, () => {
+      console.log(`🚀 Bitcoin Dashboard Backend running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+})();

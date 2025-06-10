@@ -6,24 +6,38 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
-    "koa": "^2.14.2",
-    "koa-router": "^12.0.0",
-    "koa-cors": "^0.0.16",
-    "koa-bodyparser": "^4.4.1",
-    "koa-logger": "^3.2.1",
-    "ws": "^8.14.2",
     "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "koa": "^2.14.2",
+    "koa-bodyparser": "^4.4.1",
+    "koa-cors": "^0.0.16",
+    "koa-logger": "^3.2.1",
+    "koa-router": "^12.0.0",
     "node-cron": "^3.0.3",
-    "dotenv": "^16.3.1"
+    "ws": "^8.14.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.28.0",
+    "eslint": "^9.28.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.4.1",
+    "jest": "^29.7.0",
     "nodemon": "^3.0.1",
-    "jest": "^29.7.0"
+    "prettier": "^3.5.3"
   },
-  "keywords": ["bitcoin", "dashboard", "koa", "websocket"],
+  "keywords": [
+    "bitcoin",
+    "dashboard",
+    "koa",
+    "websocket"
+  ],
   "author": "Mathias Bustamante",
   "license": "MIT"
 }

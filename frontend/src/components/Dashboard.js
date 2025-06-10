@@ -1,86 +1,169 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Box } from '@chakra-ui/react';
 import Header from './Header';
 import PriceSection from './PriceSection';
 import Chart from './Chart';
 import StatsGrid from './StatsGrid';
 
-// Generate 50 sample candlestick data points with realistic price movement
-const generateSampleData = () => {
-  const data = [];
-  let basePrice = 44000;
-  const volatility = 500;
-  
-  for (let i = 0; i < 50; i++) {
-    const hours = Math.floor(i / 4);
-    const minutes = (i % 4) * 15;
-    const timeStr = `${String(hours + 3).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-    
-    const trend = Math.sin(i * 0.1) * 200;
-    const noise = (Math.random() - 0.5) * volatility;
-    const open = basePrice + trend + noise;
-    const changeRange = 100 + Math.random() * 300;
-    const high = open + Math.random() * changeRange;
-    const low = open - Math.random() * changeRange;
-    const closeBias = Math.random() > 0.4 ? 1 : -1;
-    const close = open + (closeBias * Math.random() * changeRange * 0.7);
-    
-    data.push({
-      time: timeStr,
-      open: Math.round(open),
-      high: Math.round(Math.max(open, high, close)),
-      low: Math.round(Math.min(open, low, close)),
-      close: Math.round(close)
-    });
-    
-    basePrice = Math.round(close);
-  }
-  
-  return data;
-};
-
-const sampleData = generateSampleData();
+const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:3001';
+const RECONNECT_DELAY = 2000;
 
 const Dashboard = () => {
-  const [currentPrice, setCurrentPrice] = useState(45280.50);
-  const [priceChange, setPriceChange] = useState(-1.28);
-  const [volume] = useState('1.2B');
-  const [blockHeight] = useState(825749);
-  const [timeframe, setTimeframe] = useState('1H');
+  const [currentPrice, setCurrentPrice] = useState(null);
+  const [priceChange, setPriceChange] = useState(null);
+  const [volume, setVolume] = useState(null);
+  const [marketCap, setMarketCap] = useState(null);
+  const [blockHeight, setBlockHeight] = useState(null);
+  const [marketDominance, setMarketDominance] = useState(null);
+  const [totalSupply, setTotalSupply] = useState(null);
+  const [sentiment, setSentiment] = useState(null);
+  const [ohlcData, setOhlcData] = useState({});
+  const [timeframe, setTimeframe] = useState('5M');
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
+  const wsRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
 
-  // Simulate real-time updates
+  const connectWebSocket = () => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      return;
+    }
+
+    console.log('Connecting to WebSocket...');
+    wsRef.current = new window.WebSocket(WS_URL);
+
+    wsRef.current.onopen = () => {
+      console.log('WebSocket connection established');
+    };
+
+    wsRef.current.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('Received WebSocket data:', data);
+
+        let hasUpdate = false;
+
+        if (
+          data.currentPrice !== undefined &&
+          data.currentPrice !== currentPrice
+        ) {
+          setCurrentPrice(data.currentPrice);
+          hasUpdate = true;
+        }
+        if (
+          data.priceChange !== undefined &&
+          data.priceChange !== priceChange
+        ) {
+          setPriceChange(data.priceChange);
+          hasUpdate = true;
+        }
+        if (data.volume !== undefined && data.volume !== volume) {
+          setVolume(data.volume);
+          hasUpdate = true;
+        }
+        if (data.marketCap !== undefined && data.marketCap !== marketCap) {
+          setMarketCap(data.marketCap);
+          hasUpdate = true;
+        }
+        if (
+          data.blockHeight !== undefined &&
+          data.blockHeight !== blockHeight
+        ) {
+          setBlockHeight(data.blockHeight);
+          hasUpdate = true;
+        }
+        if (
+          data.marketDominance !== undefined &&
+          data.marketDominance !== marketDominance
+        ) {
+          setMarketDominance(data.marketDominance);
+          hasUpdate = true;
+        }
+        if (
+          data.totalSupply !== undefined &&
+          JSON.stringify(data.totalSupply) !== JSON.stringify(totalSupply)
+        ) {
+          setTotalSupply(data.totalSupply);
+          hasUpdate = true;
+        }
+        if (data.sentiment !== undefined && data.sentiment !== sentiment) {
+          setSentiment(data.sentiment);
+          hasUpdate = true;
+        }
+        if (data.ohlcData !== undefined) {
+          setOhlcData(data.ohlcData);
+          hasUpdate = true;
+        }
+
+        if (hasUpdate) {
+          console.log('Dashboard updated with new data');
+          setLastUpdate(new Date());
+          setSecondsSinceUpdate(0);
+        }
+      } catch (e) {
+        console.error('Error parsing WebSocket data:', e);
+      }
+    };
+
+    wsRef.current.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    wsRef.current.onclose = () => {
+      console.log('WebSocket connection closed. Reconnecting...');
+      reconnectTimeoutRef.current = setTimeout(
+        connectWebSocket,
+        RECONNECT_DELAY
+      );
+    };
+  };
+
+  useEffect(() => {
+    connectWebSocket();
+
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      wsRef.current && wsRef.current.close();
+    };
+  }, []);
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setLastUpdate(new Date());
-      const change = (Math.random() - 0.5) * 100;
-      setCurrentPrice(prev => Math.max(0, prev + change));
-      setPriceChange((Math.random() - 0.5) * 5);
-    }, 4000);
-
+      setSecondsSinceUpdate((prev) => (prev < 30 ? prev + 1 : prev));
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
 
+  // Get the current timeframe data
+  const currentOhlcData = ohlcData[timeframe] || [];
+
   return (
-    <Box minHeight="100vh">
-      <Header blockHeight={blockHeight} lastUpdate={lastUpdate} />
-      
-      <Box p="32px">
+    <Box minHeight='100vh'>
+      <Header
+        blockHeight={blockHeight || 0}
+        lastUpdate={lastUpdate}
+        secondsSinceUpdate={secondsSinceUpdate}
+      />
+      <Box p='32px'>
         <PriceSection
-          currentPrice={currentPrice}
-          priceChange={priceChange}
-          volume={volume}
-          marketCap="$891.2B"
+          currentPrice={currentPrice || 0}
+          priceChange={priceChange || 0}
+          volume={volume || 0}
+          marketCap={marketCap || 0}
           timeframe={timeframe}
           setTimeframe={setTimeframe}
         />
-        
-        <Chart sampleData={sampleData} timeframe={timeframe} />
-        
-        <StatsGrid />
+        <Chart sampleData={currentOhlcData} timeframe={timeframe} />
+        <StatsGrid
+          sentiment={sentiment}
+          marketDominance={marketDominance}
+          totalSupply={totalSupply}
+        />
       </Box>
     </Box>
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

@@ -22,7 +22,7 @@ const Chart = ({ sampleData, timeframe }) => {
           topColor: '#0F0F0F',
           bottomColor: '#1A1A1A',
         },
-        fontSize: 12,
+        fontSize: 14,
         fontFamily: '"Segoe UI", system-ui, sans-serif',
       },
       watermark: {
@@ -42,6 +42,19 @@ const Chart = ({ sampleData, timeframe }) => {
         borderColor: brand.darkBorder,
         timeVisible: true,
         secondsVisible: false,
+        barSpacing: 12,
+        tickMarkFormatter: (time) => {
+          const date = new Date(time * 1000);
+          const hours = date.getHours().toString().padStart(2, '0');
+          return `${hours}:00`;
+        },
+      },
+      localization: {
+        timeFormatter: (time) => {
+          const date = new Date(time * 1000);
+          const hours = date.getHours().toString().padStart(2, '0');
+          return `${hours}:00`;
+        },
       },
       rightPriceScale: {
         borderColor: brand.darkBorder,
@@ -61,7 +74,7 @@ const Chart = ({ sampleData, timeframe }) => {
         pinch: true,
       },
       width: chartContainerRef.current.clientWidth,
-      height: 450,
+      height: 600,
     };
 
     // Create chart
@@ -73,14 +86,13 @@ const Chart = ({ sampleData, timeframe }) => {
       upColor: brand.pastelMint,
       downColor: brand.pastelCoral,
       openVisible: true,
-      thinBars: true,
     });
     seriesRef.current = barSeries;
 
     // Convert data format for lightweight-charts (use Unix timestamps)
-    const baseTime = Math.floor(Date.now() / 1000) - (sampleData.length * 900); // 15-minute intervals
+    const baseTime = Math.floor(Date.now() / 1000) - sampleData.length * 900; // 15-minute intervals
     const formattedData = sampleData.map((item, index) => ({
-      time: baseTime + (index * 900), // 15-minute intervals in seconds
+      time: baseTime + index * 900, // 15-minute intervals in seconds
       open: item.open,
       high: item.high,
       low: item.low,
@@ -95,7 +107,7 @@ const Chart = ({ sampleData, timeframe }) => {
       if (chartRef.current && chartContainerRef.current) {
         chartRef.current.applyOptions({
           width: chartContainerRef.current.clientWidth,
-          height: 450,
+          height: 600,
         });
       }
     };
@@ -122,43 +134,43 @@ const Chart = ({ sampleData, timeframe }) => {
   };
 
   return (
-    <Box position="relative">
+    <Box position='relative'>
       <Box
-        p="24px"
-        borderRadius="16px"
-        bgGradient="linear(135deg, brand.darkCard, #1F1F1F)"
-        boxShadow="0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 brand.darkBorder"
-        border="1px solid"
-        borderColor="brand.darkBorder"
+        p='24px'
+        borderRadius='16px'
+        bgGradient='linear(135deg, brand.darkCard, #1F1F1F)'
+        boxShadow='0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 brand.darkBorder'
+        border='1px solid'
+        borderColor='brand.darkBorder'
       >
         {/* Chart Header */}
         <Flex
-          justifyContent="space-between"
-          alignItems="center"
-          mb="24px"
-          pb="16px"
-          borderBottom="1px solid"
-          borderColor="brand.darkBorder"
+          justifyContent='space-between'
+          alignItems='center'
+          mb='24px'
+          pb='16px'
+          borderBottom='1px solid'
+          borderColor='brand.darkBorder'
         >
-          <Flex alignItems="center" gap="24px">
+          <Flex alignItems='center' gap='24px'>
             <Text
-              as="h3"
-              fontSize="24px"
-              fontWeight="500"
-              color="brand.pastelYellow"
+              as='h3'
+              fontSize='28px'
+              fontWeight='600'
+              color='brand.pastelYellow'
               m={0}
             >
-              BTC/USD Chart
+              BTC/USD
             </Text>
-            <Flex alignItems="center" gap="12px" fontSize="14px">
-              <Text color="brand.pastelBlue">Timeframe:</Text>
+            <Flex alignItems='center' gap='12px' fontSize='16px'>
+              <Text color='brand.pastelBlue'>Timeframe:</Text>
               <Box
-                bg="brand.pastelPink"
-                color="brand.darkBg"
-                px="12px"
-                py="4px"
-                borderRadius="20px"
-                fontWeight="500"
+                bg='brand.pastelPink'
+                color='brand.darkBg'
+                px='12px'
+                py='4px'
+                borderRadius='20px'
+                fontWeight='500'
               >
                 {timeframe}
               </Box>
@@ -167,52 +179,68 @@ const Chart = ({ sampleData, timeframe }) => {
         </Flex>
 
         {/* Chart Container */}
-        <Box 
+        <Box
           ref={chartContainerRef}
-          w="100%" 
-          h="450px"
-          borderRadius="12px"
-          overflow="hidden"
+          w='100%'
+          h='600px'
+          borderRadius='12px'
+          overflow='hidden'
         />
 
         {/* Chart Footer */}
         <Flex
-          mt="24px"
-          pt="16px"
-          borderTop="1px solid"
-          borderColor="brand.darkBorder"
-          justifyContent="space-between"
-          alignItems="center"
-          fontSize="14px"
+          mt='24px'
+          pt='16px'
+          borderTop='1px solid'
+          borderColor='brand.darkBorder'
+          justifyContent='space-between'
+          alignItems='center'
+          fontSize='16px'
         >
-          <Flex alignItems="center" gap="32px">
-            <Flex gap="4px">
-              <Text color="brand.pastelBlue">Open:</Text>
-              <Text fontWeight="500" fontFamily="monospace" color="brand.pastelYellow">
+          <Flex alignItems='center' gap='32px'>
+            <Flex gap='4px'>
+              <Text color='brand.pastelBlue'>Open:</Text>
+              <Text
+                fontWeight='500'
+                fontFamily='monospace'
+                color='brand.pastelYellow'
+              >
                 {formatPrice(sampleData[0]?.open || 0)}
               </Text>
             </Flex>
-            <Flex gap="4px">
-              <Text color="brand.pastelBlue">High:</Text>
-              <Text fontWeight="500" fontFamily="monospace" color="brand.pastelGreen">
-                {formatPrice(Math.max(...sampleData.map(d => d.high)))}
+            <Flex gap='4px'>
+              <Text color='brand.pastelBlue'>High:</Text>
+              <Text
+                fontWeight='500'
+                fontFamily='monospace'
+                color='brand.pastelGreen'
+              >
+                {formatPrice(Math.max(...sampleData.map((d) => d.high)))}
               </Text>
             </Flex>
-            <Flex gap="4px">
-              <Text color="brand.pastelBlue">Low:</Text>
-              <Text fontWeight="500" fontFamily="monospace" color="brand.pastelCoral">
-                {formatPrice(Math.min(...sampleData.map(d => d.low)))}
+            <Flex gap='4px'>
+              <Text color='brand.pastelBlue'>Low:</Text>
+              <Text
+                fontWeight='500'
+                fontFamily='monospace'
+                color='brand.pastelCoral'
+              >
+                {formatPrice(Math.min(...sampleData.map((d) => d.low)))}
               </Text>
             </Flex>
-            <Flex gap="4px">
-              <Text color="brand.pastelBlue">Close:</Text>
-              <Text fontWeight="500" fontFamily="monospace" color="brand.pastelYellow">
+            <Flex gap='4px'>
+              <Text color='brand.pastelBlue'>Close:</Text>
+              <Text
+                fontWeight='500'
+                fontFamily='monospace'
+                color='brand.pastelYellow'
+              >
                 {formatPrice(sampleData[sampleData.length - 1]?.close || 0)}
               </Text>
             </Flex>
           </Flex>
-          
-          <Text fontStyle="italic" color="brand.pastelBlue">
+
+          <Text fontStyle='italic' color='brand.pastelBlue'>
             Liberator dashboard
           </Text>
         </Flex>

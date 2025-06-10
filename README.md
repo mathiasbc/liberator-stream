@@ -1,79 +1,61 @@
-# Bitcoin Dashboard
+# Liberator Stream Backend
 
-A live Bitcoin dashboard with candlestick charts designed for YouTube streaming.
+A real-time data streaming backend service built with Koa.js and WebSocket support.
+
+## Current Status
+
+⚠️ **This project is in active development and subject to frequent changes.**
 
 ## Features
 
-- Live Bitcoin candlestick charts
-- Multiple timeframes (15m, 1h, 1d, 1w)
-- Auto-refresh every 30 seconds
-- Real-time WebSocket updates
-- Streaming-optimized UI
+- WebSocket server for real-time data streaming
+- Scheduled data updates and synchronization
+- Health monitoring endpoint
+- Dockerized deployment ready
 
 ## Tech Stack
 
-- **Frontend**: React.js + Lightweight Charts
 - **Backend**: Koa.js + WebSocket
-- **Data Source**: Binance API
-- **Containerization**: Docker + Docker Compose
+- **Data Services**: CoinGecko & Blockchain.info APIs
+- **Containerization**: Docker
 
 ## Quick Start
 
-1. Run the setup script to create the project
-2. Start with Docker Compose:
-   ```bash
-   docker-compose up --build
-   ```
-3. Open browser:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:3001
-
-## Development
-
-### Prerequisites
-- Docker and Docker Compose
-- Node.js 18+ (for local development)
-
-### Starting the application
 ```bash
-# Build and start all services
-docker-compose up --build
+# Install dependencies
+cd backend
+npm install
 
-# Start in detached mode
-docker-compose up -d
+# Set up environment
+cp .env.example .env
+# Edit .env with your configuration
 
-# View logs
-docker-compose logs -f
+# Start development server
+npm start
 
-# Stop services
-docker-compose down
-```
-
-### Project Structure
-```
-bitcoin-dashboard/
-├── backend/          # Koa.js API server
-├── frontend/         # React.js dashboard
-├── docker-compose.yml
-└── .env
+# Or use Docker
+docker build -t liberator-stream-backend .
+docker run -p 3001:3001 liberator-stream-backend
 ```
 
 ## API Endpoints
 
-- `GET /api/bitcoin/candles/:timeframe` - Get candlestick data
-- `GET /health` - Health check
-- `WebSocket /ws` - Real-time updates
+- `GET /health` - Health check endpoint
+- `WebSocket /ws` - Real-time data streaming
 
-## Streaming Setup
+## Project Structure
 
-1. Install OBS Studio
-2. Add Browser Source pointing to http://localhost:3000
-3. Configure for YouTube Live streaming
+```
+backend/
+├── src/
+│   ├── services/     # External API integrations
+│   ├── utils/        # Scheduling and utilities
+│   ├── websocket/    # WebSocket server
+│   └── app.js        # Main application
+├── Dockerfile
+└── package.json
+```
 
-## Contributing
+## Development
 
-1. Fork the repository
-2. Create feature branch
-3. Make changes
-4. Test with Docker
-5. Submit pull request
+This backend service is designed to work as part of a larger streaming infrastructure. The API surface and functionality may change as requirements evolve.

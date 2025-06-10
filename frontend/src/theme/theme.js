@@ -12,7 +12,7 @@ const colors = {
   pastelBlue: '#5DD5FF',
   darkBg: '#0D0D0D',
   darkCard: '#1A1A1A',
-  darkBorder: '#2A2A2A'
+  darkBorder: '#2A2A2A',
 };
 
 const theme = extendTheme({

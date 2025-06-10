@@ -9,7 +9,7 @@ const PriceSection = ({
   timeframe,
   setTimeframe,
 }) => {
-  const timeframes = ['15M', '1H', '4H', '1D', '1W'];
+  const timeframes = ['5M', '1H', '4H', '1D', '1W'];
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-US', {
@@ -19,78 +19,111 @@ const PriceSection = ({
     }).format(price);
   };
 
+  const formatLargeNumber = (value) => {
+    const num =
+      typeof value === 'string'
+        ? parseFloat(value.replace(/[^0-9.-]+/g, ''))
+        : value;
+
+    if (num >= 1e12) {
+      return `$${(num / 1e12).toFixed(2)}T`;
+    } else if (num >= 1e9) {
+      return `$${(num / 1e9).toFixed(2)}B`;
+    } else if (num >= 1e6) {
+      return `$${(num / 1e6).toFixed(2)}M`;
+    }
+    return `$${num.toLocaleString()}`;
+  };
+
   return (
-    <Flex mb="32px" justifyContent="space-between" alignItems="center">
-      <Flex alignItems="center" gap="48px">
-        <Flex flexDirection="column" gap="8px">
+    <Flex mb='32px' justifyContent='space-between' alignItems='center'>
+      <Flex alignItems='center' gap='48px'>
+        <Flex flexDirection='column' gap='8px'>
           <Text
-            as="h2"
-            fontSize="64px"
-            fontWeight="300"
-            color="brand.pastelYellow"
+            as='h2'
+            fontSize='64px'
+            fontWeight='300'
+            color='brand.pastelYellow'
             m={0}
           >
             {formatPrice(currentPrice)}
           </Text>
-          <Flex alignItems="center" gap="12px">
+          <Flex alignItems='center' gap='12px'>
             <Text
-              fontSize="24px"
-              color={priceChange >= 0 ? 'brand.pastelMint' : 'brand.pastelCoral'}
+              fontSize='24px'
+              color={
+                priceChange >= 0 ? 'brand.pastelMint' : 'brand.pastelCoral'
+              }
             >
               {priceChange >= 0 ? '↗' : '↘'}
             </Text>
             <Text
-              fontSize="20px"
-              fontWeight="500"
-              color={priceChange >= 0 ? 'brand.pastelMint' : 'brand.pastelCoral'}
+              fontSize='20px'
+              fontWeight='500'
+              color={
+                priceChange >= 0 ? 'brand.pastelMint' : 'brand.pastelCoral'
+              }
             >
               {priceChange >= 0 ? '+' : ''}
               {priceChange.toFixed(2)}%
             </Text>
-            <Text fontSize="20px" fontWeight="300" color="brand.pastelBlue">
+            <Text fontSize='20px' fontWeight='300' color='brand.pastelBlue'>
               today
             </Text>
           </Flex>
         </Flex>
 
-        <Box w="1px" h="80px" bg="brand.darkBorder" />
+        <Box w='1px' h='80px' bg='brand.darkBorder' />
 
-        <Flex flexDirection="column" gap="4px">
-          <Text fontSize="14px" fontWeight="300" color="brand.pastelLavender" m={0}>
+        <Flex flexDirection='column' gap='4px'>
+          <Text
+            fontSize='14px'
+            fontWeight='300'
+            color='brand.pastelLavender'
+            m={0}
+          >
             Volume (24h)
           </Text>
-          <Text fontSize="32px" fontWeight="500" m={0} color="brand.pastelLavender">
-            {volume}
+          <Text
+            fontSize='32px'
+            fontWeight='500'
+            m={0}
+            color='brand.pastelLavender'
+          >
+            {formatLargeNumber(volume)}
           </Text>
         </Flex>
 
-        <Flex flexDirection="column" gap="4px">
-          <Text fontSize="14px" fontWeight="300" color="brand.pastelMint" m={0}>
+        <Flex flexDirection='column' gap='4px'>
+          <Text fontSize='14px' fontWeight='300' color='brand.pastelMint' m={0}>
             Market Cap
           </Text>
-          <Text fontSize="32px" fontWeight="500" m={0} color="brand.pastelMint">
-            {marketCap}
+          <Text fontSize='32px' fontWeight='500' m={0} color='brand.pastelMint'>
+            {formatLargeNumber(marketCap)}
           </Text>
         </Flex>
       </Flex>
 
       <Flex
-        p="8px"
-        borderRadius="12px"
-        bgGradient="linear(135deg, brand.darkCard, #1F1F1F)"
-        boxShadow="0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 brand.darkBorder"
-        gap="8px"
+        p='8px'
+        borderRadius='12px'
+        bgGradient='linear(135deg, brand.darkCard, #1F1F1F)'
+        boxShadow='0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 brand.darkBorder'
+        gap='8px'
       >
         {timeframes.map((tf) => (
           <Button
             key={tf}
-            variant="timeframe"
+            variant='timeframe'
             bg={timeframe === tf ? 'brand.pastelPink' : 'transparent'}
             color={timeframe === tf ? 'brand.darkBg' : 'brand.pastelBlue'}
-            boxShadow={timeframe === tf ? '0 8px 25px rgba(248, 187, 217, 0.3)' : 'none'}
+            boxShadow={
+              timeframe === tf ? '0 8px 25px rgba(248, 187, 217, 0.3)' : 'none'
+            }
             transform={timeframe === tf ? 'translateY(-1px)' : 'none'}
             _hover={{
-              bg: timeframe !== tf ? 'rgba(255,255,255,0.1)' : 'brand.pastelPink',
+              bg:
+                timeframe !== tf ? 'rgba(255,255,255,0.1)' : 'brand.pastelPink',
             }}
             onClick={() => setTimeframe(tf)}
           >
@@ -102,4 +135,4 @@ const PriceSection = ({
   );
 };
 
-export default PriceSection; 
+export default PriceSection;

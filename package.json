@@ -1,0 +1,28 @@
+{
+  "name": "liberator-stream",
+  "version": "1.0.0",
+  "description": "Bitcoin Dashboard Application",
+  "private": true,
+  "scripts": {
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:fix": "npm run lint:fix:backend && npm run lint:fix:frontend",
+    "format": "npm run format:backend && npm run format:frontend",
+    "format:check": "npm run format:check:backend && npm run format:check:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:fix:backend": "cd backend && npm run lint:fix",
+    "format:backend": "cd backend && npm run format",
+    "format:check:backend": "cd backend && npm run format:check",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:fix:frontend": "cd frontend && npm run lint:fix",
+    "format:frontend": "cd frontend && npm run format",
+    "format:check:frontend": "cd frontend && npm run format:check",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build"
+  },
+  "author": "Mathias Bustamante",
+  "license": "MIT"
+}
+
