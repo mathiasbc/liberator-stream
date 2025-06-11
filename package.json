@@ -4,7 +4,7 @@
   "description": "Bitcoin live dashboard for streaming",
   "main": "backend/src/app.js",
   "scripts": {
-    "build": "cd frontend && npm install && npm run build",
+    "build": "cd backend && npm install && cd ../frontend && npm install && npm run build",
     "start": "cd backend && npm start",
     "dev": "concurrently \"cd frontend && npm start\" \"cd backend && npm run dev\"",
     "install-all": "cd frontend && npm install && cd ../backend && npm install"
