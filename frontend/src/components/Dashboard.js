@@ -3,7 +3,6 @@ import { Box } from '@chakra-ui/react';
 import Header from './Header';
 import PriceSection from './PriceSection';
 import Chart from './Chart';
-import StatsGrid from './StatsGrid';
 
 const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:3001';
 const RECONNECT_DELAY = 2000;
@@ -16,9 +15,10 @@ const Dashboard = () => {
   const [blockHeight, setBlockHeight] = useState(null);
   const [marketDominance, setMarketDominance] = useState(null);
   const [totalSupply, setTotalSupply] = useState(null);
-  const [sentiment, setSentiment] = useState(null);
+  const [extendedSupplyData, setExtendedSupplyData] = useState(null);
   const [ohlcData, setOhlcData] = useState({});
   const [timeframe, setTimeframe] = useState('5M'); // This will be controlled by backend
+  // Note: All timestamps in this app use UTC for consistency across YouTube stream viewers
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
   const wsRef = useRef(null);
@@ -86,8 +86,12 @@ const Dashboard = () => {
           setTotalSupply(data.totalSupply);
           hasUpdate = true;
         }
-        if (data.sentiment !== undefined && data.sentiment !== sentiment) {
-          setSentiment(data.sentiment);
+        if (
+          data.extendedSupplyData !== undefined &&
+          JSON.stringify(data.extendedSupplyData) !==
+            JSON.stringify(extendedSupplyData)
+        ) {
+          setExtendedSupplyData(data.extendedSupplyData);
           hasUpdate = true;
         }
         if (data.ohlcData !== undefined) {
@@ -100,9 +104,6 @@ const Dashboard = () => {
           data.currentTimeframe !== undefined &&
           data.currentTimeframe !== timeframe
         ) {
-          console.log(
-            `Frontend timeframe update: ${timeframe} → ${data.currentTimeframe}`
-          );
           setTimeframe(data.currentTimeframe);
           hasUpdate = true;
         }
@@ -136,7 +137,7 @@ const Dashboard = () => {
     blockHeight,
     marketDominance,
     totalSupply,
-    sentiment,
+    extendedSupplyData,
     timeframe,
   ]);
 
@@ -175,13 +176,12 @@ const Dashboard = () => {
           volume={volume || 0}
           marketCap={marketCap || 0}
           timeframe={timeframe}
-        />
-        <Chart sampleData={currentOhlcData} timeframe={timeframe} />
-        <StatsGrid
-          sentiment={sentiment}
           marketDominance={marketDominance}
           totalSupply={totalSupply}
+          extendedSupplyData={extendedSupplyData}
+          blockHeight={blockHeight}
         />
+        <Chart sampleData={currentOhlcData} timeframe={timeframe} />
       </Box>
     </Box>
   );

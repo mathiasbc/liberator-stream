@@ -178,6 +178,8 @@ class Scheduler {
         console.error('Initial blockchain data fetch failed:', error.message);
       }
 
+
+
       let hasUpdates = false;
       const newCache = { ...this._cache };
 
@@ -196,6 +198,8 @@ class Scheduler {
         Object.assign(newCache, blockchainData);
         hasUpdates = true;
       }
+
+
 
       // Add current timeframe to the data being sent
       newCache.currentTimeframe = this.getCurrentTimeframe();
@@ -224,13 +228,27 @@ class Scheduler {
   }
 
   async fetchBlockchainData() {
-    const [blockHeight, marketDominance, totalSupply] = await Promise.all([
+    const [blockHeight, globalMarketData, supplyData] = await Promise.all([
       blockchaininfo.getBlockHeight(),
       blockchaininfo.getMarketDominance(),
       blockchaininfo.getTotalSupply(),
     ]);
-    return { blockHeight, marketDominance, totalSupply };
+    return { 
+      blockHeight, 
+      // Keep backward compatibility
+      marketDominance: globalMarketData.btcDominance,
+      totalSupply: {
+        current: supplyData.current,
+        max: supplyData.max,
+        percentage: supplyData.percentage
+      },
+      // Add new metrics
+      globalMarketData,
+      extendedSupplyData: supplyData
+    };
   }
+
+
 }
 
 module.exports = new Scheduler();

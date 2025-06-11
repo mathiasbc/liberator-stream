@@ -10,6 +10,7 @@ const Chart = ({ sampleData, timeframe }) => {
   const { brand } = theme.colors;
 
   // Get time interval and formatting based on timeframe
+  // Note: All time displays use UTC for consistency across YouTube stream viewers
   const getTimeConfig = (timeframe) => {
     const configs = {
       '5M': {
@@ -20,6 +21,7 @@ const Chart = ({ sampleData, timeframe }) => {
             hour: '2-digit',
             minute: '2-digit',
             hour12: false,
+            timeZone: 'UTC',
           });
         },
         timeFormatter: (time) => {
@@ -28,6 +30,7 @@ const Chart = ({ sampleData, timeframe }) => {
             hour: '2-digit',
             minute: '2-digit',
             hour12: false,
+            timeZone: 'UTC',
           });
         },
       },
@@ -39,6 +42,7 @@ const Chart = ({ sampleData, timeframe }) => {
             hour: '2-digit',
             minute: '2-digit',
             hour12: false,
+            timeZone: 'UTC',
           });
         },
         timeFormatter: (time) => {
@@ -47,6 +51,7 @@ const Chart = ({ sampleData, timeframe }) => {
             hour: '2-digit',
             minute: '2-digit',
             hour12: false,
+            timeZone: 'UTC',
           });
         },
       },
@@ -59,6 +64,7 @@ const Chart = ({ sampleData, timeframe }) => {
             day: 'numeric',
             hour: '2-digit',
             hour12: false,
+            timeZone: 'UTC',
           });
         },
         timeFormatter: (time) => {
@@ -68,6 +74,7 @@ const Chart = ({ sampleData, timeframe }) => {
             day: 'numeric',
             hour: '2-digit',
             hour12: false,
+            timeZone: 'UTC',
           });
         },
       },
@@ -78,6 +85,7 @@ const Chart = ({ sampleData, timeframe }) => {
           return date.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
+            timeZone: 'UTC',
           });
         },
         timeFormatter: (time) => {
@@ -85,6 +93,7 @@ const Chart = ({ sampleData, timeframe }) => {
           return date.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
+            timeZone: 'UTC',
           });
         },
       },
@@ -96,6 +105,7 @@ const Chart = ({ sampleData, timeframe }) => {
             month: 'short',
             day: 'numeric',
             year: '2-digit',
+            timeZone: 'UTC',
           });
         },
         timeFormatter: (time) => {
@@ -104,6 +114,7 @@ const Chart = ({ sampleData, timeframe }) => {
             month: 'short',
             day: 'numeric',
             year: '2-digit',
+            timeZone: 'UTC',
           });
         },
       },
@@ -276,7 +287,7 @@ const Chart = ({ sampleData, timeframe }) => {
               as='h3'
               fontSize='28px'
               fontWeight='600'
-              color='brand.pastelYellow'
+              color='brand.bitcoinOrange'
               m={0}
             >
               BTC/USD

@@ -1,5 +1,7 @@
 const axios = require('axios');
 
+// Note: All timestamps from CoinGecko API are in UTC format
+// This ensures consistency for YouTube stream viewers across different timezones
 const BASE_URL = 'https://api.coingecko.com/api/v3';
 const BITCOIN_ID = 'bitcoin';
 

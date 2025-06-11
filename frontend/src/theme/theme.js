@@ -10,6 +10,7 @@ const colors = {
   pastelGreen: '#89CDF1',
   pastelCoral: '#FF7A85',
   pastelBlue: '#5DD5FF',
+  bitcoinOrange: '#F7931A', // Official Bitcoin orange color
   darkBg: '#0D0D0D',
   darkCard: '#1A1A1A',
   darkBorder: '#2A2A2A',
@@ -37,6 +38,11 @@ const theme = extendTheme({
       '@keyframes pulse': {
         '0%, 100%': { opacity: 1 },
         '50%': { opacity: 0.5 },
+      },
+      // Add keyframe animation for shimmer effect
+      '@keyframes shimmer': {
+        '0%': { transform: 'translateX(-100%)' },
+        '100%': { transform: 'translateX(200%)' },
       },
     },
   },

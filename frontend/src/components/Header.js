@@ -1,13 +1,15 @@
 import React from 'react';
-import { Box, Flex, Text, CircularProgress } from '@chakra-ui/react';
+import { Box, Flex, Text } from '@chakra-ui/react';
 
 const Header = ({ blockHeight, lastUpdate, secondsSinceUpdate }) => {
+  // Format time in UTC for consistency across YouTube stream viewers
   const formatTime = (date) => {
     return date.toLocaleTimeString('en-US', {
       hour12: false,
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
+      timeZone: 'UTC',
     });
   };
 
@@ -57,43 +59,13 @@ const Header = ({ blockHeight, lastUpdate, secondsSinceUpdate }) => {
             bg='brand.pastelCoral'
             animation='pulse 2s infinite'
           />
-          <Text fontSize='14px' fontWeight='500' color='brand.pastelCoral'>
+          <Text fontSize='24px' fontWeight='500' color='brand.pastelCoral'>
             Live
-          </Text>
-          <CircularProgress
-            value={(secondsSinceUpdate / 60) * 100}
-            size='24px'
-            thickness='8px'
-            color='brand.pastelCoral'
-            trackColor='brand.darkBorder'
-            ml='8px'
-            capIsRound
-          />
-          <Text
-            fontSize='12px'
-            fontWeight='300'
-            color='brand.pastelBlue'
-            ml='8px'
-          >
-            (updates every 60s)
           </Text>
         </Flex>
       </Flex>
 
       <Flex alignItems='center' gap='32px'>
-        <Box textAlign='right'>
-          <Text
-            fontSize='14px'
-            fontWeight='300'
-            color='brand.pastelBlue'
-            m='0 0 4px 0'
-          >
-            Block Height
-          </Text>
-          <Text fontSize='20px' fontWeight='500' color='white' m={0}>
-            #{blockHeight.toLocaleString()}
-          </Text>
-        </Box>
         <Box textAlign='right'>
           <Text
             fontSize='14px'

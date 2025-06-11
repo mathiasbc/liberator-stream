@@ -7,12 +7,17 @@ const PriceSection = ({
   volume,
   marketCap,
   timeframe,
+  marketDominance,
+  totalSupply,
+  extendedSupplyData,
+  blockHeight,
 }) => {
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0, // Remove decimals for Bitcoin price
+      maximumFractionDigits: 0, // Remove decimals for Bitcoin price
     }).format(price);
   };
 
@@ -32,6 +37,15 @@ const PriceSection = ({
     return `$${num.toLocaleString()}`;
   };
 
+  const getAthDistanceColor = (percentage) => {
+    if (!percentage) return 'brand.pastelBlue';
+    const pct = Math.abs(parseFloat(percentage));
+    if (pct <= 5) return 'brand.pastelMint';
+    if (pct <= 15) return 'brand.pastelYellow';
+    if (pct <= 30) return 'brand.pastelLavender';
+    return 'brand.pastelCoral';
+  };
+
   // Static list of all timeframes
   const timeframes = ['5M', '1H', '4H', '1D', '1W'];
 
@@ -41,9 +55,11 @@ const PriceSection = ({
         <Flex flexDirection='column' gap='8px'>
           <Text
             as='h2'
-            fontSize='64px'
-            fontWeight='300'
-            color='brand.pastelYellow'
+            fontSize='76px'
+            fontWeight='600'
+            color='brand.bitcoinOrange'
+            textShadow='0 4px 20px rgba(247, 147, 26, 0.4)'
+            letterSpacing='-0.02em'
             m={0}
           >
             {formatPrice(currentPrice)}
@@ -100,6 +116,68 @@ const PriceSection = ({
           </Text>
           <Text fontSize='32px' fontWeight='500' m={0} color='brand.pastelMint'>
             {formatLargeNumber(marketCap)}
+          </Text>
+        </Flex>
+
+        <Flex flexDirection='column' gap='4px'>
+          <Text fontSize='14px' fontWeight='300' color='brand.pastelBlue' m={0}>
+            Block Height
+          </Text>
+          <Text fontSize='32px' fontWeight='500' m={0} color='brand.pastelBlue'>
+            #{blockHeight ? blockHeight.toLocaleString() : 'N/A'}
+          </Text>
+        </Flex>
+
+        <Flex flexDirection='column' gap='4px'>
+          <Text
+            fontSize='14px'
+            fontWeight='300'
+            color={getAthDistanceColor(
+              extendedSupplyData?.priceChangePercentageFromAth
+            )}
+            m={0}
+          >
+            Distance from ATH
+          </Text>
+          <Text
+            fontSize='32px'
+            fontWeight='500'
+            m={0}
+            color={getAthDistanceColor(
+              extendedSupplyData?.priceChangePercentageFromAth
+            )}
+          >
+            {extendedSupplyData?.priceChangePercentageFromAth
+              ? `${extendedSupplyData.priceChangePercentageFromAth}%`
+              : 'N/A'}
+          </Text>
+        </Flex>
+
+        <Flex flexDirection='column' gap='4px'>
+          <Text fontSize='14px' fontWeight='300' color='brand.pastelPink' m={0}>
+            Market Dominance
+          </Text>
+          <Text fontSize='32px' fontWeight='500' m={0} color='brand.pastelPink'>
+            {marketDominance ? `${marketDominance}%` : 'N/A'}
+          </Text>
+        </Flex>
+
+        <Flex flexDirection='column' gap='4px'>
+          <Text
+            fontSize='14px'
+            fontWeight='300'
+            color='brand.pastelCoral'
+            m={0}
+          >
+            Supply Mined
+          </Text>
+          <Text
+            fontSize='32px'
+            fontWeight='500'
+            m={0}
+            color='brand.pastelCoral'
+          >
+            {totalSupply ? `${totalSupply.percentage}%` : 'N/A'}
           </Text>
         </Flex>
       </Flex>
