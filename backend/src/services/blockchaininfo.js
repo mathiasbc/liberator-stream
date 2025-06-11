@@ -1,9 +1,5 @@
 const axios = require('axios');
 
-// Note: All timestamps from blockchain.info and CoinGecko APIs are in UTC format
-// This ensures consistency for YouTube stream viewers across different timezones
-const BLOCKCHAIN_BASE =
-  process.env.BLOCKCHAIN_INFO_API_URL || 'https://blockchain.info';
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 const BLOCKSTREAM_BASE = 'https://blockstream.info/api';
 
@@ -18,7 +14,7 @@ class BlockchainInfoService {
     const url = `${COINGECKO_BASE}/global`;
     const { data } = await axios.get(url);
     const globalData = data.data;
-    
+
     return {
       btcDominance: globalData.market_cap_percentage.btc
         ? globalData.market_cap_percentage.btc.toFixed(1)
@@ -26,7 +22,8 @@ class BlockchainInfoService {
       totalMarketCap: globalData.total_market_cap.usd || 0,
       totalVolume: globalData.total_volume.usd || 0,
       activeCryptocurrencies: globalData.active_cryptocurrencies || 0,
-      marketCapChangePercentage: globalData.market_cap_change_percentage_24h_usd || 0
+      marketCapChangePercentage:
+        globalData.market_cap_change_percentage_24h_usd || 0,
     };
   }
 
@@ -36,7 +33,7 @@ class BlockchainInfoService {
     const marketData = data.market_data;
     const totalSupply = marketData.total_supply;
     const maxSupply = marketData.max_supply;
-    
+
     return {
       current: totalSupply,
       max: maxSupply,
@@ -47,9 +44,10 @@ class BlockchainInfoService {
       athDate: marketData.ath_date.usd,
       atlPrice: marketData.atl.usd,
       atlDate: marketData.atl_date.usd,
-      priceChangePercentageFromAth: marketData.ath_change_percentage.usd?.toFixed(2),
+      priceChangePercentageFromAth:
+        marketData.ath_change_percentage.usd?.toFixed(2),
       marketCapRank: data.market_cap_rank,
-      liquidityScore: data.liquidity_score
+      liquidityScore: data.liquidity_score,
     };
   }
 }

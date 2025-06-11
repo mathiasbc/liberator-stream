@@ -169,7 +169,7 @@ const Dashboard = () => {
         lastUpdate={lastUpdate}
         secondsSinceUpdate={secondsSinceUpdate}
       />
-      <Box p='32px'>
+      <Box p={{ base: '16px', sm: '20px', md: '24px', lg: '32px' }}>
         <PriceSection
           currentPrice={currentPrice || 0}
           priceChange={priceChange || 0}

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Box, Flex, Text, useTheme } from '@chakra-ui/react';
+import { Box, Flex, Text, Grid, useTheme } from '@chakra-ui/react';
 import { createChart } from 'lightweight-charts';
 
 const Chart = ({ sampleData, timeframe }) => {
@@ -122,11 +122,23 @@ const Chart = ({ sampleData, timeframe }) => {
     return configs[timeframe] || configs['1H'];
   };
 
+  // Get responsive chart height
+  const getChartHeight = () => {
+    if (typeof window !== 'undefined') {
+      const width = window.innerWidth;
+      if (width < 768) return 400; // Mobile
+      if (width < 1024) return 500; // Tablet
+      return 600; // Desktop
+    }
+    return 600;
+  };
+
   // Initialize and update chart
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
     const timeConfig = getTimeConfig(timeframe);
+    const chartHeight = getChartHeight();
 
     // Chart configuration with dark theme
     const chartOptions = {
@@ -137,7 +149,7 @@ const Chart = ({ sampleData, timeframe }) => {
           topColor: '#0F0F0F',
           bottomColor: '#1A1A1A',
         },
-        fontSize: 14,
+        fontSize: window.innerWidth < 768 ? 12 : 14,
         fontFamily: '"Segoe UI", system-ui, sans-serif',
       },
       watermark: {
@@ -157,8 +169,8 @@ const Chart = ({ sampleData, timeframe }) => {
         borderColor: brand.darkBorder,
         timeVisible: true,
         secondsVisible: false,
-        barSpacing: 12, // Better spacing for candlestick visibility
-        minBarSpacing: 6,
+        barSpacing: window.innerWidth < 768 ? 8 : 12, // Better spacing for mobile
+        minBarSpacing: window.innerWidth < 768 ? 4 : 6,
         tickMarkFormatter: timeConfig.tickFormatter,
       },
       localization: {
@@ -182,7 +194,7 @@ const Chart = ({ sampleData, timeframe }) => {
         pinch: true,
       },
       width: chartContainerRef.current.clientWidth,
-      height: 600,
+      height: chartHeight,
     };
 
     // Create chart
@@ -235,9 +247,17 @@ const Chart = ({ sampleData, timeframe }) => {
     // Handle resize
     const handleResize = () => {
       if (chartRef.current && chartContainerRef.current) {
+        const newHeight = getChartHeight();
         chartRef.current.applyOptions({
           width: chartContainerRef.current.clientWidth,
-          height: 600,
+          height: newHeight,
+          layout: {
+            fontSize: window.innerWidth < 768 ? 12 : 14,
+          },
+          timeScale: {
+            barSpacing: window.innerWidth < 768 ? 8 : 12,
+            minBarSpacing: window.innerWidth < 768 ? 4 : 6,
+          },
         });
       }
     };
@@ -266,8 +286,8 @@ const Chart = ({ sampleData, timeframe }) => {
   return (
     <Box position='relative'>
       <Box
-        p='24px'
-        borderRadius='16px'
+        p={{ base: '16px', md: '20px', lg: '24px' }}
+        borderRadius={{ base: '12px', md: '16px' }}
         bgGradient='linear(135deg, brand.darkCard, #1F1F1F)'
         boxShadow='0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 brand.darkBorder'
         border='1px solid'
@@ -275,32 +295,43 @@ const Chart = ({ sampleData, timeframe }) => {
       >
         {/* Chart Header */}
         <Flex
+          direction={{ base: 'column', sm: 'row' }}
           justifyContent='space-between'
-          alignItems='center'
-          mb='24px'
-          pb='16px'
+          alignItems={{ base: 'flex-start', sm: 'center' }}
+          mb={{ base: '16px', md: '24px' }}
+          pb={{ base: '12px', md: '16px' }}
           borderBottom='1px solid'
           borderColor='brand.darkBorder'
+          gap={{ base: '12px', sm: '24px' }}
         >
-          <Flex alignItems='center' gap='24px'>
+          <Flex
+            alignItems='center'
+            gap={{ base: '16px', md: '24px' }}
+            wrap='wrap'
+          >
             <Text
               as='h3'
-              fontSize='28px'
+              fontSize={{ base: '20px', sm: '24px', md: '28px' }}
               fontWeight='600'
               color='brand.bitcoinOrange'
               m={0}
             >
               BTC/USD
             </Text>
-            <Flex alignItems='center' gap='12px' fontSize='16px'>
+            <Flex
+              alignItems='center'
+              gap='12px'
+              fontSize={{ base: '14px', md: '16px' }}
+            >
               <Text color='brand.pastelBlue'>Timeframe:</Text>
               <Box
                 bg='brand.pastelPink'
                 color='brand.darkBg'
-                px='12px'
+                px={{ base: '8px', md: '12px' }}
                 py='4px'
                 borderRadius='20px'
                 fontWeight='500'
+                fontSize={{ base: '12px', md: '14px' }}
               >
                 {timeframe}
               </Box>
@@ -312,65 +343,101 @@ const Chart = ({ sampleData, timeframe }) => {
         <Box
           ref={chartContainerRef}
           w='100%'
-          h='600px'
-          borderRadius='12px'
+          h={{ base: '400px', md: '500px', lg: '600px' }}
+          borderRadius={{ base: '8px', md: '12px' }}
           overflow='hidden'
         />
 
         {/* Chart Footer */}
         <Flex
-          mt='24px'
-          pt='16px'
+          mt={{ base: '16px', md: '24px' }}
+          pt={{ base: '12px', md: '16px' }}
           borderTop='1px solid'
           borderColor='brand.darkBorder'
+          direction={{ base: 'column', lg: 'row' }}
           justifyContent='space-between'
-          alignItems='center'
-          fontSize='16px'
+          alignItems={{ base: 'flex-start', lg: 'center' }}
+          fontSize={{ base: '14px', md: '16px' }}
+          gap={{ base: '16px', lg: '0' }}
         >
-          <Flex alignItems='center' gap='32px'>
-            <Flex gap='4px'>
-              <Text color='brand.pastelBlue'>Open:</Text>
+          <Grid
+            templateColumns={{ base: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }}
+            gap={{ base: '12px', sm: '16px', md: '32px' }}
+            flex='1'
+          >
+            <Flex direction='column' gap='4px'>
+              <Text
+                color='brand.pastelBlue'
+                fontSize={{ base: '12px', md: '14px' }}
+              >
+                Open:
+              </Text>
               <Text
                 fontWeight='500'
                 fontFamily='monospace'
                 color='brand.pastelYellow'
+                fontSize={{ base: '14px', md: '16px' }}
               >
                 {formatPrice(sampleData[0]?.open || 0)}
               </Text>
             </Flex>
-            <Flex gap='4px'>
-              <Text color='brand.pastelBlue'>High:</Text>
+            <Flex direction='column' gap='4px'>
+              <Text
+                color='brand.pastelBlue'
+                fontSize={{ base: '12px', md: '14px' }}
+              >
+                High:
+              </Text>
               <Text
                 fontWeight='500'
                 fontFamily='monospace'
                 color='brand.pastelGreen'
+                fontSize={{ base: '14px', md: '16px' }}
               >
                 {formatPrice(Math.max(...sampleData.map((d) => d.high)))}
               </Text>
             </Flex>
-            <Flex gap='4px'>
-              <Text color='brand.pastelBlue'>Low:</Text>
+            <Flex direction='column' gap='4px'>
+              <Text
+                color='brand.pastelBlue'
+                fontSize={{ base: '12px', md: '14px' }}
+              >
+                Low:
+              </Text>
               <Text
                 fontWeight='500'
                 fontFamily='monospace'
                 color='brand.pastelCoral'
+                fontSize={{ base: '14px', md: '16px' }}
               >
                 {formatPrice(Math.min(...sampleData.map((d) => d.low)))}
               </Text>
             </Flex>
-            <Flex gap='4px'>
-              <Text color='brand.pastelBlue'>Close:</Text>
+            <Flex direction='column' gap='4px'>
+              <Text
+                color='brand.pastelBlue'
+                fontSize={{ base: '12px', md: '14px' }}
+              >
+                Close:
+              </Text>
               <Text
                 fontWeight='500'
                 fontFamily='monospace'
                 color='brand.pastelYellow'
+                fontSize={{ base: '14px', md: '16px' }}
               >
                 {formatPrice(sampleData[sampleData.length - 1]?.close || 0)}
               </Text>
             </Flex>
-          </Flex>
+          </Grid>
 
-          <Text fontStyle='italic' color='brand.pastelBlue'>
+          <Text
+            fontStyle='italic'
+            color='brand.pastelBlue'
+            fontSize={{ base: '12px', md: '14px' }}
+            mt={{ base: '8px', lg: '0' }}
+            alignSelf={{ base: 'center', lg: 'auto' }}
+          >
             Liberator dashboard
           </Text>
         </Flex>

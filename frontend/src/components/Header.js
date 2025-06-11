@@ -19,20 +19,22 @@ const Header = ({ blockHeight, lastUpdate, secondsSinceUpdate }) => {
       borderBottom='1px solid'
       borderColor='brand.darkBorder'
       bgGradient='linear(135deg, brand.darkCard, #1F1F1F)'
-      p='24px'
+      p={{ base: '16px', md: '24px' }}
+      direction={{ base: 'column', md: 'row' }}
       justifyContent='space-between'
-      alignItems='center'
+      alignItems={{ base: 'flex-start', md: 'center' }}
+      gap={{ base: '16px', md: '0' }}
     >
-      <Flex alignItems='center' gap='24px'>
+      <Flex alignItems='center' gap={{ base: '16px', md: '24px' }} wrap='wrap'>
         <Flex alignItems='center' gap='12px'>
           <Flex
-            w='48px'
-            h='48px'
+            w={{ base: '40px', md: '48px' }}
+            h={{ base: '40px', md: '48px' }}
             borderRadius='50%'
             bgGradient='linear(135deg, brand.pastelYellow, brand.pastelPeach)'
             color='brand.darkBg'
             fontWeight='bold'
-            fontSize='18px'
+            fontSize={{ base: '16px', md: '18px' }}
             alignItems='center'
             justifyContent='center'
             boxShadow='0 4px 15px rgba(0,0,0,0.3)'
@@ -41,16 +43,22 @@ const Header = ({ blockHeight, lastUpdate, secondsSinceUpdate }) => {
           </Flex>
           <Text
             as='h1'
-            fontSize='32px'
+            fontSize={{ base: '20px', sm: '24px', md: '32px' }}
             fontWeight='300'
             bgGradient='linear(135deg, brand.pastelPink, brand.pastelLavender)'
             bgClip='text'
             m={0}
+            whiteSpace='nowrap'
           >
             Bitcoin Dashboard
           </Text>
         </Flex>
-        <Box w='1px' h='32px' bg='brand.darkBorder' />
+        <Box
+          w={{ base: '100%', md: '1px' }}
+          h={{ base: '1px', md: '32px' }}
+          bg='brand.darkBorder'
+          display={{ base: 'block', md: 'block' }}
+        />
         <Flex alignItems='center' gap='8px'>
           <Box
             w='12px'
@@ -59,23 +67,32 @@ const Header = ({ blockHeight, lastUpdate, secondsSinceUpdate }) => {
             bg='brand.pastelCoral'
             animation='pulse 2s infinite'
           />
-          <Text fontSize='24px' fontWeight='500' color='brand.pastelCoral'>
+          <Text
+            fontSize={{ base: '18px', md: '24px' }}
+            fontWeight='500'
+            color='brand.pastelCoral'
+          >
             Live
           </Text>
         </Flex>
       </Flex>
 
       <Flex alignItems='center' gap='32px'>
-        <Box textAlign='right'>
+        <Box textAlign={{ base: 'left', md: 'right' }}>
           <Text
-            fontSize='14px'
+            fontSize={{ base: '12px', md: '14px' }}
             fontWeight='300'
             color='brand.pastelBlue'
             m='0 0 4px 0'
           >
             Last Update (UTC)
           </Text>
-          <Text fontSize='20px' fontWeight='500' color='white' m={0}>
+          <Text
+            fontSize={{ base: '16px', md: '20px' }}
+            fontWeight='500'
+            color='white'
+            m={0}
+          >
             {formatTime(lastUpdate)}
           </Text>
         </Box>
