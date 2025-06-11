@@ -47,7 +47,7 @@ The backend exposes the following endpoints:
 | **Frontend**  | React, Chakra UI, Lightweight Charts     |
 | **Backend**   | Koa.js, WebSockets (`ws`), Axios, koa-static |
 | **DevOps**    | Docker, Docker Compose                   |
-| **Deployment**| Railway (unified deployment)             |
+| **Deployment**| Render (unified deployment)             |
 | **Linting**   | ESLint, Prettier                         |
 
 ## Quick Start
@@ -93,9 +93,23 @@ For development with hot-reload and separate services:
 
 ## Deployment
 
-### Railway Deployment
+### Render Deployment (Recommended - Free)
 
-This project is optimized for deployment on Railway:
+This project is optimized for deployment on Render's free tier:
+
+1. **Connect your GitHub repository to Render**
+2. **Create a Web Service** with these settings:
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm start`
+   - **Environment**: `Node`
+3. **Environment variables** (optional):
+   - `NODE_ENV=production` - Recommended for production
+
+Render's free tier includes 750 hours/month and full WebSocket support, perfect for this application.
+
+### Alternative: Railway Deployment
+
+Railway offers $5/month free credits:
 
 1. **Connect your GitHub repository to Railway**
 2. **The build process automatically:**
@@ -105,6 +119,19 @@ This project is optimized for deployment on Railway:
 3. **Environment variables** (if needed):
    - `PORT` - Automatically set by Railway
    - `NODE_ENV=production` - Recommended for production
+
+### Frontend-Only: Vercel + External Backend
+
+If you want to use Vercel's excellent free frontend hosting:
+
+1. **Deploy Frontend to Vercel**:
+   - Connect the `frontend/` directory
+   - Build command: `npm run build`
+   - Output directory: `build`
+
+2. **Deploy Backend Separately** (Render/Fly.io):
+   - Deploy only the `backend/` directory
+   - Update frontend's WebSocket URL to point to your backend
 
 The unified architecture means you only need to deploy one service that handles everything.
 
