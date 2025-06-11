@@ -140,9 +140,6 @@ const Chart = ({ sampleData, timeframe }) => {
         fontSize: 14,
         fontFamily: '"Segoe UI", system-ui, sans-serif',
       },
-      watermark: {
-        visible: false,
-      },
       grid: {
         vertLines: {
           color: 'rgba(93, 213, 255, 0.1)',
