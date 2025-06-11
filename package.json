@@ -1,28 +1,24 @@
 {
   "name": "liberator-stream",
   "version": "1.0.0",
-  "description": "Bitcoin Dashboard Application",
-  "private": true,
+  "description": "Bitcoin live dashboard for streaming",
+  "main": "backend/src/app.js",
   "scripts": {
-    "lint": "npm run lint:backend && npm run lint:frontend",
-    "lint:fix": "npm run lint:fix:backend && npm run lint:fix:frontend",
-    "format": "npm run format:backend && npm run format:frontend",
-    "format:check": "npm run format:check:backend && npm run format:check:frontend",
-    "lint:backend": "cd backend && npm run lint",
-    "lint:fix:backend": "cd backend && npm run lint:fix",
-    "format:backend": "cd backend && npm run format",
-    "format:check:backend": "cd backend && npm run format:check",
-    "lint:frontend": "cd frontend && npm run lint",
-    "lint:fix:frontend": "cd frontend && npm run lint:fix",
-    "format:frontend": "cd frontend && npm run format",
-    "format:check:frontend": "cd frontend && npm run format:check",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm start",
-    "build:backend": "cd backend && npm run build",
-    "build:frontend": "cd frontend && npm run build"
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd backend && npm start",
+    "dev": "concurrently \"cd frontend && npm start\" \"cd backend && npm run dev\"",
+    "install-all": "cd frontend && npm install && cd ../backend && npm install"
   },
+  "keywords": [
+    "bitcoin",
+    "dashboard",
+    "streaming",
+    "websockets"
+  ],
   "author": "Mathias Bustamante",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
 }
 

@@ -9,6 +9,9 @@ const Chart = ({ sampleData, timeframe }) => {
   const theme = useTheme();
   const { brand } = theme.colors;
 
+  // Static list of all timeframes
+  const timeframes = ['5M', '1H', '4H', '1D', '1W'];
+
   // Get time interval and formatting based on timeframe
   // Note: All time displays use UTC for consistency across YouTube stream viewers
   const getTimeConfig = (timeframe) => {
@@ -126,11 +129,11 @@ const Chart = ({ sampleData, timeframe }) => {
   const getChartHeight = () => {
     if (typeof window !== 'undefined') {
       const width = window.innerWidth;
-      if (width < 768) return 400; // Mobile
-      if (width < 1024) return 500; // Tablet
-      return 600; // Desktop
+      if (width < 768) return 350; // Mobile - reduced from 400
+      if (width < 1024) return 450; // Tablet - reduced from 500
+      return 520; // Desktop - reduced from 600
     }
-    return 600;
+    return 520;
   };
 
   // Initialize and update chart
@@ -286,7 +289,7 @@ const Chart = ({ sampleData, timeframe }) => {
   return (
     <Box position='relative'>
       <Box
-        p={{ base: '16px', md: '20px', lg: '24px' }}
+        p={{ base: '14px', md: '18px', lg: '20px' }}
         borderRadius={{ base: '12px', md: '16px' }}
         bgGradient='linear(135deg, brand.darkCard, #1F1F1F)'
         boxShadow='0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 brand.darkBorder'
@@ -298,8 +301,8 @@ const Chart = ({ sampleData, timeframe }) => {
           direction={{ base: 'column', sm: 'row' }}
           justifyContent='space-between'
           alignItems={{ base: 'flex-start', sm: 'center' }}
-          mb={{ base: '16px', md: '24px' }}
-          pb={{ base: '12px', md: '16px' }}
+          mb={{ base: '12px', md: '16px' }}
+          pb={{ base: '10px', md: '12px' }}
           borderBottom='1px solid'
           borderColor='brand.darkBorder'
           gap={{ base: '12px', sm: '24px' }}
@@ -311,9 +314,9 @@ const Chart = ({ sampleData, timeframe }) => {
           >
             <Text
               as='h3'
-              fontSize={{ base: '20px', sm: '24px', md: '28px' }}
+              fontSize={{ base: '24px', sm: '28px', md: '32px', lg: '36px' }}
               fontWeight='600'
-              color='brand.bitcoinOrange'
+              color='brand.pastelYellow'
               m={0}
             >
               BTC/USD
@@ -321,21 +324,97 @@ const Chart = ({ sampleData, timeframe }) => {
             <Flex
               alignItems='center'
               gap='12px'
-              fontSize={{ base: '14px', md: '16px' }}
+              fontSize={{ base: '16px', md: '18px', lg: '20px' }}
             >
               <Text color='brand.pastelBlue'>Timeframe:</Text>
               <Box
                 bg='brand.pastelPink'
                 color='brand.darkBg'
-                px={{ base: '8px', md: '12px' }}
-                py='4px'
+                px={{ base: '10px', md: '14px' }}
+                py={{ base: '6px', md: '8px' }}
                 borderRadius='20px'
                 fontWeight='500'
-                fontSize={{ base: '12px', md: '14px' }}
+                fontSize={{ base: '14px', md: '16px', lg: '18px' }}
               >
                 {timeframe}
               </Box>
             </Flex>
+          </Flex>
+
+          {/* Live Auto-Rotation Indicator */}
+          <Flex
+            alignItems='center'
+            gap='12px'
+            p={{ base: '10px 14px', md: '12px 18px' }}
+            borderRadius='12px'
+            bg='rgba(255, 255, 255, 0.05)'
+            border='1px solid'
+            borderColor='brand.darkBorder'
+            minW='fit-content'
+            position='relative'
+            overflow='hidden'
+          >
+            {/* Animated Progress Bar Background */}
+            <Box
+              position='absolute'
+              top='0'
+              left='0'
+              right='0'
+              bottom='0'
+              bgGradient='linear(90deg, transparent, brand.pastelPink, brand.pastelYellow, brand.pastelMint, transparent)'
+              opacity='0.3'
+              animation='shimmer 3s ease-in-out infinite'
+              sx={{
+                '@keyframes shimmer': {
+                  '0%': { transform: 'translateX(-100%)' },
+                  '50%': { transform: 'translateX(100%)' },
+                  '100%': { transform: 'translateX(100%)' },
+                },
+              }}
+            />
+
+            {/* Content */}
+            <Box position='relative' zIndex='1'>
+              <Flex alignItems='center' gap='8px' wrap='wrap' justify='center'>
+                {timeframes.map((item, index) => (
+                  <React.Fragment key={item}>
+                    <Box
+                      p={{ base: '4px 8px', md: '6px 10px' }}
+                      borderRadius='6px'
+                      bg={
+                        item === timeframe
+                          ? 'brand.pastelPink'
+                          : 'rgba(255, 255, 255, 0.1)'
+                      }
+                      color={
+                        item === timeframe ? 'brand.darkBg' : 'brand.pastelBlue'
+                      }
+                      fontSize={{ base: '12px', md: '14px', lg: '16px' }}
+                      fontWeight={item === timeframe ? '600' : '400'}
+                      transition='all 0.3s ease'
+                      boxShadow={
+                        item === timeframe
+                          ? '0 0 15px rgba(245, 101, 101, 0.4)'
+                          : 'none'
+                      }
+                      transform={
+                        item === timeframe ? 'scale(1.05)' : 'scale(1)'
+                      }
+                    >
+                      {item}
+                    </Box>
+                    {index < timeframes.length - 1 && (
+                      <Box
+                        w='3px'
+                        h='3px'
+                        borderRadius='50%'
+                        bg='brand.darkBorder'
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
+              </Flex>
+            </Box>
           </Flex>
         </Flex>
 
@@ -343,22 +422,22 @@ const Chart = ({ sampleData, timeframe }) => {
         <Box
           ref={chartContainerRef}
           w='100%'
-          h={{ base: '400px', md: '500px', lg: '600px' }}
+          h={{ base: '350px', md: '450px', lg: '520px' }}
           borderRadius={{ base: '8px', md: '12px' }}
           overflow='hidden'
         />
 
         {/* Chart Footer */}
         <Flex
-          mt={{ base: '16px', md: '24px' }}
-          pt={{ base: '12px', md: '16px' }}
+          mt={{ base: '12px', md: '16px' }}
+          pt={{ base: '10px', md: '12px' }}
           borderTop='1px solid'
           borderColor='brand.darkBorder'
           direction={{ base: 'column', lg: 'row' }}
           justifyContent='space-between'
           alignItems={{ base: 'flex-start', lg: 'center' }}
           fontSize={{ base: '14px', md: '16px' }}
-          gap={{ base: '16px', lg: '0' }}
+          gap={{ base: '12px', lg: '0' }}
         >
           <Grid
             templateColumns={{ base: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }}
@@ -438,7 +517,7 @@ const Chart = ({ sampleData, timeframe }) => {
             mt={{ base: '8px', lg: '0' }}
             alignSelf={{ base: 'center', lg: 'auto' }}
           >
-            Liberator dashboard
+            by Liberator
           </Text>
         </Flex>
       </Box>

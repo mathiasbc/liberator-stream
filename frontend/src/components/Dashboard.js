@@ -4,7 +4,9 @@ import Header from './Header';
 import PriceSection from './PriceSection';
 import Chart from './Chart';
 
-const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:3001';
+const WS_URL =
+  process.env.REACT_APP_WS_URL ||
+  `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
 const RECONNECT_DELAY = 2000;
 
 const Dashboard = () => {
@@ -169,7 +171,7 @@ const Dashboard = () => {
         lastUpdate={lastUpdate}
         secondsSinceUpdate={secondsSinceUpdate}
       />
-      <Box p={{ base: '16px', sm: '20px', md: '24px', lg: '32px' }}>
+      <Box p={{ base: '12px', sm: '16px', md: '20px', lg: '24px' }}>
         <PriceSection
           currentPrice={currentPrice || 0}
           priceChange={priceChange || 0}

@@ -1,6 +1,6 @@
 # Liberator Stream: Bitcoin Live Dashboard
 
-This project is a real-time Bitcoin dashboard that streams live data to a web interface. It is designed to be a comprehensive source of information for Bitcoin, providing live price updates, historical chart data, and key blockchain metrics. The dashboard is built with a modern tech stack and is fully containerized for easy deployment.
+This project is a real-time Bitcoin dashboard that streams live data to a web interface. It is designed to be a comprehensive source of information for Bitcoin, providing live price updates, historical chart data, and key blockchain metrics. The dashboard is built with a modern tech stack and can be deployed as a unified application on a single platform.
 
 ## Project Overview
 
@@ -13,7 +13,7 @@ The application provides a live dashboard with the following features:
 
 ## Architecture
 
-The project follows a classic client-server architecture, with a React frontend and a Node.js backend. The two services are containerized using Docker and managed with Docker Compose.
+The project uses a **unified architecture** where a single Node.js backend serves both the API endpoints and the React frontend as static files. This design enables simple single-platform deployment while maintaining clean separation of concerns during development.
 
 ### Frontend
 
@@ -25,32 +25,36 @@ The frontend is a single-page application built with **React**. It uses:
 
 ### Backend
 
-The backend is a **Koa.js** application that serves two primary purposes:
+The backend is a **Koa.js** application that serves three primary purposes:
 
 1.  **Data Aggregation**: It periodically fetches data from external APIs:
     - **CoinGecko**: For market data and OHLC information.
     - **Blockchain.info**: For blockchain-specific metrics.
 2.  **Real-time Streaming**: It uses a WebSocket server to push the aggregated data to all connected clients. A scheduler (`node-cron`) manages the data fetching and timeframe rotation.
+3.  **Static File Serving**: It serves the built React application as static files, handling routing and fallback to `index.html` for client-side routing.
+
+### API Routes
+
+The backend exposes the following endpoints:
+- `/api/health` - Health check endpoint
+- `/api/*` - Additional API routes (prefixed with `/api/`)
+- `/` - Serves the React application (catch-all for client-side routing)
 
 ## Tech Stack
 
 | Area          | Technology                               |
 | ------------- | ---------------------------------------- |
 | **Frontend**  | React, Chakra UI, Lightweight Charts     |
-| **Backend**   | Koa.js, WebSockets (`ws`), Axios         |
+| **Backend**   | Koa.js, WebSockets (`ws`), Axios, koa-static |
 | **DevOps**    | Docker, Docker Compose                   |
+| **Deployment**| Railway (unified deployment)             |
 | **Linting**   | ESLint, Prettier                         |
 
 ## Quick Start
 
-The recommended way to run this project is with Docker Compose.
+### Option 1: Unified Deployment (Production-Ready)
 
-### Prerequisites
-
-- Docker
-- Docker Compose
-
-### Running the Application
+This method builds the frontend and runs everything from the backend server:
 
 1.  **Clone the repository:**
     ```bash
@@ -58,22 +62,51 @@ The recommended way to run this project is with Docker Compose.
     cd liberator-stream
     ```
 
-2.  **Set up environment variables:**
-    The backend requires a `.env` file. You can copy the example file to get started:
+2.  **Install dependencies and build:**
+    ```bash
+    npm install
+    npm run build
+    npm start
+    ```
+
+3.  **Access the application:**
+    - **Application**: [http://localhost:3001](http://localhost:3001)
+    - **Health Check**: [http://localhost:3001/api/health](http://localhost:3001/api/health)
+
+### Option 2: Development with Docker Compose
+
+For development with hot-reload and separate services:
+
+1.  **Set up environment variables:**
     ```bash
     cp backend/.env.example backend/.env
     ```
-    No changes are required for the default setup, but you can customize the `PORT` if needed.
 
-3.  **Build and run with Docker Compose:**
-    From the root directory, run the following command:
+2.  **Build and run with Docker Compose:**
     ```bash
     docker-compose up --build
     ```
 
-4.  **Access the application:**
+3.  **Access the application:**
     - **Frontend**: [http://localhost:3000](http://localhost:3000)
-    - **Backend Health Check**: [http://localhost:3001/health](http://localhost:3001/health)
+    - **Backend Health Check**: [http://localhost:3001/api/health](http://localhost:3001/api/health)
+
+## Deployment
+
+### Railway Deployment
+
+This project is optimized for deployment on Railway:
+
+1. **Connect your GitHub repository to Railway**
+2. **The build process automatically:**
+   - Installs all dependencies
+   - Builds the React frontend
+   - Starts the unified backend server
+3. **Environment variables** (if needed):
+   - `PORT` - Automatically set by Railway
+   - `NODE_ENV=production` - Recommended for production
+
+The unified architecture means you only need to deploy one service that handles everything.
 
 ## Project Structure
 
@@ -84,7 +117,7 @@ liberator-stream/
 │   │   ├── services/       # External API integrations (CoinGecko, Blockchain.info)
 │   │   ├── utils/          # Scheduler for data fetching
 │   │   ├── websocket/      # WebSocket server implementation
-│   │   └── app.js          # Main Koa application
+│   │   └── app.js          # Main Koa application (serves API + static files)
 │   ├── .env.example
 │   ├── Dockerfile
 │   └── package.json
@@ -92,19 +125,28 @@ liberator-stream/
 │   ├── src/
 │   │   ├── components/     # React components
 │   │   └── App.js          # Main application component
+│   ├── build/              # Production build output (created by npm run build)
 │   ├── Dockerfile
 │   └── package.json
-├── docker-compose.yml      # Docker Compose configuration
+├── package.json            # Root package.json for unified builds
+├── docker-compose.yml      # Docker Compose configuration (development)
 └── README.md
 ```
 
 ## How It Works
 
-The backend is the core of the application. On startup, it fetches an initial set of data and then begins a scheduled cycle of updates every 60 seconds. In each cycle, it:
+The backend is the core of the application. On startup, it:
 
+1. **Serves the React Application**: The built frontend files are served as static content from the `/frontend/build` directory.
+2. **Provides API Endpoints**: All API routes are prefixed with `/api/` to avoid conflicts with frontend routing.
+3. **Establishes WebSocket Connection**: Clients connect via WebSocket for real-time data streaming.
+4. **Fetches Initial Data**: Loads market and blockchain data on startup.
+5. **Starts Scheduled Updates**: Every 60 seconds, it rotates timeframes and fetches fresh data.
+
+In each update cycle, the backend:
 1.  Rotates to a new timeframe (e.g., from `5M` to `1H`).
 2.  Fetches the latest market, OHLC, and blockchain data for that timeframe.
 3.  Caches the data.
 4.  Broadcasts the complete data object to all connected frontend clients via WebSockets.
 
-The frontend listens for these WebSocket messages and updates the UI in real-time, providing a seamless and live experience.
+The frontend receives these WebSocket messages and updates the UI in real-time, providing a seamless live experience. The dynamic WebSocket URL ensures the connection works in both development and production environments.

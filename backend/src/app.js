@@ -4,6 +4,9 @@ const Router = require('koa-router');
 const cors = require('koa-cors');
 const bodyParser = require('koa-bodyparser');
 const logger = require('koa-logger');
+const serve = require('koa-static');
+const send = require('koa-send');
+const path = require('path');
 const http = require('http');
 
 const websocketServer = require('./websocket/server');
@@ -17,17 +20,34 @@ app.use(cors());
 app.use(bodyParser());
 app.use(logger());
 
-// Routes
-app.use(router.routes());
-app.use(router.allowedMethods());
+// Serve static files from React build
+const frontendPath = path.join(__dirname, '../../frontend/build');
+app.use(serve(frontendPath));
 
-// Health check
-router.get('/health', (ctx) => {
+// API Routes
+router.get('/api/health', (ctx) => {
   ctx.body = { status: 'OK', timestamp: new Date().toISOString() };
 });
 
-const PORT = process.env.PORT;
-if (!PORT) throw new Error('PORT must be set in .env');
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+// Catch-all handler: send back React's index.html file for any non-API routes
+app.use(async (ctx, next) => {
+  if (ctx.path.startsWith('/api/') || ctx.path.startsWith('/ws')) {
+    await next();
+  } else {
+    try {
+      await send(ctx, 'index.html', { root: frontendPath });
+    } catch (error) {
+      console.error('Error sending index.html:', error);
+      ctx.status = 404;
+      ctx.body = 'Not Found';
+    }
+  }
+});
+
+const PORT = process.env.PORT || 3001;
 const server = http.createServer(app.callback());
 
 // Start server with initial data fetch
@@ -44,7 +64,7 @@ const server = http.createServer(app.callback());
     scheduler.start();
 
     server.listen(PORT, () => {
-      console.log(`🚀 Bitcoin Dashboard Backend running on port ${PORT}`);
+      console.log(`🚀 Bitcoin Dashboard running on port ${PORT}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
