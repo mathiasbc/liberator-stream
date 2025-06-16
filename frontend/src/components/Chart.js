@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Box, Flex, Text, Grid, useTheme } from '@chakra-ui/react';
+import { Box, Flex, Text, Grid, useTheme, Link, Image } from '@chakra-ui/react';
 import { createChart } from 'lightweight-charts';
 
 const Chart = ({ sampleData, timeframe }) => {
@@ -510,15 +510,25 @@ const Chart = ({ sampleData, timeframe }) => {
             </Flex>
           </Grid>
 
-          <Text
-            fontStyle='italic'
-            color='brand.pastelBlue'
-            fontSize={{ base: '12px', md: '14px' }}
+          <Link
+            href='https://github.com/mathiasbc/liberator-stream'
+            isExternal
             mt={{ base: '8px', lg: '0' }}
             alignSelf={{ base: 'center', lg: 'auto' }}
+            _hover={{
+              opacity: 0.8,
+              transform: 'scale(1.05)',
+            }}
+            transition='all 0.2s ease'
           >
-            by Liberator
-          </Text>
+            <Image
+              src='/assets/the_liberator_horizontal.png'
+              alt='The Liberator'
+              h={{ base: '130px', md: '100px' }}
+              w='auto'
+              objectFit='contain'
+            />
+          </Link>
         </Flex>
       </Box>
     </Box>
