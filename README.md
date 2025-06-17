@@ -1,5 +1,18 @@
 # Liberator Stream: Bitcoin Live Dashboard
 
+```
+██████╗ ████████╗ ██████╗      ██████╗  █████╗ ███████╗██╗  ██╗
+██╔══██╗╚══██╔══╝██╔════╝      ██╔══██╗██╔══██╗██╔════╝██║  ██║
+██████╔╝   ██║   ██║     █████╗██║  ██║███████║███████╗███████║
+██╔══██╗   ██║   ██║     ╚════╝██║  ██║██╔══██║╚════██║██╔══██║
+██████╔╝   ██║   ╚██████╗      ██████╔╝██║  ██║███████║██║  ██║
+╚═════╝    ╚═╝    ╚═════╝      ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+```
+
+## [btc-dash.com](https://btc-dash.com)
+
+![BTC-DASH Screenshot](screenshot.png)
+
 This project is a real-time Bitcoin dashboard that streams live data to a web interface with intelligent **multi-source API architecture**. It provides comprehensive Bitcoin information with live price updates, historical chart data, and key blockchain metrics. The dashboard features automatic API rotation, fallback mechanisms, and memory-efficient operation for 24/7 deployment.
 
 ## Project Overview
