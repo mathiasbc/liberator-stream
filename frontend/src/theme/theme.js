@@ -28,11 +28,33 @@ const theme = extendTheme({
   },
   styles: {
     global: {
-      'html, body': {
+      '*': {
+        boxSizing: 'border-box',
+      },
+      html: {
+        width: '100%',
+        height: '100%',
+        margin: 0,
+        padding: 0,
+        overflowX: 'hidden',
+      },
+      body: {
+        width: '100%',
         minHeight: '100vh',
+        margin: 0,
+        padding: 0,
         background: `linear-gradient(135deg, ${colors.darkBg} 0%, #111111 100%)`,
         color: 'white',
         fontFamily: '"Segoe UI", system-ui, sans-serif',
+        overflowX: 'hidden',
+        fontSize: { base: '14px', md: '16px' },
+        lineHeight: '1.5',
+      },
+      '#root': {
+        width: '100%',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
       },
       // Add keyframe animation for pulse effect
       '@keyframes pulse': {

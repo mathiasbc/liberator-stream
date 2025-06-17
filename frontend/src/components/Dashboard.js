@@ -165,13 +165,25 @@ const Dashboard = () => {
   const currentOhlcData = ohlcData[timeframe] || [];
 
   return (
-    <Box minHeight='100vh'>
+    <Box
+      width='100%'
+      minHeight='100vh'
+      maxWidth='100vw'
+      overflowX='hidden'
+      display='flex'
+      flexDirection='column'
+    >
       <Header
         blockHeight={blockHeight || 0}
         lastUpdate={lastUpdate}
         secondsSinceUpdate={secondsSinceUpdate}
       />
-      <Box p={{ base: '12px', sm: '16px', md: '20px', lg: '24px' }}>
+      <Box
+        flex='1'
+        p={{ base: '8px', sm: '12px', md: '16px', lg: '20px' }}
+        maxWidth='100%'
+        overflowX='hidden'
+      >
         <PriceSection
           currentPrice={currentPrice || 0}
           priceChange={priceChange || 0}
