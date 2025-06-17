@@ -38,4 +38,20 @@ export default [
       'no-var': 'error',
     },
   },
+  {
+    files: ['**/__tests__/**/*.js', '**/*.test.js', '**/*.spec.js'],
+    languageOptions: {
+      globals: {
+        jest: 'readonly',
+        describe: 'readonly',
+        test: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+      },
+    },
+  },
 ];

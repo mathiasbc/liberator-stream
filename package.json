@@ -7,7 +7,9 @@
     "build": "cd backend && npm install && cd ../frontend && npm install && npm run build",
     "start": "cd backend && npm start",
     "dev": "concurrently \"cd frontend && npm start\" \"cd backend && npm run dev\"",
-    "install-all": "cd frontend && npm install && cd ../backend && npm install"
+    "install-all": "cd frontend && npm install && cd ../backend && npm install",
+    "lint": "cd backend && npm run lint && cd ../frontend && npm run lint",
+    "lint:fix": "cd backend && npm run lint -- --fix && cd ../frontend && npm run lint:fix"
   },
   "keywords": [
     "bitcoin",

@@ -1,19 +1,22 @@
 # Liberator Stream: Bitcoin Live Dashboard
 
-This project is a real-time Bitcoin dashboard that streams live data to a web interface. It is designed to be a comprehensive source of information for Bitcoin, providing live price updates, historical chart data, and key blockchain metrics. The dashboard is built with a modern tech stack and can be deployed as a unified application on a single platform.
+This project is a real-time Bitcoin dashboard that streams live data to a web interface with intelligent **multi-source API architecture**. It provides comprehensive Bitcoin information with live price updates, historical chart data, and key blockchain metrics. The dashboard features automatic API rotation, fallback mechanisms, and memory-efficient operation for 24/7 deployment.
 
 ## Project Overview
 
 The application provides a live dashboard with the following features:
 
-- **Real-time Price Updates**: Live Bitcoin price updates streamed directly to the dashboard.
-- **Historical OHLC Data**: Interactive charts displaying Open, High, Low, and Close (OHLC) data across multiple timeframes (5M, 1H, 4H, 1D, 1W).
-- **Key Blockchain Metrics**: Displays critical blockchain information, including the current block height, market dominance, and total supply.
-- **Dynamic Timeframe Rotation**: The backend automatically rotates through different timeframes, providing a comprehensive view of the market without any user interaction.
+- **Real-time Price Updates**: Live Bitcoin price updates streamed directly to the dashboard with automatic API source rotation
+- **Historical OHLC Data**: Interactive charts displaying Open, High, Low, and Close (OHLC) data across multiple timeframes (5M, 1H, 4H, 1D, 1W)
+- **Key Blockchain Metrics**: Displays critical blockchain information, including current block height, market dominance, and total supply
+- **Dynamic Timeframe Rotation**: The backend automatically rotates through different timeframes, providing a comprehensive view of the market
+- **Multi-Source API Management**: Intelligent rotation between multiple data sources (CoinGecko, CoinCap, Binance, Blockstream) with automatic failover
+- **Memory-Efficient Operation**: Built for long-running deployment with automatic memory cleanup and overflow protection
+- **Comprehensive Monitoring**: Real-time system health monitoring with detailed API adapter status
 
 ## Architecture
 
-The project uses a **unified architecture** where a single Node.js backend serves both the API endpoints and the React frontend as static files. This design enables simple single-platform deployment while maintaining clean separation of concerns during development.
+The project uses a **unified architecture** where a single Node.js backend serves both API endpoints and the React frontend as static files, while intelligently managing multiple data sources for maximum reliability.
 
 ### Frontend
 
@@ -25,36 +28,53 @@ The frontend is a single-page application built with **React**. It uses:
 
 ### Backend
 
-The backend is a **Koa.js** application that serves three primary purposes:
+The backend is a **Koa.js** application with intelligent API management that serves four primary purposes:
 
-1.  **Data Aggregation**: It periodically fetches data from external APIs:
-    - **CoinGecko**: For market data and OHLC information.
-    - **Blockchain.info**: For blockchain-specific metrics.
-2.  **Real-time Streaming**: It uses a WebSocket server to push the aggregated data to all connected clients. A scheduler (`node-cron`) manages the data fetching and timeframe rotation.
-3.  **Static File Serving**: It serves the built React application as static files, handling routing and fallback to `index.html` for client-side routing.
+1.  **Multi-Source Data Aggregation**: Uses multiple API adapters with automatic rotation and failover:
+    - **CoinGecko**: Primary source for market data, OHLC information, and global metrics
+    - **CoinCap**: Alternative market data source with fast response times
+    - **Binance**: High-frequency OHLC data source
+    - **Blockstream**: Dedicated blockchain metrics (block height, network data)
+2.  **Smart Caching Layer**: Centralized cache service that validates and stores data from multiple sources
+3.  **Real-time Streaming**: WebSocket server pushes aggregated data to all connected clients with efficient memory management
+4.  **Static File Serving**: Serves the built React application as static files with proper routing
 
 ### API Routes
 
-The backend exposes the following endpoints:
-- `/api/health` - Health check endpoint
-- `/api/*` - Additional API routes (prefixed with `/api/`)
+The backend exposes comprehensive monitoring and data endpoints:
+- `/api/health` - System health check with architecture info
+- `/api/stats` - Comprehensive scheduler and cache statistics  
+- `/api/memory` - Real-time memory usage and system metrics
+- `/api/adapters` - API adapter health status and performance metrics
+- `/api/cache` - Current cached data for debugging
+- `/api/admin/cleanup` - Manual memory cleanup trigger
 - `/` - Serves the React application (catch-all for client-side routing)
+
+### Multi-Source API Architecture
+
+The system features intelligent API management:
+
+- **Adaptive Rotation**: Automatically cycles between API sources to prevent rate limiting
+- **Fallback Mechanisms**: Seamlessly switches to alternative sources when primary APIs fail
+- **Memory Management**: Automatic cleanup with overflow protection for 24/7 operation
+- **Health Monitoring**: Real-time tracking of adapter performance and automatic recovery
+- **Centralized Configuration**: Single source of truth for timeframes and API settings
 
 ## Tech Stack
 
-| Area          | Technology                               |
-| ------------- | ---------------------------------------- |
-| **Frontend**  | React, Chakra UI, Lightweight Charts     |
-| **Backend**   | Koa.js, WebSockets (`ws`), Axios, koa-static |
-| **DevOps**    | Docker, Docker Compose                   |
-| **Deployment**| Render (unified deployment)             |
-| **Linting**   | ESLint, Prettier                         |
+| Area            | Technology                               |
+| --------------- | ---------------------------------------- |
+| **Frontend**    | React, Chakra UI, Lightweight Charts     |
+| **Backend**     | Koa.js, WebSockets (`ws`), Axios, koa-static |
+| **API Sources** | CoinGecko, CoinCap, Binance, Blockstream |
+| **DevOps**      | Docker, Docker Compose                   |
+| **Deployment**  | Render (unified deployment)             |
+| **Testing**     | Jest, React Testing Library              |
+| **Linting**     | ESLint, Prettier                         |
 
 ## Quick Start
 
-### Option 1: Unified Deployment (Production-Ready)
-
-This method builds the frontend and runs everything from the backend server:
+### Production Deployment
 
 1.  **Clone the repository:**
     ```bash
@@ -66,14 +86,28 @@ This method builds the frontend and runs everything from the backend server:
     ```bash
     npm install
     npm run build
+    ```
+
+3.  **Start the application:**
+    ```bash
     npm start
     ```
 
-3.  **Access the application:**
+4.  **Access the application and monitoring:**
     - **Application**: [http://localhost:3001](http://localhost:3001)
-    - **Health Check**: [http://localhost:3001/api/health](http://localhost:3001/api/health)
+    - **System Stats**: [http://localhost:3001/api/stats](http://localhost:3001/api/stats)
+    - **API Health**: [http://localhost:3001/api/adapters](http://localhost:3001/api/adapters)
+    - **Memory Usage**: [http://localhost:3001/api/memory](http://localhost:3001/api/memory)
 
-### Option 2: Development with Docker Compose
+### Development Mode
+
+For development with hot-reload:
+
+```bash
+npm run dev
+```
+
+### Development with Docker Compose
 
 For development with hot-reload and separate services:
 
@@ -135,45 +169,154 @@ If you want to use Vercel's excellent free frontend hosting:
 
 The unified architecture means you only need to deploy one service that handles everything.
 
+## Development and Testing
+
+### Development Commands
+
+```bash
+# Development with hot reload
+npm run dev
+
+# Production mode
+npm start
+```
+
+### Testing
+
+**Backend Tests:**
+```bash
+cd backend
+
+# Run all tests
+npm test
+
+# Run integration tests only
+npm run test:integration
+
+# Watch mode for development
+npm run test:watch
+```
+
+**Frontend Tests:**
+```bash
+cd frontend
+
+# Run all tests
+npm test
+
+# Run integration tests only
+npm run test:integration
+```
+
+**Full System Integration Tests:**
+```bash
+# Run comprehensive test suite
+node test-integration.js
+
+# This tests:
+# - API rotation and fallback mechanisms
+# - Memory management and cleanup
+# - WebSocket real-time data streaming
+# - OHLC chart rendering and timeframe rotation
+# - System monitoring endpoints
+```
+
+### Monitoring and Debugging
+
+The application provides comprehensive monitoring:
+
+**System Health:**
+- `/api/health` - Basic system status
+- `/api/stats` - Detailed scheduler and cache statistics
+- `/api/memory` - Memory usage and system metrics
+
+**API Management:**
+- `/api/adapters` - Health status of all API adapters
+- `/api/cache` - Current cached data for debugging
+
+**Administration:**
+- `/api/admin/cleanup` - Manual memory cleanup trigger
+
+
 ## Project Structure
 
 ```
 liberator-stream/
 ├── backend/
 │   ├── src/
-│   │   ├── services/       # External API integrations (CoinGecko, Blockchain.info)
-│   │   ├── utils/          # Scheduler for data fetching
+│   │   ├── adapters/       # API adapters (CoinGecko, CoinCap, Binance, Blockstream)
+│   │   │   ├── base-adapter.js     # Abstract base class for all adapters
+│   │   │   ├── coingecko-adapter.js # CoinGecko API implementation
+│   │   │   ├── coincap-adapter.js   # CoinCap API implementation  
+│   │   │   ├── binance-adapter.js   # Binance API implementation
+│   │   │   └── blockstream-adapter.js # Blockstream API implementation
+│   │   ├── cache/          # Centralized caching system
+│   │   │   ├── cache-service.js     # Cache management with memory optimization
+│   │   │   └── schema.js            # Cache schema and validation
+│   │   ├── config/         # Configuration management
+│   │   │   └── timeframes.js        # Centralized timeframe configuration
+│   │   ├── services/       # Business logic services
+│   │   │   ├── api-manager.js       # API rotation and health management
+│   │   │   └── scheduler.js         # Scheduler with memory management
 │   │   ├── websocket/      # WebSocket server implementation
-│   │   └── app.js          # Main Koa application (serves API + static files)
+│   │   │   └── server.js
+│   │   ├── __tests__/      # Test suites
+│   │   │   └── integration/ # Integration tests
+│   │   └── app.js          # Main Koa application
 │   ├── .env.example
 │   ├── Dockerfile
 │   └── package.json
 ├── frontend/
 │   ├── src/
 │   │   ├── components/     # React components
+│   │   │   ├── Dashboard.js # Main dashboard component
+│   │   │   ├── Chart.js     # OHLC chart component
+│   │   │   ├── Header.js    # Header with metrics
+│   │   │   └── PriceSection.js # Price display component
+│   │   ├── theme/          # Chakra UI theme
+│   │   ├── __tests__/      # Test suites
+│   │   │   └── integration/ # Frontend integration tests
 │   │   └── App.js          # Main application component
 │   ├── build/              # Production build output (created by npm run build)
 │   ├── Dockerfile
 │   └── package.json
+├── test-integration.js     # Comprehensive integration test runner
 ├── package.json            # Root package.json for unified builds
 ├── docker-compose.yml      # Docker Compose configuration (development)
+├── CLAUDE.md              # Claude Code development guidance
 └── README.md
 ```
 
 ## How It Works
 
-The backend is the core of the application. On startup, it:
+### Multi-Source Architecture
 
-1. **Serves the React Application**: The built frontend files are served as static content from the `/frontend/build` directory.
-2. **Provides API Endpoints**: All API routes are prefixed with `/api/` to avoid conflicts with frontend routing.
-3. **Establishes WebSocket Connection**: Clients connect via WebSocket for real-time data streaming.
-4. **Fetches Initial Data**: Loads market and blockchain data on startup.
-5. **Starts Scheduled Updates**: Every 60 seconds, it rotates timeframes and fetches fresh data.
+The backend provides intelligent API management and memory optimization:
 
-In each update cycle, the backend:
-1.  Rotates to a new timeframe (e.g., from `5M` to `1H`).
-2.  Fetches the latest market, OHLC, and blockchain data for that timeframe.
-3.  Caches the data.
-4.  Broadcasts the complete data object to all connected frontend clients via WebSockets.
+**Startup Process:**
+1. **Initializes API Adapters**: Sets up multiple API sources with health monitoring
+2. **Starts Cache Service**: Initializes centralized cache with memory management
+3. **Serves React Application**: Static files served from `/frontend/build` directory
+4. **Establishes WebSocket Connection**: Real-time data streaming to clients
+5. **Fetches Initial Data**: Loads data from multiple sources with fallback
+6. **Starts Scheduler**: Multiple update intervals for different data types
+
+**Update Cycles with Intelligent Management:**
+- **Market Data (30s)**: Rotates between CoinGecko → CoinCap → Binance
+- **OHLC Data (60s)**: Rotates timeframes (5M → 1H → 4H → 1D → 1W) with source rotation
+- **Blockchain Data (2min)**: Fetches from Blockstream with fallback
+- **Global Data (5min)**: Market dominance and supply data from CoinGecko
+
+**Memory Management:**
+- Automatic counter overflow protection
+- Periodic cleanup of historical data
+- Bounded arrays with circular buffer behavior
+- Real-time memory monitoring and reporting
+
+**Fallback Mechanisms:**
+- Automatic source switching on API failures
+- Health monitoring with recovery detection
+- Intelligent retry with exponential backoff
+- Rate limiting to prevent API exhaustion
 
 The frontend receives these WebSocket messages and updates the UI in real-time, providing a seamless live experience. The dynamic WebSocket URL ensures the connection works in both development and production environments.
