@@ -247,21 +247,43 @@ const Chart = ({ sampleData, timeframe }) => {
     candlestickSeries.setData(formattedData);
     chart.timeScale().fitContent();
 
-    // Handle resize
+    // Handle resize with throttling for better performance
+    let resizeTimeout;
     const handleResize = () => {
       if (chartRef.current && chartContainerRef.current) {
-        const newHeight = getChartHeight();
-        chartRef.current.applyOptions({
-          width: chartContainerRef.current.clientWidth,
-          height: newHeight,
-          layout: {
-            fontSize: window.innerWidth < 768 ? 12 : 14,
-          },
-          timeScale: {
-            barSpacing: window.innerWidth < 768 ? 8 : 12,
-            minBarSpacing: window.innerWidth < 768 ? 4 : 6,
-          },
-        });
+        // Clear existing timeout
+        if (resizeTimeout) {
+          clearTimeout(resizeTimeout);
+        }
+
+        // Throttle resize events
+        resizeTimeout = setTimeout(() => {
+          if (chartRef.current && chartContainerRef.current) {
+            const newHeight = getChartHeight();
+            const newWidth = chartContainerRef.current.clientWidth;
+
+            chartRef.current.applyOptions({
+              width: newWidth,
+              height: newHeight,
+              layout: {
+                fontSize: window.innerWidth < 768 ? 12 : 14,
+                textColor: brand.pastelBlue,
+              },
+              timeScale: {
+                barSpacing: window.innerWidth < 768 ? 8 : 12,
+                minBarSpacing: window.innerWidth < 768 ? 4 : 6,
+                borderColor: brand.darkBorder,
+              },
+              rightPriceScale: {
+                borderColor: brand.darkBorder,
+                textColor: brand.pastelBlue,
+              },
+            });
+
+            // Force chart to resize
+            chartRef.current.timeScale().fitContent();
+          }
+        }, 100);
       }
     };
 
@@ -270,6 +292,9 @@ const Chart = ({ sampleData, timeframe }) => {
     // Cleanup function
     return () => {
       window.removeEventListener('resize', handleResize);
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
       if (chartRef.current) {
         chartRef.current.remove();
         chartRef.current = null;
@@ -425,6 +450,8 @@ const Chart = ({ sampleData, timeframe }) => {
           h={{ base: '350px', md: '450px', lg: '520px' }}
           borderRadius={{ base: '8px', md: '12px' }}
           overflow='hidden'
+          position='relative'
+          maxWidth='100%'
         />
 
         {/* Chart Footer */}

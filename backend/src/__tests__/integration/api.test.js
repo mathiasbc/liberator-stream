@@ -109,14 +109,14 @@ describe('API Component Unit Tests', () => {
           symbol: 'BTCUSDT',
           priceChangePercent: '2.3',
           volume: '13837.39654',
-        }
+        },
       };
 
       const priceResponse = {
         data: {
           symbol: 'BTCUSDT',
-          price: '45000'
-        }
+          price: '45000',
+        },
       };
 
       mockedAxios.get
@@ -134,9 +134,25 @@ describe('API Component Unit Tests', () => {
     test('should fetch OHLC data successfully', async () => {
       const mockResponse = {
         data: [
-          [1640995200000, '47000', '47200', '46800', '47100', '1000000', 1640995259999],
-          [1640995260000, '47100', '47300', '46900', '47200', '1100000', 1640995319999],
-        ]
+          [
+            1640995200000,
+            '47000',
+            '47200',
+            '46800',
+            '47100',
+            '1000000',
+            1640995259999,
+          ],
+          [
+            1640995260000,
+            '47100',
+            '47300',
+            '46900',
+            '47200',
+            '1100000',
+            1640995319999,
+          ],
+        ],
       };
 
       mockedAxios.get.mockResolvedValueOnce(mockResponse);
@@ -276,7 +292,9 @@ describe('API Component Unit Tests', () => {
 
       const finalStats = cacheService.getStats();
       expect(finalStats.memoryInfo.historySize).toBeLessThanOrEqual(100);
-      expect(finalStats.memoryInfo.updateCounter).toBeLessThan(Number.MAX_SAFE_INTEGER);
+      expect(finalStats.memoryInfo.updateCounter).toBeLessThan(
+        Number.MAX_SAFE_INTEGER
+      );
     });
 
     test('should handle counter overflow protection', () => {
