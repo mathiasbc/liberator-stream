@@ -2,6 +2,7 @@ const CoinGeckoAdapter = require('../adapters/coingecko-adapter');
 const BlockstreamAdapter = require('../adapters/blockstream-adapter');
 const CoinCapAdapter = require('../adapters/coincap-adapter');
 const BinanceAdapter = require('../adapters/binance-adapter');
+const CoinPaprikaAdapter = require('../adapters/coinpaprika-adapter');
 
 const MAX_SAFE_COUNTER = Number.MAX_SAFE_INTEGER - 10000;
 const COUNTER_RESET_THRESHOLD = 1_000_000;
@@ -12,17 +13,22 @@ class APIManager {
   constructor() {
     this.adapters = {
       coingecko: new CoinGeckoAdapter(),
+      coinpaprika: new CoinPaprikaAdapter(),
       blockstream: new BlockstreamAdapter(),
       coincap: new CoinCapAdapter(),
       binance: new BinanceAdapter(),
     };
 
+    // CoinPaprika sits ahead of CoinGecko for supply/global on cloud
+    // deploys (Render, etc.) where CoinGecko's free tier 429s aggressively.
+    // CoinGecko stays in the chain so it can take over when available
+    // (e.g. with COINGECKO_API_KEY set).
     this.adapterPriorities = {
-      market: ['binance', 'coingecko', 'coincap'],
+      market: ['binance', 'coingecko', 'coinpaprika', 'coincap'],
       ohlc: ['binance', 'coingecko'],
       blockchain: ['blockstream'],
-      supply: ['coingecko', 'coincap'],
-      global: ['coingecko'],
+      supply: ['coingecko', 'coinpaprika', 'coincap'],
+      global: ['coingecko', 'coinpaprika'],
     };
 
     this.adapterHealth = {};

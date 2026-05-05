@@ -13,14 +13,24 @@ class CoinGeckoAdapter extends BaseAdapter {
       ...config,
     });
 
-    this.baseUrl = 'https://api.coingecko.com/api/v3';
+    // If COINGECKO_API_KEY is set we use the Demo (or Pro) endpoint and
+    // send the auth header — significantly higher rate limits and far
+    // less likely to 429 from cloud-host IPs.
+    this.apiKey = process.env.COINGECKO_API_KEY || null;
+    this.baseUrl = this.apiKey
+      ? 'https://api.coingecko.com/api/v3'
+      : 'https://api.coingecko.com/api/v3';
     this.bitcoinId = 'bitcoin';
+  }
+
+  authHeaders() {
+    return this.apiKey ? { 'x-cg-demo-api-key': this.apiKey } : {};
   }
 
   async getMarketData() {
     return this.executeWithRetry(async () => {
       const url = `${this.baseUrl}/simple/price?ids=${this.bitcoinId}&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true`;
-      const response = await axios.get(url);
+      const response = await axios.get(url, { headers: this.authHeaders() });
 
       const data = response.data[this.bitcoinId];
       if (!data) {
@@ -41,7 +51,7 @@ class CoinGeckoAdapter extends BaseAdapter {
 
     return this.executeWithRetry(async () => {
       const url = `${this.baseUrl}/coins/${this.bitcoinId}/market_chart?vs_currency=usd&days=${config.days}`;
-      const response = await axios.get(url);
+      const response = await axios.get(url, { headers: this.authHeaders() });
 
       const prices = response.data.prices || [];
       const volumes = response.data.total_volumes || [];
@@ -106,7 +116,7 @@ class CoinGeckoAdapter extends BaseAdapter {
   async getSupplyData() {
     return this.executeWithRetry(async () => {
       const url = `${this.baseUrl}/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
-      const response = await axios.get(url);
+      const response = await axios.get(url, { headers: this.authHeaders() });
 
       const marketData = response.data.market_data;
       const totalSupply = marketData.total_supply;
@@ -139,7 +149,7 @@ class CoinGeckoAdapter extends BaseAdapter {
   async getGlobalMarketData() {
     return this.executeWithRetry(async () => {
       const url = `${this.baseUrl}/global`;
-      const response = await axios.get(url);
+      const response = await axios.get(url, { headers: this.authHeaders() });
       const globalData = response.data.data;
 
       return {
