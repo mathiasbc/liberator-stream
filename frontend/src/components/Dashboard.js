@@ -90,7 +90,7 @@ const Dashboard = () => {
       overflowX='hidden'
       display='flex'
       flexDirection='column'
-      bg='brand.bg'
+      bg='transparent'
     >
       <Box
         flex='1'

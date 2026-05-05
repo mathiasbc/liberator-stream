@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Flex, Grid, Image, Link, Text } from '@chakra-ui/react';
+import { Box, Flex, Grid, Image, Link, Text, useTheme } from '@chakra-ui/react';
 
 const formatPrice = (price) =>
   new Intl.NumberFormat('en-US', {
@@ -73,9 +73,12 @@ const PriceSection = ({
   dayLow,
   dayClose,
 }) => {
+  const { colors } = useTheme();
   const change = priceChange || 0;
   const positive = change >= 0;
   const fmtCandle = (v) => (v == null || v === 0 ? 'N/A' : formatPrice(v));
+  const heroColor = colors?.brand?.priceHero || '#FFD60A';
+  const heroGlow = colors?.brand?.priceHeroGlow || 'rgba(255, 214, 10, 0.45)';
 
   return (
     <Box
@@ -134,8 +137,8 @@ const PriceSection = ({
               '2xl': '92px',
             }}
             fontWeight='700'
-            color='#FFFF00'
-            textShadow='0 4px 24px rgba(255, 255, 0, 0.4)'
+            color={heroColor}
+            textShadow={`0 4px 24px ${heroGlow}`}
             letterSpacing='-0.03em'
             m={0}
             lineHeight='0.95'

@@ -1,19 +1,24 @@
 import { extendTheme } from '@chakra-ui/react';
 
 const colors = {
-  pastelPink: '#FF8AC7',
-  pastelPeach: '#FFAA66',
-  pastelMint: '#7FDFB8',
-  pastelYellow: '#FFD54F',
-  pastelLavender: '#C785FF',
-  pastelGreen: '#89CDF1',
-  pastelCoral: '#FF7A85',
-  pastelBlue: '#5DD5FF',
-  bitcoinOrange: '#F7931A',
-  darkBg: '#0D0D0D',
-  darkCard: '#1A1A1A',
-  darkBorder: '#2A2A2A',
+  pastelPink: '#FF4FA0',
+  pastelPeach: '#FF8A3D',
+  pastelMint: '#00E676',
+  pastelYellow: '#FFD60A',
+  pastelLavender: '#B362FF',
+  pastelGreen: '#54E0FF',
+  pastelCoral: '#FF2E63',
+  pastelBlue: '#00E5FF',
+  bitcoinOrange: '#FF9A1F',
+  darkBg: '#070C1C',
+  darkCard: '#101935',
+  darkBorder: '#1E2B55',
+  priceHero: '#FFD60A',
+  priceHeroGlow: 'rgba(255, 214, 10, 0.45)',
 };
+
+const bodyGradient =
+  'linear-gradient(135deg, #070C1C 0%, #0E1530 55%, #131C3E 100%)';
 
 const theme = extendTheme({
   colors: {
@@ -43,7 +48,7 @@ const theme = extendTheme({
         minHeight: '100vh',
         margin: 0,
         padding: 0,
-        background: `linear-gradient(135deg, ${colors.darkBg} 0%, #111111 100%)`,
+        background: bodyGradient,
         color: 'white',
         fontFamily: '"Segoe UI", system-ui, sans-serif',
         overflowX: 'hidden',

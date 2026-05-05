@@ -141,8 +141,8 @@ const Chart = ({ sampleData, timeframe, secondsSinceUpdate = 0 }) => {
         textColor: axisColor,
         background: {
           type: 'gradient',
-          topColor: '#0F0F0F',
-          bottomColor: '#1A1A1A',
+          topColor: brand.darkBg,
+          bottomColor: brand.darkCard,
         },
         fontSize: getFontSize(width),
         fontFamily: '"Segoe UI", system-ui, sans-serif',
@@ -264,7 +264,7 @@ const Chart = ({ sampleData, timeframe, secondsSinceUpdate = 0 }) => {
       <Box
         p={{ base: '12px', md: '14px', lg: '16px', xl: '20px' }}
         borderRadius={{ base: '12px', md: '14px' }}
-        bgGradient='linear(135deg, brand.darkCard, #1F1F1F)'
+        bgGradient='linear(135deg, brand.darkCard, brand.darkBorder)'
         boxShadow='0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 brand.darkBorder'
         border='1px solid'
         borderColor='brand.darkBorder'
