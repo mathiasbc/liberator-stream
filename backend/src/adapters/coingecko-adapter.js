@@ -55,57 +55,49 @@ class CoinGeckoAdapter extends BaseAdapter {
         }))
         .sort((a, b) => a.timestamp - b.timestamp);
 
-      // Group into time intervals using centralized bucketing
-      const groupedData = {};
-
-      sortedPrices.forEach((item) => {
+      // Bucket raw price points into timeframe buckets
+      const groupedData = new Map();
+      for (const item of sortedPrices) {
         const groupKey = getTimeframeBucket(item.timestamp, timeframe);
-
-        if (!groupedData[groupKey]) {
-          groupedData[groupKey] = {
-            time: groupKey,
-            prices: [],
-            volumes: [],
-          };
+        let bucket = groupedData.get(groupKey);
+        if (!bucket) {
+          bucket = { time: groupKey, prices: [], volumes: [] };
+          groupedData.set(groupKey, bucket);
         }
+        bucket.prices.push(item.price);
+        bucket.volumes.push(item.volume);
+      }
 
-        groupedData[groupKey].prices.push(item.price);
-        groupedData[groupKey].volumes.push(item.volume);
-      });
-
-      // Convert grouped data to proper OHLC format
-      const sortedGroups = Object.values(groupedData).sort(
+      const sortedGroups = Array.from(groupedData.values()).sort(
         (a, b) => a.time - b.time
       );
       const rawData = [];
       let previousClose = null;
 
-      sortedGroups.forEach((group) => {
-        const prices = group.prices;
-        const volumes = group.volumes;
+      for (const group of sortedGroups) {
+        const { prices, volumes } = group;
+        if (prices.length === 0) continue;
 
-        if (prices.length === 0) return;
-
-        const open = previousClose !== null ? previousClose : prices[0];
+        // Use previous close to chain candles when bucket has only one sample,
+        // otherwise use the bucket's own first sample as open.
+        const open =
+          prices.length > 1 || previousClose === null
+            ? prices[0]
+            : previousClose;
         const close = prices[prices.length - 1];
-        const high = Math.max(...prices);
-        const low = Math.min(...prices);
+        const high = Math.max(open, close, ...prices);
+        const low = Math.min(open, close, ...prices);
 
-        const finalHigh = Math.max(high, open, close);
-        const finalLow = Math.min(low, open, close);
-
-        const candle = {
+        rawData.push({
           time: group.time,
-          open: open,
-          high: finalHigh,
-          low: finalLow,
-          close: close,
+          open,
+          high,
+          low,
+          close,
           volume: volumes.reduce((sum, vol) => sum + vol, 0),
-        };
-
-        rawData.push(candle);
+        });
         previousClose = close;
-      });
+      }
 
       return this.cleanAndSortData(rawData, config.maxCandles);
     });

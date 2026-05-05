@@ -5,6 +5,10 @@ const CACHE_SCHEMA = {
   priceChange: null,
   volume: null,
   marketCap: null,
+  dayOpen: null,
+  dayHigh: null,
+  dayLow: null,
+  dayClose: null,
 
   // Blockchain data
   blockHeight: null,
@@ -60,7 +64,16 @@ const CACHE_SCHEMA = {
 
 // Field mappings for different data types
 const FIELD_MAPPINGS = {
-  MARKET_DATA: ['currentPrice', 'priceChange', 'volume', 'marketCap'],
+  MARKET_DATA: [
+    'currentPrice',
+    'priceChange',
+    'volume',
+    'marketCap',
+    'dayOpen',
+    'dayHigh',
+    'dayLow',
+    'dayClose',
+  ],
   BLOCKCHAIN_DATA: ['blockHeight'],
   SUPPLY_DATA: ['totalSupply', 'extendedSupplyData'],
   GLOBAL_DATA: ['marketDominance', 'globalMarketData'],

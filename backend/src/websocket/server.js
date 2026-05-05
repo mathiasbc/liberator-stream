@@ -1,74 +1,51 @@
 const WebSocket = require('ws');
 
-const BROADCAST_INTERVAL_MS = 60000; // 60s
-
 class WebSocketServer {
   constructor() {
     this.wss = null;
     this.clients = new Set();
     this.cachedData = null;
-    this.broadcastInterval = null;
   }
 
   init(server) {
     this.wss = new WebSocket.Server({ server });
     this.wss.on('connection', (ws) => {
       this.clients.add(ws);
-      console.log(`Client connected. Total clients: ${this.clients.size}`);
-      // Send latest data immediately on connect
+      console.log(`[WS] client connected (${this.clients.size} total)`);
+
       if (this.cachedData) {
         try {
-          const message = JSON.stringify(this.cachedData);
-          ws.send(message);
-          console.log(
-            'Sent initial data to new client:',
-            Object.keys(this.cachedData)
-          );
+          ws.send(JSON.stringify(this.cachedData));
         } catch (error) {
-          console.error('Error sending initial data to client:', error);
+          console.error('[WS] error sending initial data:', error.message);
         }
-      } else {
-        console.warn('No cached data available for new client');
       }
+
       ws.on('close', () => {
         this.clients.delete(ws);
-        console.log(`Client disconnected. Total clients: ${this.clients.size}`);
+        console.log(`[WS] client disconnected (${this.clients.size} total)`);
+      });
+
+      ws.on('error', (err) => {
+        console.error('[WS] client error:', err.message);
       });
     });
-    this.broadcastInterval = setInterval(() => {
-      if (this.cachedData) {
-        console.log('Broadcasting data on interval');
-        this.broadcast(this.cachedData);
-      } else {
-        console.warn('No cached data available for broadcast');
-      }
-    }, BROADCAST_INTERVAL_MS);
-    console.log('WebSocket server initialized');
+    console.log('[WS] server initialized');
   }
 
   updateData(data) {
-    const oldData = this.cachedData;
     this.cachedData = data;
-
-    // Check if data has actually changed
-    if (JSON.stringify(oldData) !== JSON.stringify(data)) {
-      console.log('Data updated, broadcasting to all clients');
-      this.broadcast(data); // Broadcast immediately when data changes
-    }
+    this.broadcast(data);
   }
 
   broadcast(data) {
+    if (this.clients.size === 0) return;
     const message = JSON.stringify(data);
-    let successCount = 0;
     for (const ws of this.clients) {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(message);
-        successCount++;
       }
     }
-    console.log(
-      `Broadcast complete. Sent to ${successCount}/${this.clients.size} clients`
-    );
   }
 }
 

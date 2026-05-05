@@ -39,7 +39,20 @@ This is a real-time Bitcoin dashboard application with a **multi-source API arch
 
 ## Development Commands
 
-### Production and Development
+### Using Make (Recommended)
+
+```bash
+make install     # Install all dependencies
+make dev         # Development with hot reload
+make build       # Build frontend for production
+make start       # Start in production mode
+make test        # Run all tests
+make lint        # Run linters
+make format      # Format code with prettier
+make docker-up   # Start with docker-compose
+```
+
+### Manual Commands
 
 ```bash
 # Production deployment
@@ -58,14 +71,14 @@ curl http://localhost:3001/api/memory    # Memory usage monitoring
 ### Testing
 
 ```bash
-# Backend integration tests
-cd backend && npm run test:integration
+# Run all tests
+make test
 
-# Frontend integration tests  
-cd frontend && npm run test:integration
+# Backend tests
+cd backend && npm test
 
-# Full system integration test
-node test-integration.js
+# Frontend tests
+cd frontend && npm test
 
 # Watch mode for development
 cd backend && npm run test:watch
@@ -74,17 +87,16 @@ cd backend && npm run test:watch
 ### Docker Development
 
 ```bash
-docker-compose up --build  # Separate frontend/backend containers
+make docker-up   # or: docker-compose up --build
+make docker-down # Stop containers
 ```
 
 ### Linting and Formatting
 
 ```bash
-# Backend
-cd backend && npm run lint && npm run format
-
-# Frontend  
-cd frontend && npm run lint && npm run format
+make lint        # Run linters
+make lint-fix    # Fix lint issues
+make format      # Format code
 ```
 
 ## Important Implementation Details
@@ -126,11 +138,11 @@ cd frontend && npm run lint && npm run format
 
 ### Testing Guidelines
 
-- Write integration tests for all API adapters
+- Write tests for API adapters in `backend/src/__tests__/`
 - Test fallback mechanisms and error scenarios
 - Validate OHLC data structure and relationships
 - Test memory management and cleanup functions
-- Use comprehensive test runner for system validation
+- Frontend tests go in `frontend/src/__tests__/`
 
 ## File Structure Notes
 
@@ -138,6 +150,5 @@ cd frontend && npm run lint && npm run format
 - **API Adapters**: Each data source has dedicated adapter in `backend/src/adapters/`
 - **Cache System**: Centralized cache service handles all data validation and storage
 - **Configuration**: Single source of truth for timeframes in `backend/src/config/timeframes.js`
-- **Testing**: Integration tests in both `backend/src/__tests__/` and `frontend/src/__tests__/`
-- **Environment**: Variables set in `backend/.env` (see `backend/.env.example`)
-- **Build**: Root `package.json` contains unified build scripts for deployment platforms
+- **Testing**: Tests in both `backend/src/__tests__/` and `frontend/src/__tests__/`
+- **Build**: Root `package.json` and `Makefile` contain unified build commands

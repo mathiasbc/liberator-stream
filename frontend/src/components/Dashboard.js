@@ -9,160 +9,79 @@ const WS_URL =
   `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
 const RECONNECT_DELAY = 2000;
 
+const INITIAL_DATA = {
+  currentPrice: null,
+  priceChange: null,
+  volume: null,
+  marketCap: null,
+  blockHeight: null,
+  marketDominance: null,
+  totalSupply: null,
+  extendedSupplyData: null,
+  ohlcData: {},
+  currentTimeframe: '5M',
+};
+
 const Dashboard = () => {
-  const [currentPrice, setCurrentPrice] = useState(null);
-  const [priceChange, setPriceChange] = useState(null);
-  const [volume, setVolume] = useState(null);
-  const [marketCap, setMarketCap] = useState(null);
-  const [blockHeight, setBlockHeight] = useState(null);
-  const [marketDominance, setMarketDominance] = useState(null);
-  const [totalSupply, setTotalSupply] = useState(null);
-  const [extendedSupplyData, setExtendedSupplyData] = useState(null);
-  const [ohlcData, setOhlcData] = useState({});
-  const [timeframe, setTimeframe] = useState('5M'); // This will be controlled by backend
-  // Note: All timestamps in this app use UTC for consistency across YouTube stream viewers
-  const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [data, setData] = useState(INITIAL_DATA);
   const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
 
   const connectWebSocket = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      return;
-    }
+    if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-    console.log('Connecting to WebSocket...');
-    wsRef.current = new window.WebSocket(WS_URL);
+    console.log('[Dashboard] connecting WebSocket', WS_URL);
+    const ws = new window.WebSocket(WS_URL);
+    wsRef.current = ws;
 
-    wsRef.current.onopen = () => {
-      console.log('WebSocket connection established');
-    };
+    ws.onopen = () => console.log('[Dashboard] WebSocket open');
 
-    wsRef.current.onmessage = (event) => {
+    ws.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
-        console.log('Received WebSocket data:', data);
-
-        let hasUpdate = false;
-
-        if (
-          data.currentPrice !== undefined &&
-          data.currentPrice !== currentPrice
-        ) {
-          setCurrentPrice(data.currentPrice);
-          hasUpdate = true;
-        }
-        if (
-          data.priceChange !== undefined &&
-          data.priceChange !== priceChange
-        ) {
-          setPriceChange(data.priceChange);
-          hasUpdate = true;
-        }
-        if (data.volume !== undefined && data.volume !== volume) {
-          setVolume(data.volume);
-          hasUpdate = true;
-        }
-        if (data.marketCap !== undefined && data.marketCap !== marketCap) {
-          setMarketCap(data.marketCap);
-          hasUpdate = true;
-        }
-        if (
-          data.blockHeight !== undefined &&
-          data.blockHeight !== blockHeight
-        ) {
-          setBlockHeight(data.blockHeight);
-          hasUpdate = true;
-        }
-        if (
-          data.marketDominance !== undefined &&
-          data.marketDominance !== marketDominance
-        ) {
-          setMarketDominance(data.marketDominance);
-          hasUpdate = true;
-        }
-        if (
-          data.totalSupply !== undefined &&
-          JSON.stringify(data.totalSupply) !== JSON.stringify(totalSupply)
-        ) {
-          setTotalSupply(data.totalSupply);
-          hasUpdate = true;
-        }
-        if (
-          data.extendedSupplyData !== undefined &&
-          JSON.stringify(data.extendedSupplyData) !==
-            JSON.stringify(extendedSupplyData)
-        ) {
-          setExtendedSupplyData(data.extendedSupplyData);
-          hasUpdate = true;
-        }
-        if (data.ohlcData !== undefined) {
-          setOhlcData(data.ohlcData);
-          hasUpdate = true;
-        }
-
-        // Update timeframe from backend
-        if (
-          data.currentTimeframe !== undefined &&
-          data.currentTimeframe !== timeframe
-        ) {
-          setTimeframe(data.currentTimeframe);
-          hasUpdate = true;
-        }
-
-        if (hasUpdate) {
-          console.log('Dashboard updated with new data');
-          setLastUpdate(new Date());
-          setSecondsSinceUpdate(0);
-        }
+        const incoming = JSON.parse(event.data);
+        setData((prev) => ({ ...prev, ...incoming }));
+        setSecondsSinceUpdate(0);
       } catch (e) {
-        console.error('Error parsing WebSocket data:', e);
+        console.error('[Dashboard] parse error:', e);
       }
     };
 
-    wsRef.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
+    ws.onerror = (error) =>
+      console.error('[Dashboard] WebSocket error:', error);
 
-    wsRef.current.onclose = () => {
-      console.log('WebSocket connection closed. Reconnecting...');
+    ws.onclose = () => {
+      console.log('[Dashboard] WebSocket closed; reconnecting...');
       reconnectTimeoutRef.current = setTimeout(
         connectWebSocket,
         RECONNECT_DELAY
       );
     };
-  }, [
-    currentPrice,
-    priceChange,
-    volume,
-    marketCap,
-    blockHeight,
-    marketDominance,
-    totalSupply,
-    extendedSupplyData,
-    timeframe,
-  ]);
+  }, []);
 
   useEffect(() => {
     connectWebSocket();
-
     return () => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
-      wsRef.current && wsRef.current.close();
+      if (wsRef.current) {
+        // Prevent reconnect on intentional close
+        wsRef.current.onclose = null;
+        wsRef.current.close();
+      }
     };
   }, [connectWebSocket]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setSecondsSinceUpdate((prev) => (prev < 60 ? prev + 1 : prev));
+      setSecondsSinceUpdate((prev) => (prev < 999 ? prev + 1 : prev));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // Get the current timeframe data
-  const currentOhlcData = ohlcData[timeframe] || [];
+  const timeframe = data.currentTimeframe || '5M';
+  const currentOhlcData = data.ohlcData?.[timeframe] || [];
 
   return (
     <Box
@@ -172,28 +91,29 @@ const Dashboard = () => {
       overflowX='hidden'
       display='flex'
       flexDirection='column'
+      bg='brand.bg'
     >
-      <Header
-        blockHeight={blockHeight || 0}
-        lastUpdate={lastUpdate}
-        secondsSinceUpdate={secondsSinceUpdate}
-      />
+      <Header secondsSinceUpdate={secondsSinceUpdate} />
       <Box
         flex='1'
-        p={{ base: '8px', sm: '12px', md: '16px', lg: '20px' }}
+        px={{ base: '12px', sm: '16px', md: '24px', xl: '32px' }}
+        py={{ base: '12px', sm: '16px', md: '20px', xl: '28px' }}
         maxWidth='100%'
         overflowX='hidden'
       >
         <PriceSection
-          currentPrice={currentPrice || 0}
-          priceChange={priceChange || 0}
-          volume={volume || 0}
-          marketCap={marketCap || 0}
-          timeframe={timeframe}
-          marketDominance={marketDominance}
-          totalSupply={totalSupply}
-          extendedSupplyData={extendedSupplyData}
-          blockHeight={blockHeight}
+          currentPrice={data.currentPrice || 0}
+          priceChange={data.priceChange || 0}
+          volume={data.volume || 0}
+          marketCap={data.marketCap || 0}
+          marketDominance={data.marketDominance}
+          totalSupply={data.totalSupply}
+          extendedSupplyData={data.extendedSupplyData}
+          blockHeight={data.blockHeight}
+          dayOpen={data.dayOpen}
+          dayHigh={data.dayHigh}
+          dayLow={data.dayLow}
+          dayClose={data.dayClose}
         />
         <Chart sampleData={currentOhlcData} timeframe={timeframe} />
       </Box>

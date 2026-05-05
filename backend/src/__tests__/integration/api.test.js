@@ -109,6 +109,11 @@ describe('API Component Unit Tests', () => {
           symbol: 'BTCUSDT',
           priceChangePercent: '2.3',
           volume: '13837.39654',
+          quoteVolume: '622680000.5',
+          openPrice: '44000',
+          highPrice: '45500',
+          lowPrice: '43800',
+          lastPrice: '45000',
         },
       };
 
@@ -127,8 +132,12 @@ describe('API Component Unit Tests', () => {
 
       expect(result.currentPrice).toBe(45000);
       expect(result.priceChange).toBe(2.3);
-      expect(result.volume).toBe(13837.39654);
-      expect(result.marketCap).toBe(0); // Binance doesn't provide market cap
+      expect(result.volume).toBe(622680000.5);
+      expect(result.marketCap).toBe(0);
+      expect(result.dayOpen).toBe(44000);
+      expect(result.dayHigh).toBe(45500);
+      expect(result.dayLow).toBe(43800);
+      expect(result.dayClose).toBe(45000);
     });
 
     test('should fetch OHLC data successfully', async () => {

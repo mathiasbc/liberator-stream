@@ -1,6 +1,76 @@
-import React, { useEffect, useRef } from 'react';
-import { Box, Flex, Text, Grid, useTheme, Link, Image } from '@chakra-ui/react';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { Box, Flex, Text, useTheme } from '@chakra-ui/react';
 import { createChart } from 'lightweight-charts';
+
+const priceFormatter = (price) =>
+  `$${Math.round(price).toLocaleString('en-US')}`;
+
+const TIMEFRAMES = ['5M', '1H', '4H', '1D', '1W'];
+
+const TIME_FORMATTERS = {
+  hourMinute: (time) =>
+    new Date(time * 1000).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'UTC',
+    }),
+  monthDayHour: (time) =>
+    new Date(time * 1000).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      hour12: false,
+      timeZone: 'UTC',
+    }),
+  monthDay: (time) =>
+    new Date(time * 1000).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    }),
+  monthDayYear: (time) =>
+    new Date(time * 1000).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: '2-digit',
+      timeZone: 'UTC',
+    }),
+};
+
+const TIME_CONFIG = {
+  '5M': { formatter: TIME_FORMATTERS.hourMinute },
+  '1H': { formatter: TIME_FORMATTERS.hourMinute },
+  '4H': { formatter: TIME_FORMATTERS.monthDayHour },
+  '1D': { formatter: TIME_FORMATTERS.monthDay },
+  '1W': { formatter: TIME_FORMATTERS.monthDayYear },
+};
+
+const getViewportDims = () => {
+  if (typeof window === 'undefined') return { width: 1280, height: 720 };
+  return { width: window.innerWidth, height: window.innerHeight };
+};
+
+const getChartHeight = (width) => {
+  if (width < 768) return 360;
+  if (width < 1024) return 460;
+  if (width < 1600) return 560;
+  if (width < 2400) return 680;
+  return 820;
+};
+
+const getFontSize = (width) => {
+  if (width < 768) return 12;
+  if (width < 1600) return 14;
+  if (width < 2400) return 18;
+  return 22;
+};
+
+const getBarSpacing = (width) => {
+  if (width < 768) return 8;
+  if (width < 1600) return 12;
+  return 16;
+};
 
 const Chart = ({ sampleData, timeframe }) => {
   const chartContainerRef = useRef();
@@ -9,142 +79,26 @@ const Chart = ({ sampleData, timeframe }) => {
   const theme = useTheme();
   const { brand } = theme.colors;
 
-  // Static list of all timeframes
-  const timeframes = ['5M', '1H', '4H', '1D', '1W'];
+  const formattedData = useMemo(
+    () =>
+      (sampleData || []).map((item) => ({
+        time: item.time,
+        open: item.open,
+        high: item.high,
+        low: item.low,
+        close: item.close,
+      })),
+    [sampleData]
+  );
 
-  // Get time interval and formatting based on timeframe
-  // Note: All time displays use UTC for consistency across YouTube stream viewers
-  const getTimeConfig = (timeframe) => {
-    const configs = {
-      '5M': {
-        interval: 300, // 5 minutes in seconds
-        tickFormatter: (time) => {
-          const date = new Date(time * 1000);
-          return date.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-            timeZone: 'UTC',
-          });
-        },
-        timeFormatter: (time) => {
-          const date = new Date(time * 1000);
-          return date.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-            timeZone: 'UTC',
-          });
-        },
-      },
-      '1H': {
-        interval: 3600, // 1 hour in seconds
-        tickFormatter: (time) => {
-          const date = new Date(time * 1000);
-          return date.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-            timeZone: 'UTC',
-          });
-        },
-        timeFormatter: (time) => {
-          const date = new Date(time * 1000);
-          return date.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-            timeZone: 'UTC',
-          });
-        },
-      },
-      '4H': {
-        interval: 14400, // 4 hours in seconds
-        tickFormatter: (time) => {
-          const date = new Date(time * 1000);
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            hour12: false,
-            timeZone: 'UTC',
-          });
-        },
-        timeFormatter: (time) => {
-          const date = new Date(time * 1000);
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            hour12: false,
-            timeZone: 'UTC',
-          });
-        },
-      },
-      '1D': {
-        interval: 86400, // 1 day in seconds
-        tickFormatter: (time) => {
-          const date = new Date(time * 1000);
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            timeZone: 'UTC',
-          });
-        },
-        timeFormatter: (time) => {
-          const date = new Date(time * 1000);
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            timeZone: 'UTC',
-          });
-        },
-      },
-      '1W': {
-        interval: 604800, // 1 week in seconds
-        tickFormatter: (time) => {
-          const date = new Date(time * 1000);
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: '2-digit',
-            timeZone: 'UTC',
-          });
-        },
-        timeFormatter: (time) => {
-          const date = new Date(time * 1000);
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: '2-digit',
-            timeZone: 'UTC',
-          });
-        },
-      },
-    };
-    return configs[timeframe] || configs['1H'];
-  };
-
-  // Get responsive chart height
-  const getChartHeight = () => {
-    if (typeof window !== 'undefined') {
-      const width = window.innerWidth;
-      if (width < 768) return 350; // Mobile - reduced from 400
-      if (width < 1024) return 450; // Tablet - reduced from 500
-      return 520; // Desktop - reduced from 600
-    }
-    return 520;
-  };
-
-  // Initialize and update chart
+  // Initialize chart once
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    const timeConfig = getTimeConfig(timeframe);
-    const chartHeight = getChartHeight();
+    const { width } = getViewportDims();
+    const timeFmt = TIME_CONFIG[timeframe] || TIME_CONFIG['1H'];
 
-    // Chart configuration with dark theme
-    const chartOptions = {
+    const chart = createChart(chartContainerRef.current, {
       layout: {
         textColor: brand.pastelBlue,
         background: {
@@ -152,59 +106,42 @@ const Chart = ({ sampleData, timeframe }) => {
           topColor: '#0F0F0F',
           bottomColor: '#1A1A1A',
         },
-        fontSize: window.innerWidth < 768 ? 12 : 14,
+        fontSize: getFontSize(width),
         fontFamily: '"Segoe UI", system-ui, sans-serif',
       },
-      watermark: {
-        visible: false,
-      },
+      watermark: { visible: false },
       grid: {
-        vertLines: {
-          color: 'rgba(93, 213, 255, 0.1)',
-          style: 0,
-        },
-        horzLines: {
-          color: 'rgba(93, 213, 255, 0.15)',
-          style: 0,
-        },
+        vertLines: { color: 'rgba(93, 213, 255, 0.08)', style: 0 },
+        horzLines: { color: 'rgba(93, 213, 255, 0.12)', style: 0 },
       },
       timeScale: {
         borderColor: brand.darkBorder,
         timeVisible: true,
         secondsVisible: false,
-        barSpacing: window.innerWidth < 768 ? 8 : 12, // Better spacing for mobile
-        minBarSpacing: window.innerWidth < 768 ? 4 : 6,
-        tickMarkFormatter: timeConfig.tickFormatter,
+        barSpacing: getBarSpacing(width),
+        minBarSpacing: 4,
+        tickMarkFormatter: timeFmt.formatter,
       },
       localization: {
-        timeFormatter: timeConfig.timeFormatter,
+        timeFormatter: timeFmt.formatter,
+        priceFormatter,
       },
       rightPriceScale: {
         borderColor: brand.darkBorder,
         textColor: brand.pastelBlue,
-        scaleMargins: {
-          top: 0.1,
-          bottom: 0.1,
-        },
+        scaleMargins: { top: 0.1, bottom: 0.1 },
       },
-      handleScroll: {
-        mouseWheel: true,
-        pressedMouseMove: true,
-      },
+      handleScroll: { mouseWheel: true, pressedMouseMove: true },
       handleScale: {
         axisPressedMouseMove: true,
         mouseWheel: true,
         pinch: true,
       },
       width: chartContainerRef.current.clientWidth,
-      height: chartHeight,
-    };
-
-    // Create chart
-    const chart = createChart(chartContainerRef.current, chartOptions);
+      height: getChartHeight(width),
+    });
     chartRef.current = chart;
 
-    // Add candlestick series with proper styling
     const candlestickSeries = chart.addCandlestickSeries({
       upColor: brand.pastelMint,
       downColor: brand.pastelCoral,
@@ -213,115 +150,75 @@ const Chart = ({ sampleData, timeframe }) => {
       wickUpColor: brand.pastelMint,
       wickDownColor: brand.pastelCoral,
       priceScaleId: 'right',
+      priceFormat: {
+        type: 'custom',
+        formatter: priceFormatter,
+        minMove: 1,
+      },
     });
     seriesRef.current = candlestickSeries;
 
-    // Convert data format for lightweight-charts using proper timestamps
-    const formattedData = sampleData.map((item) => ({
-      time: item.time, // Backend already provides timestamps in seconds
-      open: item.open,
-      high: item.high,
-      low: item.low,
-      close: item.close,
-    }));
-
-    // Add debugging for chart data
-    console.log(
-      `Chart: formatting ${sampleData.length} data points for timeframe ${timeframe}`
-    );
-    if (formattedData.length > 0) {
-      console.log(
-        `Chart: first timestamp = ${formattedData[0].time}, last = ${formattedData[formattedData.length - 1].time}`
-      );
-    }
-
-    // Verify data is sorted
-    for (let i = 1; i < formattedData.length; i++) {
-      if (formattedData[i].time <= formattedData[i - 1].time) {
-        console.error(
-          `Chart: ERROR - found duplicate/out-of-order timestamp at index ${i}: current=${formattedData[i].time}, prev=${formattedData[i - 1].time}`
-        );
-      }
-    }
-
-    candlestickSeries.setData(formattedData);
-    chart.timeScale().fitContent();
-
-    // Handle resize with throttling for better performance
     let resizeTimeout;
     const handleResize = () => {
-      if (chartRef.current && chartContainerRef.current) {
-        // Clear existing timeout
-        if (resizeTimeout) {
-          clearTimeout(resizeTimeout);
-        }
-
-        // Throttle resize events
-        resizeTimeout = setTimeout(() => {
-          if (chartRef.current && chartContainerRef.current) {
-            const newHeight = getChartHeight();
-            const newWidth = chartContainerRef.current.clientWidth;
-
-            chartRef.current.applyOptions({
-              width: newWidth,
-              height: newHeight,
-              layout: {
-                fontSize: window.innerWidth < 768 ? 12 : 14,
-                textColor: brand.pastelBlue,
-              },
-              timeScale: {
-                barSpacing: window.innerWidth < 768 ? 8 : 12,
-                minBarSpacing: window.innerWidth < 768 ? 4 : 6,
-                borderColor: brand.darkBorder,
-              },
-              rightPriceScale: {
-                borderColor: brand.darkBorder,
-                textColor: brand.pastelBlue,
-              },
-            });
-
-            // Force chart to resize
-            chartRef.current.timeScale().fitContent();
-          }
-        }, 100);
-      }
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (!chartRef.current || !chartContainerRef.current) return;
+        const dims = getViewportDims();
+        chartRef.current.applyOptions({
+          width: chartContainerRef.current.clientWidth,
+          height: getChartHeight(dims.width),
+          layout: {
+            fontSize: getFontSize(dims.width),
+            textColor: brand.pastelBlue,
+          },
+          timeScale: { barSpacing: getBarSpacing(dims.width) },
+        });
+        chartRef.current.timeScale().fitContent();
+      }, 100);
     };
 
     window.addEventListener('resize', handleResize);
 
-    // Cleanup function
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (resizeTimeout) {
-        clearTimeout(resizeTimeout);
-      }
+      if (resizeTimeout) clearTimeout(resizeTimeout);
       if (chartRef.current) {
         chartRef.current.remove();
         chartRef.current = null;
         seriesRef.current = null;
       }
     };
-  }, [sampleData, timeframe, brand]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brand]);
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(price);
-  };
+  // Apply timeframe-specific formatter without rebuilding the chart
+  useEffect(() => {
+    if (!chartRef.current) return;
+    const timeFmt = TIME_CONFIG[timeframe] || TIME_CONFIG['1H'];
+    chartRef.current.applyOptions({
+      timeScale: { tickMarkFormatter: timeFmt.formatter },
+      localization: { timeFormatter: timeFmt.formatter },
+    });
+  }, [timeframe]);
+
+  // Push data updates without recreating the chart
+  useEffect(() => {
+    if (!seriesRef.current) return;
+    seriesRef.current.setData(formattedData);
+    chartRef.current?.timeScale().fitContent();
+  }, [formattedData]);
 
   return (
     <Box position='relative'>
       <Box
-        p={{ base: '14px', md: '18px', lg: '20px' }}
+        p={{ base: '14px', md: '18px', lg: '22px', xl: '28px' }}
         borderRadius={{ base: '12px', md: '16px' }}
         bgGradient='linear(135deg, brand.darkCard, #1F1F1F)'
         boxShadow='0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 brand.darkBorder'
         border='1px solid'
         borderColor='brand.darkBorder'
       >
-        {/* Chart Header */}
+        {/* Header */}
         <Flex
           direction={{ base: 'column', sm: 'row' }}
           justifyContent='space-between'
@@ -339,38 +236,45 @@ const Chart = ({ sampleData, timeframe }) => {
           >
             <Text
               as='h3'
-              fontSize={{ base: '24px', sm: '28px', md: '32px', lg: '36px' }}
+              fontSize={{
+                base: '24px',
+                sm: '28px',
+                md: '32px',
+                lg: '38px',
+                xl: '46px',
+              }}
               fontWeight='600'
               color='brand.pastelYellow'
               m={0}
+              letterSpacing='-0.01em'
             >
               BTC/USD
             </Text>
             <Flex
               alignItems='center'
               gap='12px'
-              fontSize={{ base: '16px', md: '18px', lg: '20px' }}
+              fontSize={{ base: '16px', md: '18px', lg: '22px', xl: '26px' }}
             >
               <Text color='brand.pastelBlue'>Timeframe:</Text>
               <Box
                 bg='brand.pastelPink'
                 color='brand.darkBg'
-                px={{ base: '10px', md: '14px' }}
-                py={{ base: '6px', md: '8px' }}
+                px={{ base: '10px', md: '14px', xl: '18px' }}
+                py={{ base: '6px', md: '8px', xl: '10px' }}
                 borderRadius='20px'
-                fontWeight='500'
-                fontSize={{ base: '14px', md: '16px', lg: '18px' }}
+                fontWeight='600'
+                fontSize={{ base: '14px', md: '16px', lg: '20px', xl: '24px' }}
               >
                 {timeframe}
               </Box>
             </Flex>
           </Flex>
 
-          {/* Live Auto-Rotation Indicator */}
+          {/* Auto-rotation indicator */}
           <Flex
             alignItems='center'
             gap='12px'
-            p={{ base: '10px 14px', md: '12px 18px' }}
+            p={{ base: '10px 14px', md: '12px 18px', xl: '14px 22px' }}
             borderRadius='12px'
             bg='rgba(255, 255, 255, 0.05)'
             border='1px solid'
@@ -379,7 +283,6 @@ const Chart = ({ sampleData, timeframe }) => {
             position='relative'
             overflow='hidden'
           >
-            {/* Animated Progress Bar Background */}
             <Box
               position='absolute'
               top='0'
@@ -387,176 +290,75 @@ const Chart = ({ sampleData, timeframe }) => {
               right='0'
               bottom='0'
               bgGradient='linear(90deg, transparent, brand.pastelPink, brand.pastelYellow, brand.pastelMint, transparent)'
-              opacity='0.3'
+              opacity='0.25'
               animation='shimmer 3s ease-in-out infinite'
               sx={{
                 '@keyframes shimmer': {
                   '0%': { transform: 'translateX(-100%)' },
-                  '50%': { transform: 'translateX(100%)' },
                   '100%': { transform: 'translateX(100%)' },
                 },
               }}
             />
-
-            {/* Content */}
             <Box position='relative' zIndex='1'>
               <Flex alignItems='center' gap='8px' wrap='wrap' justify='center'>
-                {timeframes.map((item, index) => (
-                  <React.Fragment key={item}>
-                    <Box
-                      p={{ base: '4px 8px', md: '6px 10px' }}
-                      borderRadius='6px'
-                      bg={
-                        item === timeframe
-                          ? 'brand.pastelPink'
-                          : 'rgba(255, 255, 255, 0.1)'
-                      }
-                      color={
-                        item === timeframe ? 'brand.darkBg' : 'brand.pastelBlue'
-                      }
-                      fontSize={{ base: '12px', md: '14px', lg: '16px' }}
-                      fontWeight={item === timeframe ? '600' : '400'}
-                      transition='all 0.3s ease'
-                      boxShadow={
-                        item === timeframe
-                          ? '0 0 15px rgba(245, 101, 101, 0.4)'
-                          : 'none'
-                      }
-                      transform={
-                        item === timeframe ? 'scale(1.05)' : 'scale(1)'
-                      }
-                    >
-                      {item}
-                    </Box>
-                    {index < timeframes.length - 1 && (
+                {TIMEFRAMES.map((item, index) => {
+                  const active = item === timeframe;
+                  return (
+                    <React.Fragment key={item}>
                       <Box
-                        w='3px'
-                        h='3px'
-                        borderRadius='50%'
-                        bg='brand.darkBorder'
-                      />
-                    )}
-                  </React.Fragment>
-                ))}
+                        p={{ base: '4px 8px', md: '6px 10px', xl: '8px 14px' }}
+                        borderRadius='6px'
+                        bg={
+                          active ? 'brand.pastelPink' : 'rgba(255,255,255,0.1)'
+                        }
+                        color={active ? 'brand.darkBg' : 'brand.pastelBlue'}
+                        fontSize={{
+                          base: '12px',
+                          md: '14px',
+                          lg: '16px',
+                          xl: '20px',
+                        }}
+                        fontWeight={active ? '600' : '400'}
+                        transition='all 0.3s ease'
+                        boxShadow={
+                          active ? '0 0 15px rgba(255,138,199,0.45)' : 'none'
+                        }
+                        transform={active ? 'scale(1.06)' : 'scale(1)'}
+                      >
+                        {item}
+                      </Box>
+                      {index < TIMEFRAMES.length - 1 && (
+                        <Box
+                          w='3px'
+                          h='3px'
+                          borderRadius='50%'
+                          bg='brand.darkBorder'
+                        />
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </Flex>
             </Box>
           </Flex>
         </Flex>
 
-        {/* Chart Container */}
+        {/* Chart container */}
         <Box
           ref={chartContainerRef}
           w='100%'
-          h={{ base: '350px', md: '450px', lg: '520px' }}
+          h={{
+            base: '360px',
+            md: '460px',
+            lg: '560px',
+            xl: '680px',
+            '2xl': '820px',
+          }}
           borderRadius={{ base: '8px', md: '12px' }}
           overflow='hidden'
           position='relative'
           maxWidth='100%'
         />
-
-        {/* Chart Footer */}
-        <Flex
-          mt={{ base: '12px', md: '16px' }}
-          pt={{ base: '10px', md: '12px' }}
-          borderTop='1px solid'
-          borderColor='brand.darkBorder'
-          direction={{ base: 'column', lg: 'row' }}
-          justifyContent='space-between'
-          alignItems={{ base: 'flex-start', lg: 'center' }}
-          fontSize={{ base: '14px', md: '16px' }}
-          gap={{ base: '12px', lg: '0' }}
-        >
-          <Grid
-            templateColumns={{ base: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }}
-            gap={{ base: '12px', sm: '16px', md: '32px' }}
-            flex='1'
-          >
-            <Flex direction='column' gap='4px'>
-              <Text
-                color='brand.pastelBlue'
-                fontSize={{ base: '12px', md: '14px' }}
-              >
-                Open:
-              </Text>
-              <Text
-                fontWeight='500'
-                fontFamily='monospace'
-                color='brand.pastelYellow'
-                fontSize={{ base: '14px', md: '16px' }}
-              >
-                {formatPrice(sampleData[0]?.open || 0)}
-              </Text>
-            </Flex>
-            <Flex direction='column' gap='4px'>
-              <Text
-                color='brand.pastelBlue'
-                fontSize={{ base: '12px', md: '14px' }}
-              >
-                High:
-              </Text>
-              <Text
-                fontWeight='500'
-                fontFamily='monospace'
-                color='brand.pastelGreen'
-                fontSize={{ base: '14px', md: '16px' }}
-              >
-                {formatPrice(Math.max(...sampleData.map((d) => d.high)))}
-              </Text>
-            </Flex>
-            <Flex direction='column' gap='4px'>
-              <Text
-                color='brand.pastelBlue'
-                fontSize={{ base: '12px', md: '14px' }}
-              >
-                Low:
-              </Text>
-              <Text
-                fontWeight='500'
-                fontFamily='monospace'
-                color='brand.pastelCoral'
-                fontSize={{ base: '14px', md: '16px' }}
-              >
-                {formatPrice(Math.min(...sampleData.map((d) => d.low)))}
-              </Text>
-            </Flex>
-            <Flex direction='column' gap='4px'>
-              <Text
-                color='brand.pastelBlue'
-                fontSize={{ base: '12px', md: '14px' }}
-              >
-                Close:
-              </Text>
-              <Text
-                fontWeight='500'
-                fontFamily='monospace'
-                color='brand.pastelYellow'
-                fontSize={{ base: '14px', md: '16px' }}
-              >
-                {formatPrice(sampleData[sampleData.length - 1]?.close || 0)}
-              </Text>
-            </Flex>
-          </Grid>
-
-          <Link
-            href='https://github.com/mathiasbc/liberator-stream'
-            isExternal
-            mt={{ base: '8px', lg: '0' }}
-            alignSelf={{ base: 'center', lg: 'auto' }}
-            _hover={{
-              opacity: 0.8,
-              transform: 'scale(1.05)',
-            }}
-            transition='all 0.2s ease'
-          >
-            <Image
-              src='/assets/the_liberator_horizontal.png'
-              alt='The Liberator'
-              h={{ base: '130px', md: '100px' }}
-              w='auto'
-              objectFit='contain'
-            />
-          </Link>
-        </Flex>
       </Box>
     </Box>
   );

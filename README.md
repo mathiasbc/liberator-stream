@@ -87,7 +87,21 @@ The system features intelligent API management:
 
 ## Quick Start
 
-### Production Deployment
+### Using Make (Recommended)
+
+```bash
+# Install all dependencies
+make install
+
+# Run in development mode (hot reload)
+make dev
+
+# Build and run in production mode
+make build
+make start
+```
+
+### Manual Setup
 
 1.  **Clone the repository:**
     ```bash
@@ -117,26 +131,22 @@ The system features intelligent API management:
 For development with hot-reload:
 
 ```bash
+make dev
+# or
 npm run dev
 ```
 
 ### Development with Docker Compose
 
-For development with hot-reload and separate services:
+```bash
+make docker-up
+# or
+docker-compose up --build
+```
 
-1.  **Set up environment variables:**
-    ```bash
-    cp backend/.env.example backend/.env
-    ```
-
-2.  **Build and run with Docker Compose:**
-    ```bash
-    docker-compose up --build
-    ```
-
-3.  **Access the application:**
-    - **Frontend**: [http://localhost:3000](http://localhost:3000)
-    - **Backend Health Check**: [http://localhost:3001/api/health](http://localhost:3001/api/health)
+Access the application:
+- **Frontend**: [http://localhost:3000](http://localhost:3000)
+- **Backend Health Check**: [http://localhost:3001/api/health](http://localhost:3001/api/health)
 
 ## Development and Testing
 
@@ -144,50 +154,32 @@ For development with hot-reload and separate services:
 
 ```bash
 # Development with hot reload
-npm run dev
+make dev
 
 # Production mode
-npm start
+make start
+
+# Linting
+make lint
+
+# Format code
+make format
 ```
 
 ### Testing
 
-**Backend Tests:**
 ```bash
-cd backend
-
 # Run all tests
-npm test
+make test
 
-# Run integration tests only
-npm run test:integration
+# Backend tests only
+make test-backend
 
-# Watch mode for development
-npm run test:watch
-```
+# Frontend tests only
+make test-frontend
 
-**Frontend Tests:**
-```bash
-cd frontend
-
-# Run all tests
-npm test
-
-# Run integration tests only
-npm run test:integration
-```
-
-**Full System Integration Tests:**
-```bash
-# Run comprehensive test suite
-node test-integration.js
-
-# This tests:
-# - API rotation and fallback mechanisms
-# - Memory management and cleanup
-# - WebSocket real-time data streaming
-# - OHLC chart rendering and timeframe rotation
-# - System monitoring endpoints
+# Watch mode (backend)
+cd backend && npm run test:watch
 ```
 
 ### Monitoring and Debugging
@@ -214,45 +206,27 @@ liberator-stream/
 ├── backend/
 │   ├── src/
 │   │   ├── adapters/       # API adapters (CoinGecko, CoinCap, Binance, Blockstream)
-│   │   │   ├── base-adapter.js     # Abstract base class for all adapters
-│   │   │   ├── coingecko-adapter.js # CoinGecko API implementation
-│   │   │   ├── coincap-adapter.js   # CoinCap API implementation  
-│   │   │   ├── binance-adapter.js   # Binance API implementation
-│   │   │   └── blockstream-adapter.js # Blockstream API implementation
 │   │   ├── cache/          # Centralized caching system
-│   │   │   ├── cache-service.js     # Cache management with memory optimization
-│   │   │   └── schema.js            # Cache schema and validation
 │   │   ├── config/         # Configuration management
-│   │   │   └── timeframes.js        # Centralized timeframe configuration
 │   │   ├── services/       # Business logic services
-│   │   │   ├── api-manager.js       # API rotation and health management
-│   │   │   └── scheduler.js         # Scheduler with memory management
 │   │   ├── websocket/      # WebSocket server implementation
-│   │   │   └── server.js
 │   │   ├── __tests__/      # Test suites
-│   │   │   └── integration/ # Integration tests
 │   │   └── app.js          # Main Koa application
-│   ├── .env.example
 │   ├── Dockerfile
 │   └── package.json
 ├── frontend/
 │   ├── src/
 │   │   ├── components/     # React components
-│   │   │   ├── Dashboard.js # Main dashboard component
-│   │   │   ├── Chart.js     # OHLC chart component
-│   │   │   ├── Header.js    # Header with metrics
-│   │   │   └── PriceSection.js # Price display component
 │   │   ├── theme/          # Chakra UI theme
 │   │   ├── __tests__/      # Test suites
-│   │   │   └── integration/ # Frontend integration tests
 │   │   └── App.js          # Main application component
-│   ├── build/              # Production build output (created by npm run build)
+│   ├── build/              # Production build output (created by make build)
 │   ├── Dockerfile
 │   └── package.json
-├── test-integration.js     # Comprehensive integration test runner
+├── Makefile                # Development commands
 ├── package.json            # Root package.json for unified builds
-├── docker-compose.yml      # Docker Compose configuration (development)
-├── CLAUDE.md              # Claude Code development guidance
+├── docker-compose.yml      # Docker Compose configuration
+├── CLAUDE.md               # Claude Code development guidance
 └── README.md
 ```
 

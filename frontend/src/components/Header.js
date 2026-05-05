@@ -1,17 +1,13 @@
 import React from 'react';
-import { Box, Flex, Text } from '@chakra-ui/react';
+import { Box, Flex, Image, Link, Text } from '@chakra-ui/react';
 
-const Header = ({ blockHeight, lastUpdate, secondsSinceUpdate }) => {
-  // Format time in UTC for consistency across YouTube stream viewers
-  const formatTime = (date) => {
-    return date.toLocaleTimeString('en-US', {
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      timeZone: 'UTC',
-    });
-  };
+const Header = ({ secondsSinceUpdate }) => {
+  const freshnessColor =
+    secondsSinceUpdate <= 30
+      ? 'brand.pastelMint'
+      : secondsSinceUpdate <= 90
+        ? 'brand.pastelYellow'
+        : 'brand.pastelCoral';
 
   return (
     <Flex
@@ -19,85 +15,73 @@ const Header = ({ blockHeight, lastUpdate, secondsSinceUpdate }) => {
       borderBottom='1px solid'
       borderColor='brand.darkBorder'
       bgGradient='linear(135deg, brand.darkCard, #1F1F1F)'
-      p={{ base: '12px', md: '16px' }}
-      direction={{ base: 'column', md: 'row' }}
+      px={{ base: '16px', md: '24px', xl: '32px' }}
+      py={{ base: '12px', md: '14px', xl: '18px' }}
+      direction='row'
       justifyContent='space-between'
-      alignItems={{ base: 'flex-start', md: 'center' }}
-      gap={{ base: '12px', md: '0' }}
-      minH={{ base: 'auto', md: '60px' }}
+      alignItems='center'
+      gap='16px'
     >
-      <Flex alignItems='center' gap={{ base: '12px', md: '16px' }} wrap='wrap'>
-        <Flex alignItems='center' gap='8px'>
-          <Flex
-            w={{ base: '32px', md: '40px' }}
-            h={{ base: '32px', md: '40px' }}
-            borderRadius='50%'
-            bgGradient='linear(135deg, brand.pastelYellow, brand.pastelPeach)'
-            color='brand.darkBg'
-            fontWeight='bold'
-            fontSize={{ base: '14px', md: '16px' }}
-            alignItems='center'
-            justifyContent='center'
-            boxShadow='0 4px 15px rgba(0,0,0,0.3)'
-          >
-            ₿
-          </Flex>
-          <Text
-            as='h1'
-            fontSize={{ base: '18px', sm: '20px', md: '24px' }}
-            fontWeight='300'
-            bgGradient='linear(135deg, brand.pastelPink, brand.pastelLavender)'
-            bgClip='text'
-            m={0}
-            whiteSpace='nowrap'
-          >
-            Bitcoin Dashboard
-          </Text>
-        </Flex>
-        <Box
-          w={{ base: '100%', md: '1px' }}
-          h={{ base: '1px', md: '24px' }}
-          bg='brand.darkBorder'
-          display={{ base: 'block', md: 'block' }}
-        />
-        <Flex alignItems='center' gap='6px'>
+      <Flex alignItems='center' gap={{ base: '16px', md: '24px', xl: '32px' }}>
+        <Link
+          href='https://github.com/mathiasbc/liberator-stream'
+          isExternal
+          _hover={{ opacity: 0.85 }}
+          transition='opacity 0.2s ease'
+          display='flex'
+          alignItems='center'
+        >
+          <Image
+            src='/assets/the_liberator_horizontal.png'
+            alt='The Liberator'
+            h={{ base: '56px', md: '80px', xl: '110px', '2xl': '130px' }}
+            w='auto'
+            objectFit='contain'
+          />
+        </Link>
+
+        <Flex alignItems='center' gap={{ base: '10px', md: '12px' }}>
           <Box
-            w='10px'
-            h='10px'
+            w={{ base: '14px', md: '16px', xl: '18px' }}
+            h={{ base: '14px', md: '16px', xl: '18px' }}
             borderRadius='50%'
-            bg='brand.pastelCoral'
+            bg={freshnessColor}
+            boxShadow={`0 0 16px ${freshnessColor === 'brand.pastelMint' ? 'rgba(127,223,184,0.6)' : freshnessColor === 'brand.pastelYellow' ? 'rgba(255,213,79,0.6)' : 'rgba(255,122,133,0.6)'}`}
             animation='pulse 2s infinite'
           />
           <Text
-            fontSize={{ base: '16px', md: '18px' }}
-            fontWeight='500'
-            color='brand.pastelCoral'
+            fontSize={{ base: '20px', md: '26px', xl: '32px' }}
+            fontWeight='600'
+            color={freshnessColor}
+            letterSpacing='0.02em'
           >
             Live
           </Text>
         </Flex>
       </Flex>
 
-      <Flex alignItems='center' gap='32px'>
-        <Box textAlign={{ base: 'left', md: 'right' }}>
-          <Text
-            fontSize={{ base: '11px', md: '13px', lg: '14px' }}
-            fontWeight='300'
-            color='brand.pastelBlue'
-            m='0 0 2px 0'
-          >
-            Last Update (UTC)
-          </Text>
-          <Text
-            fontSize={{ base: '16px', md: '20px', lg: '22px', xl: '24px' }}
-            fontWeight='500'
-            color='white'
-            m={0}
-          >
-            {formatTime(lastUpdate)}
-          </Text>
-        </Box>
-      </Flex>
+      <Box textAlign='right'>
+        <Text
+          fontSize={{ base: '12px', md: '13px', xl: '15px' }}
+          fontWeight='300'
+          color='brand.pastelBlue'
+          m='0 0 2px 0'
+          letterSpacing='0.04em'
+          textTransform='uppercase'
+        >
+          Refreshed
+        </Text>
+        <Text
+          fontSize={{ base: '20px', md: '26px', xl: '32px' }}
+          fontWeight='500'
+          color={freshnessColor}
+          fontFamily='monospace'
+          m={0}
+          lineHeight='1'
+        >
+          {secondsSinceUpdate}s ago
+        </Text>
+      </Box>
     </Flex>
   );
 };

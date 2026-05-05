@@ -16,7 +16,6 @@ class BinanceAdapter extends BaseAdapter {
 
   async getMarketData() {
     return this.executeWithRetry(async () => {
-      // Get current price and 24hr stats
       const [tickerResponse, priceResponse] = await Promise.all([
         axios.get(`${this.baseUrl}/ticker/24hr?symbol=${this.symbol}`),
         axios.get(`${this.baseUrl}/ticker/price?symbol=${this.symbol}`),
@@ -28,8 +27,12 @@ class BinanceAdapter extends BaseAdapter {
       return {
         currentPrice: parseFloat(price.price) || 0,
         priceChange: parseFloat(ticker.priceChangePercent) || 0,
-        volume: parseFloat(ticker.volume) || 0,
+        volume: parseFloat(ticker.quoteVolume) || 0,
         marketCap: 0, // Binance doesn't provide market cap directly
+        dayOpen: parseFloat(ticker.openPrice) || 0,
+        dayHigh: parseFloat(ticker.highPrice) || 0,
+        dayLow: parseFloat(ticker.lowPrice) || 0,
+        dayClose: parseFloat(ticker.lastPrice) || parseFloat(price.price) || 0,
       };
     });
   }
