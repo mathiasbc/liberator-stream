@@ -10,7 +10,10 @@ class BinanceAdapter extends BaseAdapter {
       ...config,
     });
 
-    this.baseUrl = 'https://api.binance.com/api/v3';
+    // data-api.binance.vision is Binance's official public market-data
+    // mirror. It serves the same /api/v3 endpoints with no auth and no
+    // geo restrictions (api.binance.com returns 451 in some regions).
+    this.baseUrl = 'https://data-api.binance.vision/api/v3';
     this.symbol = 'BTCUSDT';
   }
 

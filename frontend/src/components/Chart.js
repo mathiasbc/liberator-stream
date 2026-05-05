@@ -134,9 +134,11 @@ const Chart = ({ sampleData, timeframe, secondsSinceUpdate = 0 }) => {
     const { width, height } = getViewportDims();
     const timeFmt = TIME_CONFIG[timeframe] || TIME_CONFIG['1H'];
 
+    const axisColor = 'rgba(255, 255, 255, 0.6)';
+
     const chart = createChart(chartContainerRef.current, {
       layout: {
-        textColor: brand.pastelBlue,
+        textColor: axisColor,
         background: {
           type: 'gradient',
           topColor: '#0F0F0F',
@@ -147,8 +149,8 @@ const Chart = ({ sampleData, timeframe, secondsSinceUpdate = 0 }) => {
       },
       watermark: { visible: false },
       grid: {
-        vertLines: { color: 'rgba(93, 213, 255, 0.08)', style: 0 },
-        horzLines: { color: 'rgba(93, 213, 255, 0.12)', style: 0 },
+        vertLines: { color: 'rgba(255, 255, 255, 0.05)', style: 0 },
+        horzLines: { color: 'rgba(255, 255, 255, 0.07)', style: 0 },
       },
       timeScale: {
         borderColor: brand.darkBorder,
@@ -164,7 +166,7 @@ const Chart = ({ sampleData, timeframe, secondsSinceUpdate = 0 }) => {
       },
       rightPriceScale: {
         borderColor: brand.darkBorder,
-        textColor: brand.pastelBlue,
+        textColor: axisColor,
         scaleMargins: { top: 0.1, bottom: 0.1 },
       },
       handleScroll: { mouseWheel: true, pressedMouseMove: true },
@@ -205,7 +207,7 @@ const Chart = ({ sampleData, timeframe, secondsSinceUpdate = 0 }) => {
           height: getChartHeight(dims.width, dims.height),
           layout: {
             fontSize: getFontSize(dims.width),
-            textColor: brand.pastelBlue,
+            textColor: axisColor,
           },
           timeScale: { barSpacing: getBarSpacing(dims.width) },
         });

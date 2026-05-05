@@ -2,6 +2,8 @@ const APIManager = require('./api-manager');
 const CacheService = require('../cache/cache-service');
 const websocketServer = require('../websocket/server');
 const {
+  TIMEFRAMES,
+  TIMEFRAME_REFRESH,
   UPDATE_INTERVALS,
   getNextTimeframe,
   DEFAULT_TIMEFRAME,
@@ -29,14 +31,30 @@ class ResilientScheduler {
   }
 
   startUpdateIntervals() {
+    // Live price
     this.intervals.set(
       'market',
       setInterval(() => this.updateMarketData(), UPDATE_INTERVALS.MARKET_DATA)
     );
+
+    // Pure UI rotation — does not trigger network calls
     this.intervals.set(
-      'ohlc',
-      setInterval(() => this.updateOHLCData(), UPDATE_INTERVALS.OHLC_DATA)
+      'display',
+      setInterval(
+        () => this.rotateDisplayedTimeframe(),
+        UPDATE_INTERVALS.DISPLAY_ROTATION
+      )
     );
+
+    // One independent fetch loop per timeframe, each at its own cadence
+    TIMEFRAMES.forEach((tf) => {
+      const period = TIMEFRAME_REFRESH[tf];
+      this.intervals.set(
+        `ohlc-${tf}`,
+        setInterval(() => this.updateOHLCData(tf), period)
+      );
+    });
+
     this.intervals.set(
       'blockchain',
       setInterval(
@@ -46,7 +64,7 @@ class ResilientScheduler {
     );
     this.intervals.set(
       'supply',
-      setInterval(() => this.updateSupplyData(), UPDATE_INTERVALS.GLOBAL_DATA)
+      setInterval(() => this.updateSupplyData(), UPDATE_INTERVALS.SUPPLY_DATA)
     );
     this.intervals.set(
       'global',
@@ -64,23 +82,27 @@ class ResilientScheduler {
     this.apiManager.cleanup();
   }
 
+  /**
+   * Boot fetch — pull every data type in parallel (staggered to avoid
+   * upstream rate-limit bursts) so the dashboard has data on first connect.
+   */
   async updateInitialData() {
     if (this.isInitializing) return;
     this.isInitializing = true;
 
     try {
-      console.log(
-        `[Scheduler] Loading initial data (timeframe=${this.currentTimeframe})`
+      console.log('[Scheduler] Loading initial data...');
+
+      const ohlcStaggered = TIMEFRAMES.map((tf, i) =>
+        this.delay(400 * i).then(() => this.fetchOHLCDataSafe(tf))
       );
 
       await Promise.allSettled([
         this.fetchMarketDataSafe(),
-        this.delay(500).then(() =>
-          this.fetchOHLCDataSafe(this.currentTimeframe)
-        ),
-        this.delay(1000).then(() => this.fetchBlockchainDataSafe()),
-        this.delay(1500).then(() => this.fetchSupplyDataSafe()),
-        this.delay(2000).then(() => this.fetchGlobalDataSafe()),
+        this.delay(200).then(() => this.fetchBlockchainDataSafe()),
+        this.delay(400).then(() => this.fetchSupplyDataSafe()),
+        this.delay(600).then(() => this.fetchGlobalDataSafe()),
+        ...ohlcStaggered,
       ]);
 
       this.cacheService.updateCurrentTimeframe(this.currentTimeframe);
@@ -92,6 +114,15 @@ class ResilientScheduler {
     } finally {
       this.isInitializing = false;
     }
+  }
+
+  /**
+   * Cosmetic UI rotation — no network calls. Cache + WS broadcast.
+   */
+  rotateDisplayedTimeframe() {
+    this.currentTimeframe = getNextTimeframe(this.currentTimeframe);
+    this.cacheService.updateCurrentTimeframe(this.currentTimeframe);
+    this.broadcastCacheData();
   }
 
   async updateMarketData() {
@@ -107,30 +138,24 @@ class ResilientScheduler {
     }
   }
 
-  async updateOHLCData() {
-    const nextTimeframe = getNextTimeframe(this.currentTimeframe);
+  /**
+   * Refresh OHLC for a specific timeframe — independent of which one
+   * the UI happens to be displaying.
+   */
+  async updateOHLCData(timeframe) {
     try {
-      console.log(`[Scheduler] OHLC fetch for ${nextTimeframe}`);
-      const result = await this.apiManager.getOHLCData(nextTimeframe);
-
+      const result = await this.apiManager.getOHLCData(timeframe);
       if (
-        this.cacheService.updateOHLCData(
-          nextTimeframe,
-          result.data,
-          result.source
-        )
+        this.cacheService.updateOHLCData(timeframe, result.data, result.source)
       ) {
-        this.currentTimeframe = nextTimeframe;
-        this.cacheService.updateCurrentTimeframe(nextTimeframe);
         this.broadcastCacheData();
         this.successCount++;
       }
     } catch (error) {
       console.error(
-        `[Scheduler] OHLC update failed for ${nextTimeframe}:`,
+        `[Scheduler] OHLC update failed for ${timeframe}:`,
         error.message
       );
-      this.currentTimeframe = nextTimeframe;
       this.errorCount++;
     }
   }
@@ -256,6 +281,9 @@ class ResilientScheduler {
         broadcastCount: this.broadcastCount,
         lastBroadcast: this.lastBroadcast,
         intervals: Array.from(this.intervals.keys()),
+        timeframeRefreshSeconds: Object.fromEntries(
+          TIMEFRAMES.map((tf) => [tf, TIMEFRAME_REFRESH[tf] / 1000])
+        ),
         uptime: process.uptime(),
         memoryUsage: process.memoryUsage(),
       },

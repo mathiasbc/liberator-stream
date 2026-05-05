@@ -1,6 +1,6 @@
 /**
  * Centralized timeframe configuration.
- * Single source of truth for all timeframe-related constants.
+ * Single source of truth for timeframes and refresh cadences.
  */
 
 const TIMEFRAMES = ['5M', '1H', '4H', '1D', '1W'];
@@ -45,11 +45,41 @@ const TIMEFRAME_CONFIG = {
 
 const DEFAULT_TIMEFRAME = '5M';
 
+const MIN = 60_000;
+const HOUR = 60 * MIN;
+
+/**
+ * Per-timeframe OHLC refresh cadence.
+ * Tuned to the natural decay of each candle:
+ *   - 5M  bars close every 5m; refresh every minute.
+ *   - 1H  bars close every hour; refresh every 5m.
+ *   - 4H  bars close every 4h; refresh every 30m.
+ *   - 1D  bars close once a day; refresh ~twice a day.
+ *   - 1W  bars close once a week; refresh once a day.
+ */
+const TIMEFRAME_REFRESH = {
+  '5M': 1 * MIN,
+  '1H': 5 * MIN,
+  '4H': 30 * MIN,
+  '1D': 12 * HOUR,
+  '1W': 24 * HOUR,
+};
+
+/**
+ * Refresh cadences for non-OHLC data sources.
+ * Tuned to how fast each metric actually changes.
+ */
 const UPDATE_INTERVALS = {
-  MARKET_DATA: 30_000,
-  OHLC_DATA: 60_000,
-  BLOCKCHAIN_DATA: 120_000,
-  GLOBAL_DATA: 300_000,
+  // Live price — refreshed often for the streaming feel
+  MARKET_DATA: 30 * 1000,
+  // Display rotation (pure UI, no fetching)
+  DISPLAY_ROTATION: 60 * 1000,
+  // Bitcoin avg block time ~10m, so polling every 4m catches new blocks promptly
+  BLOCKCHAIN_DATA: 4 * MIN,
+  // Total supply changes every ~10m by ~6.25 BTC; UI doesn't need finer
+  SUPPLY_DATA: 30 * MIN,
+  // Dominance / global market cap drift slowly
+  GLOBAL_DATA: 15 * MIN,
 };
 
 function getTimeframeConfig(timeframe, provider = 'coingecko') {
@@ -95,6 +125,7 @@ module.exports = {
   TIMEFRAME_CONFIG,
   DEFAULT_TIMEFRAME,
   UPDATE_INTERVALS,
+  TIMEFRAME_REFRESH,
   getTimeframeConfig,
   getTimeframeInterval,
   getTimeframeBucket,
