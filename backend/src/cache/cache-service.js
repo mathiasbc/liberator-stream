@@ -368,11 +368,22 @@ class CacheService {
    * Get cache data formatted for frontend
    */
   getFormattedData() {
-    // Return cache data in exactly the format expected by frontend
+    const data = { ...this.cache };
+
+    // Compute marketCap fallback from price × circulating supply when the
+    // current source (e.g. Binance) doesn't provide one.
+    if (
+      (!data.marketCap || data.marketCap === 0) &&
+      data.currentPrice &&
+      data.extendedSupplyData?.circulatingSupply
+    ) {
+      data.marketCap =
+        data.currentPrice * data.extendedSupplyData.circulatingSupply;
+    }
+
     return {
-      ...this.cache,
-      // Ensure currentTimeframe is set
-      currentTimeframe: this.cache.currentTimeframe || DEFAULT_TIMEFRAME,
+      ...data,
+      currentTimeframe: data.currentTimeframe || DEFAULT_TIMEFRAME,
     };
   }
 }

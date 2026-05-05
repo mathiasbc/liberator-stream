@@ -82,12 +82,13 @@ const FIELD_MAPPINGS = {
 
 // Validation functions
 const validateMarketData = (data) => {
+  // marketCap is optional — sources like Binance don't expose it, and we
+  // compute a fallback from price × circulating supply.
   return (
     data &&
     typeof data.currentPrice === 'number' &&
     typeof data.priceChange === 'number' &&
-    typeof data.volume === 'number' &&
-    typeof data.marketCap === 'number'
+    typeof data.volume === 'number'
   );
 };
 

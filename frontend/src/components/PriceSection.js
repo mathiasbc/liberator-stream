@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Flex, Grid, Text } from '@chakra-ui/react';
+import { Box, Flex, Grid, Image, Link, Text } from '@chakra-ui/react';
 
 const formatPrice = (price) =>
   new Intl.NumberFormat('en-US', {
@@ -21,21 +21,15 @@ const formatLargeNumber = (value) => {
   return `$${num.toLocaleString()}`;
 };
 
-const getAthDistanceColor = (percentage) => {
-  if (!percentage) return 'brand.pastelBlue';
-  const pct = Math.abs(parseFloat(percentage));
-  if (pct <= 5) return 'brand.pastelMint';
-  if (pct <= 15) return 'brand.pastelYellow';
-  if (pct <= 30) return 'brand.pastelLavender';
-  return 'brand.pastelCoral';
-};
+const ROW_PRICE = 'brand.pastelMint';
+const ROW_NETWORK = 'brand.pastelBlue';
 
 const Metric = ({ label, value, color }) => (
-  <Flex flexDirection='column' gap='4px' minW={0} alignItems='flex-start'>
+  <Flex flexDirection='column' gap='3px' minW={0} alignItems='flex-start'>
     <Text
-      fontSize={{ base: '12px', md: '13px', lg: '14px', xl: '16px' }}
+      fontSize={{ base: '11px', md: '12px', lg: '13px', xl: '14px' }}
       fontWeight='500'
-      color='rgba(255,255,255,0.65)'
+      color='rgba(255,255,255,0.6)'
       m={0}
       letterSpacing='0.06em'
       textTransform='uppercase'
@@ -46,11 +40,11 @@ const Metric = ({ label, value, color }) => (
     </Text>
     <Text
       fontSize={{
-        base: '18px',
-        md: '22px',
-        lg: '26px',
-        xl: '30px',
-        '2xl': '34px',
+        base: '16px',
+        md: '18px',
+        lg: '20px',
+        xl: '22px',
+        '2xl': '26px',
       }}
       fontWeight='600'
       m={0}
@@ -85,9 +79,9 @@ const PriceSection = ({
 
   return (
     <Box
-      mb={{ base: '12px', md: '16px', xl: '20px' }}
-      p={{ base: '16px', md: '24px', lg: '28px', xl: '36px' }}
-      borderRadius={{ base: '12px', md: '16px' }}
+      mb={{ base: '10px', md: '12px', xl: '14px' }}
+      p={{ base: '14px', md: '18px', lg: '20px', xl: '24px' }}
+      borderRadius={{ base: '12px', md: '14px' }}
       bgGradient='linear(135deg, brand.darkCard, #1A1A1A)'
       boxShadow='0 8px 32px rgba(0,0,0,0.4)'
       border='1px solid'
@@ -96,26 +90,52 @@ const PriceSection = ({
       <Grid
         templateColumns={{
           base: '1fr',
-          xl: 'auto 1fr',
+          xl: 'auto auto 1fr',
         }}
-        gap={{ base: '20px', xl: '40px', '2xl': '56px' }}
+        gap={{ base: '16px', xl: '28px', '2xl': '40px' }}
         alignItems='center'
       >
-        {/* Hero price */}
+        {/* Liberator logo */}
+        <Link
+          href='https://github.com/mathiasbc/liberator-stream'
+          isExternal
+          _hover={{ opacity: 0.85 }}
+          transition='opacity 0.2s ease'
+          display='flex'
+          alignItems='center'
+          justifyContent='center'
+        >
+          <Image
+            src='/assets/the_liberator_horizontal.png'
+            alt='The Liberator'
+            h={{
+              base: '64px',
+              md: '80px',
+              lg: '96px',
+              xl: '110px',
+              '2xl': '130px',
+            }}
+            w='auto'
+            objectFit='contain'
+          />
+        </Link>
+
+        {/* Price column */}
         <Flex flexDirection='column' gap='10px' minW='fit-content'>
+          {/* Price */}
           <Text
             as='h2'
             fontSize={{
-              base: '40px',
-              sm: '52px',
-              md: '70px',
-              lg: '88px',
-              xl: '108px',
-              '2xl': '132px',
+              base: '36px',
+              sm: '44px',
+              md: '54px',
+              lg: '64px',
+              xl: '76px',
+              '2xl': '92px',
             }}
             fontWeight='700'
             color='#FFFF00'
-            textShadow='0 4px 28px rgba(255, 255, 0, 0.45)'
+            textShadow='0 4px 24px rgba(255, 255, 0, 0.4)'
             letterSpacing='-0.03em'
             m={0}
             lineHeight='0.95'
@@ -123,15 +143,17 @@ const PriceSection = ({
           >
             {formatPrice(currentPrice)}
           </Text>
-          <Flex alignItems='center' gap='12px' wrap='wrap'>
+
+          {/* Change */}
+          <Flex alignItems='center' gap='10px' wrap='wrap'>
             <Text
-              fontSize={{ base: '20px', md: '26px', xl: '34px' }}
+              fontSize={{ base: '16px', md: '20px', xl: '24px' }}
               color={positive ? 'brand.pastelMint' : 'brand.pastelCoral'}
             >
               {positive ? '↗' : '↘'}
             </Text>
             <Text
-              fontSize={{ base: '18px', md: '22px', xl: '30px' }}
+              fontSize={{ base: '14px', md: '18px', xl: '22px' }}
               fontWeight='600'
               color={positive ? 'brand.pastelMint' : 'brand.pastelCoral'}
               fontFamily='monospace'
@@ -140,7 +162,7 @@ const PriceSection = ({
               {change.toFixed(2)}%
             </Text>
             <Text
-              fontSize={{ base: '14px', md: '18px', xl: '22px' }}
+              fontSize={{ base: '12px', md: '14px', xl: '16px' }}
               fontWeight='300'
               color='brand.pastelBlue'
             >
@@ -149,7 +171,7 @@ const PriceSection = ({
           </Flex>
         </Flex>
 
-        {/* Metrics — borderless dense grid, right-aligned */}
+        {/* Metrics — right-aligned */}
         <Grid
           templateColumns={{
             base: 'repeat(2, max-content)',
@@ -157,49 +179,52 @@ const PriceSection = ({
             lg: 'repeat(5, max-content)',
           }}
           justifyContent={{ base: 'flex-start', xl: 'flex-end' }}
-          rowGap={{ base: '16px', md: '20px', xl: '24px' }}
+          rowGap={{ base: '12px', md: '14px', xl: '16px' }}
           columnGap={{
-            base: '28px',
-            md: '48px',
-            lg: '64px',
-            xl: '80px',
-            '2xl': '100px',
+            base: '20px',
+            md: '32px',
+            lg: '40px',
+            xl: '48px',
+            '2xl': '64px',
           }}
         >
+          {/* Row 1 — daily price action (yellow) */}
           <Metric
             label='Daily Open'
             value={fmtCandle(dayOpen)}
-            color='brand.pastelYellow'
+            color={ROW_PRICE}
           />
           <Metric
             label='Daily High'
             value={fmtCandle(dayHigh)}
-            color='brand.pastelMint'
+            color={ROW_PRICE}
           />
           <Metric
             label='Daily Low'
             value={fmtCandle(dayLow)}
-            color='brand.pastelCoral'
+            color={ROW_PRICE}
           />
           <Metric
             label='Daily Close'
             value={fmtCandle(dayClose)}
-            color='brand.pastelYellow'
+            color={ROW_PRICE}
           />
           <Metric
             label='Volume 24h'
             value={formatLargeNumber(volume)}
-            color='brand.pastelLavender'
+            color={ROW_PRICE}
           />
+
+          {/* Row 2 — market & network (blue) */}
           <Metric
             label='Market Cap'
             value={formatLargeNumber(marketCap)}
-            color='brand.pastelMint'
+            color={ROW_NETWORK}
           />
           <Metric
             label='Block Height'
             value={blockHeight ? `#${blockHeight.toLocaleString()}` : 'N/A'}
-            color='brand.pastelBlue'
+            color={ROW_NETWORK}
           />
           <Metric
             label='Distance from ATH'
@@ -208,21 +233,19 @@ const PriceSection = ({
                 ? `${extendedSupplyData.priceChangePercentageFromAth}%`
                 : 'N/A'
             }
-            color={getAthDistanceColor(
-              extendedSupplyData?.priceChangePercentageFromAth
-            )}
+            color={ROW_NETWORK}
           />
           <Metric
             label='Market Dominance'
             value={marketDominance ? `${marketDominance}%` : 'N/A'}
-            color='brand.pastelPink'
+            color={ROW_NETWORK}
           />
           <Metric
             label='Supply Mined'
             value={
               totalSupply?.percentage ? `${totalSupply.percentage}%` : 'N/A'
             }
-            color='brand.pastelCoral'
+            color={ROW_NETWORK}
           />
         </Grid>
       </Grid>

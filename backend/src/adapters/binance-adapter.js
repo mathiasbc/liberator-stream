@@ -24,11 +24,12 @@ class BinanceAdapter extends BaseAdapter {
       const ticker = tickerResponse.data;
       const price = priceResponse.data;
 
+      // Binance has no market cap endpoint — omit the field so the cache
+      // keeps the last good value from CoinGecko / supply×price fallback.
       return {
         currentPrice: parseFloat(price.price) || 0,
         priceChange: parseFloat(ticker.priceChangePercent) || 0,
         volume: parseFloat(ticker.quoteVolume) || 0,
-        marketCap: 0, // Binance doesn't provide market cap directly
         dayOpen: parseFloat(ticker.openPrice) || 0,
         dayHigh: parseFloat(ticker.highPrice) || 0,
         dayLow: parseFloat(ticker.lowPrice) || 0,

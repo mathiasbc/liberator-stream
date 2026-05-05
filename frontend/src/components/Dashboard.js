@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Box } from '@chakra-ui/react';
-import Header from './Header';
 import PriceSection from './PriceSection';
 import Chart from './Chart';
 
@@ -93,11 +92,10 @@ const Dashboard = () => {
       flexDirection='column'
       bg='brand.bg'
     >
-      <Header secondsSinceUpdate={secondsSinceUpdate} />
       <Box
         flex='1'
-        px={{ base: '12px', sm: '16px', md: '24px', xl: '32px' }}
-        py={{ base: '12px', sm: '16px', md: '20px', xl: '28px' }}
+        px={{ base: '10px', sm: '14px', md: '18px', xl: '24px' }}
+        py={{ base: '10px', sm: '12px', md: '14px', xl: '18px' }}
         maxWidth='100%'
         overflowX='hidden'
       >
@@ -115,7 +113,11 @@ const Dashboard = () => {
           dayLow={data.dayLow}
           dayClose={data.dayClose}
         />
-        <Chart sampleData={currentOhlcData} timeframe={timeframe} />
+        <Chart
+          sampleData={currentOhlcData}
+          timeframe={timeframe}
+          secondsSinceUpdate={secondsSinceUpdate}
+        />
       </Box>
     </Box>
   );

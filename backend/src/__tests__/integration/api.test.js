@@ -133,7 +133,7 @@ describe('API Component Unit Tests', () => {
       expect(result.currentPrice).toBe(45000);
       expect(result.priceChange).toBe(2.3);
       expect(result.volume).toBe(622680000.5);
-      expect(result.marketCap).toBe(0);
+      expect(result.marketCap).toBeUndefined();
       expect(result.dayOpen).toBe(44000);
       expect(result.dayHigh).toBe(45500);
       expect(result.dayLow).toBe(43800);
