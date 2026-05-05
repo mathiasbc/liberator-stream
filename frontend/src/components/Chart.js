@@ -7,48 +7,76 @@ const priceFormatter = (price) =>
 
 const TIMEFRAMES = ['5M', '1H', '4H', '1D', '1W'];
 
+// lightweight-charts TickMarkType:
+//   0 = Year, 1 = Month, 2 = DayOfMonth, 3 = Time, 4 = TimeWithSeconds
+// Pick the format per tick level so day-aligned ticks don't read "May 1 00:00".
+const fmtMonth = (d) =>
+  d.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+const fmtHour = (d) => `${String(d.getUTCHours()).padStart(2, '0')}:00`;
+const fmtHourMinute = (d) =>
+  `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+
+const formatTick = (time, tickMarkType, granularity) => {
+  const d = new Date(time * 1000);
+  switch (tickMarkType) {
+    case 0:
+      return String(d.getUTCFullYear());
+    case 1:
+      return `${fmtMonth(d)} '${String(d.getUTCFullYear()).slice(-2)}`;
+    case 2:
+      return `${fmtMonth(d)} ${d.getUTCDate()}`;
+    case 3:
+      return granularity === '5M' ? fmtHourMinute(d) : fmtHour(d);
+    default:
+      return granularity === '5M'
+        ? fmtHourMinute(d)
+        : `${fmtMonth(d)} ${d.getUTCDate()}`;
+  }
+};
+
 const TIME_FORMATTERS = {
-  hourMinute: (time) =>
-    new Date(time * 1000).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: 'UTC',
-    }),
-  monthDayHour: (time) => {
-    const d = new Date(time * 1000);
-    const month = d.toLocaleString('en-US', {
-      month: 'short',
-      timeZone: 'UTC',
-    });
-    const day = d.getUTCDate();
-    const hour = String(d.getUTCHours()).padStart(2, '0');
-    return `${month} ${day} ${hour}:00`;
-  },
-  monthDay: (time) => {
-    const d = new Date(time * 1000);
-    const month = d.toLocaleString('en-US', {
-      month: 'short',
-      timeZone: 'UTC',
-    });
-    return `${month} ${d.getUTCDate()}`;
-  },
-  monthDayYear: (time) => {
-    const d = new Date(time * 1000);
-    const month = d.toLocaleString('en-US', {
-      month: 'short',
-      timeZone: 'UTC',
-    });
-    return `${month} ${d.getUTCDate()} '${String(d.getUTCFullYear()).slice(-2)}`;
-  },
+  intraday5: (time, tmt) => formatTick(time, tmt, '5M'),
+  intradayHour: (time, tmt) => formatTick(time, tmt, '1H'),
+  multiDay: (time, tmt) => formatTick(time, tmt, '4H'),
+  daily: (time, tmt) => formatTick(time, tmt, '1D'),
+  weekly: (time, tmt) => formatTick(time, tmt, '1W'),
+};
+
+// Crosshair label — always show date + time so hover info is complete
+const crosshairTime5M = (time) => {
+  const d = new Date(time * 1000);
+  return `${fmtMonth(d)} ${d.getUTCDate()} ${fmtHourMinute(d)} UTC`;
+};
+const crosshairTimeHourly = (time) => {
+  const d = new Date(time * 1000);
+  return `${fmtMonth(d)} ${d.getUTCDate()} ${fmtHour(d)} UTC`;
+};
+const crosshairDay = (time) => {
+  const d = new Date(time * 1000);
+  return `${fmtMonth(d)} ${d.getUTCDate()}, ${d.getUTCFullYear()} UTC`;
 };
 
 const TIME_CONFIG = {
-  '5M': { formatter: TIME_FORMATTERS.hourMinute },
-  '1H': { formatter: TIME_FORMATTERS.hourMinute },
-  '4H': { formatter: TIME_FORMATTERS.monthDayHour },
-  '1D': { formatter: TIME_FORMATTERS.monthDay },
-  '1W': { formatter: TIME_FORMATTERS.monthDayYear },
+  '5M': {
+    tick: TIME_FORMATTERS.intraday5,
+    crosshair: crosshairTime5M,
+  },
+  '1H': {
+    tick: TIME_FORMATTERS.intradayHour,
+    crosshair: crosshairTimeHourly,
+  },
+  '4H': {
+    tick: TIME_FORMATTERS.multiDay,
+    crosshair: crosshairTimeHourly,
+  },
+  '1D': {
+    tick: TIME_FORMATTERS.daily,
+    crosshair: crosshairDay,
+  },
+  '1W': {
+    tick: TIME_FORMATTERS.weekly,
+    crosshair: crosshairDay,
+  },
 };
 
 const getViewportDims = () => {
@@ -128,10 +156,10 @@ const Chart = ({ sampleData, timeframe, secondsSinceUpdate = 0 }) => {
         secondsVisible: false,
         barSpacing: getBarSpacing(width),
         minBarSpacing: 4,
-        tickMarkFormatter: timeFmt.formatter,
+        tickMarkFormatter: timeFmt.tick,
       },
       localization: {
-        timeFormatter: timeFmt.formatter,
+        timeFormatter: timeFmt.crosshair,
         priceFormatter,
       },
       rightPriceScale: {
@@ -204,8 +232,8 @@ const Chart = ({ sampleData, timeframe, secondsSinceUpdate = 0 }) => {
     if (!chartRef.current) return;
     const timeFmt = TIME_CONFIG[timeframe] || TIME_CONFIG['1H'];
     chartRef.current.applyOptions({
-      timeScale: { tickMarkFormatter: timeFmt.formatter },
-      localization: { timeFormatter: timeFmt.formatter },
+      timeScale: { tickMarkFormatter: timeFmt.tick },
+      localization: { timeFormatter: timeFmt.crosshair },
     });
   }, [timeframe]);
 
