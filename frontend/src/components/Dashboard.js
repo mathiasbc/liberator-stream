@@ -1,7 +1,12 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Box } from '@chakra-ui/react';
+import { Box, Flex } from '@chakra-ui/react';
+import Stage from './Stage';
+import OnAirBar from './OnAirBar';
 import PriceSection from './PriceSection';
 import Chart from './Chart';
+import SocialWire from './SocialWire';
+import NetworkPulse from './NetworkPulse';
+import Ticker from './Ticker';
 
 const WS_URL =
   process.env.REACT_APP_WS_URL ||
@@ -17,15 +22,22 @@ const INITIAL_DATA = {
   marketDominance: null,
   totalSupply: null,
   extendedSupplyData: null,
+  globalMarketData: null,
+  networkData: null,
   ohlcData: {},
   currentTimeframe: '5M',
+  timeframeRotatedAt: null,
+  timeframeRotationMs: null,
+  tweets: null,
 };
 
 const Dashboard = () => {
   const [data, setData] = useState(INITIAL_DATA);
-  const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
+  const [lastMarketAt, setLastMarketAt] = useState(null);
+  const [connected, setConnected] = useState(false);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const lastMarketRef = useRef({ price: null, volume: null });
 
   const connectWebSocket = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
@@ -34,13 +46,29 @@ const Dashboard = () => {
     const ws = new window.WebSocket(WS_URL);
     wsRef.current = ws;
 
-    ws.onopen = () => console.log('[Dashboard] WebSocket open');
+    ws.onopen = () => {
+      console.log('[Dashboard] WebSocket open');
+      setConnected(true);
+    };
 
     ws.onmessage = (event) => {
       try {
         const incoming = JSON.parse(event.data);
+        // Count the market as live only when it actually moved; a rotation
+        // snapshot re-sends the old price and shouldn't hide a stall
+        const last = lastMarketRef.current;
+        if (
+          incoming.currentPrice !== undefined &&
+          (incoming.currentPrice !== last.price ||
+            incoming.volume !== last.volume)
+        ) {
+          lastMarketRef.current = {
+            price: incoming.currentPrice,
+            volume: incoming.volume,
+          };
+          setLastMarketAt(Date.now());
+        }
         setData((prev) => ({ ...prev, ...incoming }));
-        setSecondsSinceUpdate(0);
       } catch (e) {
         console.error('[Dashboard] parse error:', e);
       }
@@ -51,6 +79,7 @@ const Dashboard = () => {
 
     ws.onclose = () => {
       console.log('[Dashboard] WebSocket closed; reconnecting...');
+      setConnected(false);
       reconnectTimeoutRef.current = setTimeout(
         connectWebSocket,
         RECONNECT_DELAY
@@ -72,54 +101,34 @@ const Dashboard = () => {
     };
   }, [connectWebSocket]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSecondsSinceUpdate((prev) => (prev < 999 ? prev + 1 : prev));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const timeframe = data.currentTimeframe || '5M';
-  const currentOhlcData = data.ohlcData?.[timeframe] || [];
-
   return (
-    <Box
-      width='100%'
-      minHeight='100vh'
-      maxWidth='100vw'
-      overflowX='hidden'
-      display='flex'
-      flexDirection='column'
-      bg='transparent'
-    >
-      <Box
-        flex='1'
-        px={{ base: '10px', sm: '14px', md: '18px', xl: '24px' }}
-        py={{ base: '10px', sm: '12px', md: '14px', xl: '18px' }}
-        maxWidth='100%'
-        overflowX='hidden'
-      >
-        <PriceSection
-          currentPrice={data.currentPrice || 0}
-          priceChange={data.priceChange || 0}
-          volume={data.volume || 0}
-          marketCap={data.marketCap || 0}
-          marketDominance={data.marketDominance}
-          totalSupply={data.totalSupply}
-          extendedSupplyData={data.extendedSupplyData}
-          blockHeight={data.blockHeight}
-          dayOpen={data.dayOpen}
-          dayHigh={data.dayHigh}
-          dayLow={data.dayLow}
-          dayClose={data.dayClose}
-        />
-        <Chart
-          sampleData={currentOhlcData}
-          timeframe={timeframe}
-          secondsSinceUpdate={secondsSinceUpdate}
-        />
-      </Box>
-    </Box>
+    <Stage>
+      <Flex direction='column' h='100%'>
+        <OnAirBar lastMarketAt={lastMarketAt} connected={connected} />
+        <Box px='28px' pt='18px' flex='none'>
+          <PriceSection data={data} />
+        </Box>
+        <Flex flex='1' minH={0} gap='18px' px='28px' py='18px'>
+          <Box flex='1' minW={0}>
+            <Chart
+              ohlcData={data.ohlcData}
+              timeframe={data.currentTimeframe || '5M'}
+              livePrice={data.currentPrice}
+              rotatedAt={data.timeframeRotatedAt}
+              rotationMs={data.timeframeRotationMs}
+            />
+          </Box>
+          <Flex w='470px' flex='none' direction='column' gap='18px'>
+            <NetworkPulse
+              blockHeight={data.blockHeight}
+              networkData={data.networkData}
+            />
+            <SocialWire tweets={data.tweets} />
+          </Flex>
+        </Flex>
+        <Ticker data={data} />
+      </Flex>
+    </Stage>
   );
 };
 

@@ -74,8 +74,9 @@ const UPDATE_INTERVALS = {
   MARKET_DATA: 30 * 1000,
   // Display rotation (pure UI, no fetching)
   DISPLAY_ROTATION: 60 * 1000,
-  // Bitcoin avg block time ~10m, so polling every 4m catches new blocks promptly
-  BLOCKCHAIN_DATA: 4 * MIN,
+  // Tip, fees and mempool (3 light Blockstream calls). Polled every minute so
+  // the stream shows a new block within ~1m of it being found
+  BLOCKCHAIN_DATA: 1 * MIN,
   // Total supply changes every ~10m by ~6.25 BTC; UI doesn't need finer
   SUPPLY_DATA: 30 * MIN,
   // Dominance / global market cap drift slowly

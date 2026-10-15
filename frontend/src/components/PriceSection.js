@@ -1,258 +1,307 @@
-import React from 'react';
-import { Box, Flex, Grid, Image, Link, Text, useTheme } from '@chakra-ui/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Box, Flex, Grid, Text } from '@chakra-ui/react';
+import Logo from './Logo';
+import Sketch from './Sketch';
+import { palette, fonts } from '../theme/theme';
+import {
+  formatCompactUsd,
+  formatInt,
+  formatMonthShort,
+  formatPct,
+  formatUsd,
+  toNumber,
+} from '../utils/format';
+import { athInfo, rangePosition, satsPerDollar } from '../utils/metrics';
 
-const formatPrice = (price) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price || 0);
-
-const formatLargeNumber = (value) => {
-  const num =
-    typeof value === 'string'
-      ? parseFloat(value.replace(/[^0-9.-]+/g, ''))
-      : value;
-  if (!isFinite(num)) return 'N/A';
-  if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
-  if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
-  if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
-  return `$${num.toLocaleString()}`;
-};
-
-const ROW_PRICE = 'brand.pastelMint';
-const ROW_NETWORK = 'brand.pastelBlue';
-
-const Metric = ({ label, value, color }) => (
-  <Flex flexDirection='column' gap='3px' minW={0} alignItems='flex-start'>
-    <Text
-      fontSize={{ base: '11px', md: '12px', lg: '13px', xl: '14px' }}
-      fontWeight='500'
-      color='rgba(255,255,255,0.6)'
-      m={0}
-      letterSpacing='0.06em'
-      textTransform='uppercase'
-      lineHeight='1.1'
-      whiteSpace='nowrap'
-    >
-      {label}
-    </Text>
-    <Text
-      fontSize={{
-        base: '16px',
-        md: '18px',
-        lg: '20px',
-        xl: '22px',
-        '2xl': '26px',
-      }}
-      fontWeight='600'
-      m={0}
-      color={color}
-      whiteSpace='nowrap'
-      fontFamily='monospace'
-      lineHeight='1.05'
-      letterSpacing='-0.01em'
-    >
-      {value}
-    </Text>
+const Plate = ({ color, sketch, sketchProps, label, value, sub }) => (
+  <Flex
+    align='center'
+    gap='12px'
+    pl='12px'
+    pr='10px'
+    minW={0}
+    borderLeft={`5px solid ${color}`}
+    bg={`linear-gradient(90deg, ${color}26, ${color}08 70%, transparent)`}
+  >
+    <Sketch name={sketch} color={color} size={50} {...sketchProps} />
+    <Box minW={0} fontFamily={fonts.display} lineHeight='1'>
+      <Text
+        fontSize='16px'
+        fontWeight='600'
+        letterSpacing='0.16em'
+        color={palette.mute}
+        whiteSpace='nowrap'
+      >
+        {label}
+      </Text>
+      <Text
+        fontSize='42px'
+        fontWeight='700'
+        color={palette.ink}
+        mt='4px'
+        whiteSpace='nowrap'
+        sx={{ fontVariantNumeric: 'tabular-nums' }}
+      >
+        {value}
+      </Text>
+      <Text
+        fontSize='16px'
+        fontWeight='500'
+        color={palette.dim}
+        mt='5px'
+        whiteSpace='nowrap'
+        overflow='hidden'
+        textOverflow='ellipsis'
+      >
+        {sub}
+      </Text>
+    </Box>
   </Flex>
 );
 
-const PriceSection = ({
-  currentPrice,
-  priceChange,
-  volume,
-  marketCap,
-  marketDominance,
-  totalSupply,
-  extendedSupplyData,
-  blockHeight,
-  dayOpen,
-  dayHigh,
-  dayLow,
-  dayClose,
-}) => {
-  const { colors } = useTheme();
-  const change = priceChange || 0;
-  const positive = change >= 0;
-  const fmtCandle = (v) => (v == null || v === 0 ? 'N/A' : formatPrice(v));
-  const heroColor = colors?.brand?.priceHero || '#FFD60A';
-  const heroGlow = colors?.brand?.priceHeroGlow || 'rgba(255, 214, 10, 0.45)';
+const DayRange = ({ price, open, high, low }) => {
+  const pos = rangePosition(price, low, high);
+  const openPos = rangePosition(open, low, high);
+  return (
+    <Flex align='center' gap='12px' fontFamily={fonts.mono} fontSize='17px'>
+      <Text color={palette.dim}>
+        L{' '}
+        <Text as='span' color={palette.mute}>
+          {formatInt(low)}
+        </Text>
+      </Text>
+      <Box position='relative' w='200px' h='8px' borderRadius='99px'>
+        <Box
+          position='absolute'
+          inset={0}
+          borderRadius='99px'
+          bg={`linear-gradient(90deg, ${palette.down}AA, ${palette.accent}88 50%, ${palette.up}AA)`}
+        />
+        {openPos !== null && (
+          <Box
+            position='absolute'
+            top='-6px'
+            left={`${openPos * 100}%`}
+            w='2px'
+            h='20px'
+            bg={palette.ink}
+            opacity={0.7}
+          />
+        )}
+        {pos !== null && (
+          <Box
+            position='absolute'
+            top='50%'
+            left={`${pos * 100}%`}
+            w='18px'
+            h='18px'
+            borderRadius='50%'
+            bg={palette.accent}
+            border={`4px solid ${palette.stage}`}
+            transform='translate(-50%, -50%)'
+            boxShadow={`0 0 12px ${palette.accent}`}
+            transition='left 0.8s ease'
+          />
+        )}
+      </Box>
+      <Text color={palette.dim}>
+        H{' '}
+        <Text as='span' color={palette.mute}>
+          {formatInt(high)}
+        </Text>
+      </Text>
+    </Flex>
+  );
+};
+
+// The stream ticks every second; flashing the whole price that often is
+// noise, so the big number pulses at most this often and a small readout
+// shows every tick.
+const FLASH_GAP_MS = 5000;
+
+const PriceBlock = ({ price, change, open, high, low }) => {
+  const prev = useRef(price);
+  const lastFlash = useRef(0);
+  const [flash, setFlash] = useState(null);
+  const [tick, setTick] = useState(null);
+
+  useEffect(() => {
+    const before = prev.current;
+    prev.current = price;
+    if (!before || !price || price === before) return;
+    const dir = price > before ? 'up' : 'down';
+    setTick({ dir, delta: price - before });
+    const now = Date.now();
+    if (now - lastFlash.current >= FLASH_GAP_MS) {
+      lastFlash.current = now;
+      setFlash({ dir, key: now });
+    }
+  }, [price]);
+
+  const text = price ? formatUsd(price) : '—';
+  const positive = (change || 0) >= 0;
 
   return (
-    <Box
-      mb={{ base: '10px', md: '12px', xl: '14px' }}
-      p={{ base: '14px', md: '18px', lg: '20px', xl: '24px' }}
-      borderRadius={{ base: '12px', md: '14px' }}
-      bgGradient='linear(135deg, brand.darkCard, #1A1A1A)'
-      boxShadow='0 8px 32px rgba(0,0,0,0.4)'
-      border='1px solid'
-      borderColor='brand.darkBorder'
-    >
-      <Grid
-        templateColumns={{
-          base: '1fr',
-          xl: 'auto auto 1fr',
-        }}
-        gap={{ base: '16px', xl: '28px', '2xl': '40px' }}
-        alignItems='center'
-      >
-        {/* Liberator logo */}
-        <Link
-          href='https://github.com/mathiasbc/liberator-stream'
-          isExternal
-          _hover={{ opacity: 0.85 }}
-          transition='opacity 0.2s ease'
-          display='flex'
-          alignItems='center'
-          justifyContent='center'
+    <Flex direction='column' justify='center' w='600px' flex='none'>
+      <Flex align='center' gap='14px'>
+        <Text
+          bg={palette.accent}
+          color={palette.onAccent}
+          fontFamily={fonts.display}
+          fontWeight='800'
+          fontSize='21px'
+          letterSpacing='0.18em'
+          lineHeight='1'
+          px='12px'
+          py='4px'
         >
-          <Image
-            src='/assets/the_liberator_horizontal.png'
-            alt='The Liberator'
-            h={{
-              base: '64px',
-              md: '80px',
-              lg: '96px',
-              xl: '110px',
-              '2xl': '130px',
-            }}
-            w='auto'
-            objectFit='contain'
-          />
-        </Link>
-
-        {/* Price column */}
-        <Flex flexDirection='column' gap='10px' minW='fit-content'>
-          {/* Price */}
+          BTC / USD
+        </Text>
+        {tick && (
           <Text
-            as='h2'
-            fontSize={{
-              base: '36px',
-              sm: '44px',
-              md: '54px',
-              lg: '64px',
-              xl: '76px',
-              '2xl': '92px',
-            }}
+            key={`${tick.dir}-${tick.delta}`}
+            fontFamily={fonts.mono}
             fontWeight='700'
-            color={heroColor}
-            textShadow={`0 4px 24px ${heroGlow}`}
-            letterSpacing='-0.03em'
-            m={0}
-            lineHeight='0.95'
-            fontFamily='monospace'
+            fontSize='18px'
+            color={tick.dir === 'up' ? palette.up : palette.down}
+            animation='postIn 0.35s ease-out'
           >
-            {formatPrice(currentPrice)}
+            {tick.dir === 'up' ? '▲' : '▼'} {formatUsd(Math.abs(tick.delta), 2)}
           </Text>
-
-          {/* Change */}
-          <Flex alignItems='center' gap='10px' wrap='wrap'>
-            <Text
-              fontSize={{ base: '16px', md: '20px', xl: '24px' }}
-              color={positive ? 'brand.pastelMint' : 'brand.pastelCoral'}
-            >
-              {positive ? '↗' : '↘'}
-            </Text>
-            <Text
-              fontSize={{ base: '14px', md: '18px', xl: '22px' }}
-              fontWeight='600'
-              color={positive ? 'brand.pastelMint' : 'brand.pastelCoral'}
-              fontFamily='monospace'
-            >
-              {positive ? '+' : ''}
-              {change.toFixed(2)}%
-            </Text>
-            <Text
-              fontSize={{ base: '12px', md: '14px', xl: '16px' }}
-              fontWeight='300'
-              color='brand.pastelBlue'
-            >
-              24h
-            </Text>
-          </Flex>
-        </Flex>
-
-        {/* Metrics — right-aligned */}
-        <Grid
-          templateColumns={{
-            base: 'repeat(2, max-content)',
-            sm: 'repeat(3, max-content)',
-            lg: 'repeat(5, max-content)',
-          }}
-          justifyContent={{ base: 'flex-start', xl: 'flex-end' }}
-          rowGap={{ base: '12px', md: '14px', xl: '16px' }}
-          columnGap={{
-            base: '20px',
-            md: '32px',
-            lg: '40px',
-            xl: '48px',
-            '2xl': '64px',
-          }}
+        )}
+      </Flex>
+      <Text
+        key={flash?.key}
+        fontFamily={fonts.display}
+        fontWeight='800'
+        fontSize={text.length >= 8 ? '128px' : '140px'}
+        lineHeight='0.84'
+        mt='10px'
+        color={palette.accent}
+        textShadow={`0 0 40px ${palette.accentGlow}`}
+        whiteSpace='nowrap'
+        sx={{ fontVariantNumeric: 'tabular-nums' }}
+        animation={
+          flash
+            ? `${flash.dir === 'up' ? 'flashUp' : 'flashDown'} 1.2s ease-out`
+            : undefined
+        }
+      >
+        {text}
+      </Text>
+      <Flex align='center' gap='22px' mt='14px'>
+        <Flex
+          align='center'
+          gap='10px'
+          bg={positive ? palette.up : palette.down}
+          color={positive ? palette.onAccent : '#fff'}
+          fontFamily={fonts.display}
+          fontWeight='800'
+          px='16px'
+          h='34px'
+          clipPath='polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)'
         >
-          {/* Row 1 — daily price action (yellow) */}
-          <Metric
-            label='Daily Open'
-            value={fmtCandle(dayOpen)}
-            color={ROW_PRICE}
-          />
-          <Metric
-            label='Daily High'
-            value={fmtCandle(dayHigh)}
-            color={ROW_PRICE}
-          />
-          <Metric
-            label='Daily Low'
-            value={fmtCandle(dayLow)}
-            color={ROW_PRICE}
-          />
-          <Metric
-            label='Daily Close'
-            value={fmtCandle(dayClose)}
-            color={ROW_PRICE}
-          />
-          <Metric
-            label='Volume 24h'
-            value={formatLargeNumber(volume)}
-            color={ROW_PRICE}
-          />
+          <Text fontSize='18px'>{positive ? '▲' : '▼'}</Text>
+          <Text fontSize='27px' letterSpacing='0.04em'>
+            {formatPct(Math.abs(change || 0))}
+          </Text>
+          <Text fontSize='17px' opacity={0.85} letterSpacing='0.1em'>
+            24H
+          </Text>
+        </Flex>
+        <DayRange price={price} open={open} high={high} low={low} />
+      </Flex>
+    </Flex>
+  );
+};
 
-          {/* Row 2 — market & network (blue) */}
-          <Metric
-            label='Market Cap'
-            value={formatLargeNumber(marketCap)}
-            color={ROW_NETWORK}
-          />
-          <Metric
-            label='Block Height'
-            value={blockHeight ? `#${blockHeight.toLocaleString()}` : 'N/A'}
-            color={ROW_NETWORK}
-          />
-          <Metric
-            label='Distance from ATH'
-            value={
-              extendedSupplyData?.priceChangePercentageFromAth
-                ? `${extendedSupplyData.priceChangePercentageFromAth}%`
-                : 'N/A'
-            }
-            color={ROW_NETWORK}
-          />
-          <Metric
-            label='Market Dominance'
-            value={marketDominance ? `${marketDominance}%` : 'N/A'}
-            color={ROW_NETWORK}
-          />
-          <Metric
-            label='Supply Mined'
-            value={
-              totalSupply?.percentage ? `${totalSupply.percentage}%` : 'N/A'
-            }
-            color={ROW_NETWORK}
-          />
-        </Grid>
+const PriceSection = ({ data }) => {
+  const price = data.currentPrice;
+  const ath = athInfo(price, data.extendedSupplyData);
+  const dominance = toNumber(data.marketDominance);
+  const supply = data.totalSupply || {};
+  const sats = satsPerDollar(price);
+  const rank = data.extendedSupplyData?.marketCapRank;
+  const totalMarket = data.globalMarketData?.totalMarketCap;
+
+  return (
+    <Flex h='200px' align='center' gap='28px'>
+      <Flex w='290px' flex='none' justify='center' align='center'>
+        <Logo height={98} />
+      </Flex>
+      <Box w='1px' alignSelf='stretch' bg={palette.line} />
+      <PriceBlock
+        price={price}
+        change={data.priceChange}
+        open={data.dayOpen}
+        high={data.dayHigh}
+        low={data.dayLow}
+      />
+      <Grid
+        flex='1'
+        minW={0}
+        h='100%'
+        templateColumns='repeat(3, minmax(0, 1fr))'
+        templateRows='repeat(2, 1fr)'
+        gap='12px 12px'
+      >
+        <Plate
+          color={palette.market}
+          sketch='bag'
+          label='MARKET CAP'
+          value={formatCompactUsd(data.marketCap)}
+          sub={rank ? `#${rank} crypto asset` : 'Bitcoin network value'}
+        />
+        <Plate
+          color={palette.cycle}
+          sketch='pie'
+          sketchProps={{ share: dominance ? dominance / 100 : 0.5 }}
+          label='DOMINANCE'
+          value={dominance ? `${dominance.toFixed(1)}%` : '—'}
+          sub={
+            totalMarket
+              ? `of ${formatCompactUsd(totalMarket)} crypto market`
+              : 'share of crypto market'
+          }
+        />
+        <Plate
+          color={palette.sats}
+          sketch='coin'
+          label='SATS PER DOLLAR'
+          value={formatInt(sats)}
+          sub='sats one US dollar buys'
+        />
+        <Plate
+          color={palette.market}
+          sketch='bars'
+          label='VOLUME 24H'
+          value={formatCompactUsd(data.volume)}
+          sub='BTC/USDT spot on Binance'
+        />
+        <Plate
+          color={palette.cycle}
+          sketch='mountain'
+          label='FROM ATH'
+          value={ath ? formatPct(ath.fromAth) : '—'}
+          sub={
+            ath
+              ? `ATH ${formatUsd(ath.athPrice)} · ${formatMonthShort(ath.athDate)}`
+              : 'all-time high'
+          }
+        />
+        <Plate
+          color={palette.sats}
+          sketch='pick'
+          label='SUPPLY MINED'
+          value={supply.percentage ? `${supply.percentage}%` : '—'}
+          sub={
+            supply.current
+              ? `${(supply.current / 1e6).toFixed(2)}M of 21M BTC`
+              : 'of 21M BTC'
+          }
+        />
       </Grid>
-    </Box>
+    </Flex>
   );
 };
 

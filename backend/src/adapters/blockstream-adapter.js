@@ -14,12 +14,54 @@ class BlockstreamAdapter extends BaseAdapter {
 
   async getBlockchainData() {
     return this.executeWithRetry(async () => {
-      const url = `${this.baseUrl}/blocks/tip/height`;
-      const response = await axios.get(url);
-      const blockHeight = parseInt(response.data, 10);
+      // /blocks returns the 10 most recent blocks, newest first. Fees and
+      // mempool are nice-to-have: if either call fails we still return the tip.
+      const [blocksRes, feesRes, mempoolRes] = await Promise.allSettled([
+        axios.get(`${this.baseUrl}/blocks`),
+        axios.get(`${this.baseUrl}/fee-estimates`),
+        axios.get(`${this.baseUrl}/mempool`),
+      ]);
+
+      if (blocksRes.status !== 'fulfilled') throw blocksRes.reason;
+      const blocks = Array.isArray(blocksRes.value.data)
+        ? blocksRes.value.data
+        : [];
+      const tip = blocks[0];
+      if (!tip) throw new Error('Blockstream returned no blocks');
+
+      const oldest = blocks[blocks.length - 1];
+      const avgBlockSeconds =
+        blocks.length > 1
+          ? Math.round((tip.timestamp - oldest.timestamp) / (blocks.length - 1))
+          : null;
+
+      // fee-estimates maps confirmation target (in blocks) -> sat/vB
+      const est = feesRes.status === 'fulfilled' ? feesRes.value.data : null;
+      const fee = (target) =>
+        est && typeof est[target] === 'number'
+          ? Math.max(1, Math.round(est[target]))
+          : null;
+
+      const mempool =
+        mempoolRes.status === 'fulfilled' ? mempoolRes.value.data : null;
 
       return {
-        blockHeight,
+        blockHeight: tip.height,
+        networkData: {
+          lastBlockTime: tip.timestamp,
+          lastBlockTxCount: tip.tx_count ?? null,
+          avgBlockSeconds,
+          fees: {
+            fastest: fee('1'),
+            halfHour: fee('3'),
+            hour: fee('6'),
+            economy: fee('144'),
+          },
+          mempool: {
+            count: mempool?.count ?? null,
+            vsize: mempool?.vsize ?? null,
+          },
+        },
       };
     });
   }

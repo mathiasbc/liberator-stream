@@ -1,0 +1,23 @@
+[Unit]
+Description=The Liberator - live Bitcoin dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=liberator
+Group=liberator
+WorkingDirectory=/opt/liberator-stream/backend
+EnvironmentFile=/etc/liberator-stream.env
+ExecStart=/usr/bin/node src/app.js
+Restart=always
+RestartSec=3
+# A long-running Node process shouldn't be able to starve the box
+MemoryMax=1G
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

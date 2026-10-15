@@ -13,6 +13,13 @@ const CACHE_SCHEMA = {
   // Blockchain data
   blockHeight: null,
   marketDominance: null,
+  networkData: {
+    lastBlockTime: null,
+    lastBlockTxCount: null,
+    avgBlockSeconds: null,
+    fees: { fastest: null, halfHour: null, hour: null, economy: null },
+    mempool: { count: null, vsize: null },
+  },
 
   // Supply data
   totalSupply: {
@@ -54,8 +61,11 @@ const CACHE_SCHEMA = {
     '1W': [],
   },
 
-  // Current active timeframe
+  // Current active timeframe, and when the display last rotated (ms epoch)
+  // so clients can count down to the next rotation
   currentTimeframe: '5M',
+  timeframeRotatedAt: null,
+  timeframeRotationMs: null,
 
   // Metadata
   lastUpdate: null,
@@ -74,7 +84,7 @@ const FIELD_MAPPINGS = {
     'dayLow',
     'dayClose',
   ],
-  BLOCKCHAIN_DATA: ['blockHeight'],
+  BLOCKCHAIN_DATA: ['blockHeight', 'networkData'],
   SUPPLY_DATA: ['totalSupply', 'extendedSupplyData'],
   GLOBAL_DATA: ['marketDominance', 'globalMarketData'],
   OHLC_DATA: ['ohlcData'],

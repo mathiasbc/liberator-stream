@@ -81,7 +81,7 @@ The system features intelligent API management:
 | **Backend**     | Koa.js, WebSockets (`ws`), Axios, koa-static |
 | **API Sources** | CoinGecko, CoinCap, Binance, Blockstream |
 | **DevOps**      | Docker, Docker Compose                   |
-| **Deployment**  | Render (unified deployment)             |
+| **Deployment**  | Oracle Cloud Always Free + Caddy ([guide](deploy/oracle/README.md)) |
 | **Testing**     | Jest, React Testing Library              |
 | **Linting**     | ESLint, Prettier                         |
 

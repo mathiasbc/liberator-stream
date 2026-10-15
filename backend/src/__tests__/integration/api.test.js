@@ -8,6 +8,7 @@ const mockedAxios = axios;
 // Import components to test
 const CoinGeckoAdapter = require('../../adapters/coingecko-adapter');
 const BinanceAdapter = require('../../adapters/binance-adapter');
+const BlockstreamAdapter = require('../../adapters/blockstream-adapter');
 const CacheService = require('../../cache/cache-service');
 
 describe('API Component Unit Tests', () => {
@@ -184,6 +185,85 @@ describe('API Component Unit Tests', () => {
       expect(types).toContain('ohlc');
       expect(types).not.toContain('supply');
       expect(types).not.toContain('global');
+    });
+  });
+
+  describe('Blockstream Adapter', () => {
+    const blocks = [
+      { height: 971494, timestamp: 1792029836, tx_count: 6219 },
+      { height: 971493, timestamp: 1792029236, tx_count: 255 },
+      { height: 971492, timestamp: 1792028636, tx_count: 3120 },
+    ];
+
+    test('should return tip, fees and mempool in one call', async () => {
+      mockedAxios.get.mockImplementation((url) => {
+        if (url.endsWith('/blocks')) return Promise.resolve({ data: blocks });
+        if (url.endsWith('/fee-estimates'))
+          return Promise.resolve({
+            data: { 1: 12.4, 3: 8.2, 6: 5.9, 144: 1.01 },
+          });
+        if (url.endsWith('/mempool'))
+          return Promise.resolve({ data: { count: 74363, vsize: 34500000 } });
+        return Promise.reject(new Error(`unexpected ${url}`));
+      });
+
+      const result = await new BlockstreamAdapter().getBlockchainData();
+
+      expect(result.blockHeight).toBe(971494);
+      expect(result.networkData).toEqual({
+        lastBlockTime: 1792029836,
+        lastBlockTxCount: 6219,
+        avgBlockSeconds: 600,
+        fees: { fastest: 12, halfHour: 8, hour: 6, economy: 1 },
+        mempool: { count: 74363, vsize: 34500000 },
+      });
+    });
+
+    test('should still return the tip when fees and mempool fail', async () => {
+      mockedAxios.get.mockImplementation((url) =>
+        url.endsWith('/blocks')
+          ? Promise.resolve({ data: blocks })
+          : Promise.reject(new Error('503'))
+      );
+
+      const result = await new BlockstreamAdapter().getBlockchainData();
+
+      expect(result.blockHeight).toBe(971494);
+      expect(result.networkData.fees.fastest).toBeNull();
+      expect(result.networkData.mempool.count).toBeNull();
+    });
+  });
+
+  describe('Network data caching', () => {
+    test('a failed mempool call keeps the last good mempool numbers', () => {
+      const cache = new CacheService();
+      const good = {
+        blockHeight: 971494,
+        networkData: {
+          lastBlockTime: 1792029836,
+          fees: { fastest: 3, halfHour: 2, hour: 1, economy: 1 },
+          mempool: { count: 74363, vsize: 34500000 },
+        },
+      };
+      cache.updateBlockchainData(good, 'blockstream');
+      cache.updateBlockchainData(
+        {
+          blockHeight: 971495,
+          networkData: {
+            lastBlockTime: 1792030436,
+            fees: { fastest: 4, halfHour: 2, hour: 1, economy: 1 },
+            mempool: { count: null, vsize: null },
+          },
+        },
+        'blockstream'
+      );
+
+      const net = cache.get('networkData');
+      expect(cache.get('blockHeight')).toBe(971495);
+      expect(net.lastBlockTime).toBe(1792030436);
+      expect(net.fees.fastest).toBe(4);
+      expect(net.mempool).toEqual({ count: 74363, vsize: 34500000 });
+      cache.cleanup();
     });
   });
 

@@ -27,15 +27,25 @@ This is a real-time Bitcoin dashboard application with a **multi-source API arch
 - `backend/src/adapters/blockstream-adapter.js`: Blockstream API implementation (blockchain data)
 - `backend/src/services/api-manager.js`: API rotation manager with health monitoring and fallback logic
 - `backend/src/services/scheduler.js`: Advanced scheduler with memory management and multiple update intervals
+- `backend/src/services/binance-ticker-stream.js`: Live BTCUSDT price over one Binance WebSocket (backoff, attempt cap, stale watchdog). While it's healthy the scheduler skips REST price polling and pushes ~200-byte price ticks to clients once a second; when it drops, REST polling and the adapter fallbacks take over. `BINANCE_WS_URL` (comma-separated) overrides the endpoints, `PRICE_STREAM=off` disables it
 - `backend/src/cache/cache-service.js`: Centralized cache with validation, memory cleanup, and overflow protection
 - `backend/src/config/timeframes.js`: Single source of truth for all timeframe configurations
 
 ### Frontend Components
 
-- `frontend/src/components/Dashboard.js`: Main dashboard component with WebSocket integration
-- `frontend/src/components/Chart.js`: OHLC chart component using Lightweight Charts
-- `frontend/src/components/Header.js`: Header with block height and system status
-- `frontend/src/components/PriceSection.js`: Price display with metrics and supply data
+The UI is an "On Air" broadcast designed on a fixed 1920×1080 canvas (what OBS captures for the YouTube stream) and scaled to fit other windows.
+
+- `frontend/src/components/Dashboard.js`: WebSocket integration and the broadcast layout
+- `frontend/src/components/Stage.js`: Fixed 1920×1080 stage, scaled and letterboxed to the window
+- `frontend/src/components/OnAirBar.js`: LIVE block, world clocks, data freshness, UTC clock
+- `frontend/src/components/PriceSection.js`: Logo, live price with day range, sketched metric plates
+- `frontend/src/components/Chart.js`: Lightweight Charts candles + volume + MA 20, live last candle, timeframe switch wipe
+- `frontend/src/components/SocialWire.js`: Rotating selected-posts loop (sample data in `frontend/src/data/sampleTweets.js` until the backend sends `tweets`)
+- `frontend/src/components/NetworkPulse.js`: Last block, fees, mempool, difficulty and halving countdowns
+- `frontend/src/components/Ticker.js`: Bottom news crawl
+- `frontend/src/components/Logo.js`: The original logo recoloured to the palette (`frontend/public/assets/the_liberator_neon.png`; the untouched original is `the_liberator_horizontal.png`)
+- `frontend/src/components/Sketch.js`: Hand-drawn metric doodles
+- `frontend/src/theme/theme.js`: Palette and font tokens; `frontend/src/utils/`: formatters and derived metrics
 
 ## Development Commands
 

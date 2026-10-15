@@ -13,6 +13,25 @@ const MAX_HISTORY_SIZE = 100;
 const MEMORY_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
 const MAX_SAFE_COUNTER = Number.MAX_SAFE_INTEGER - 10000;
 
+// Market cap moves with the price, so derive it from the live price and the
+// circulating supply when we have both; otherwise keep the source's figure.
+const liveMarketCap = (data) =>
+  data.currentPrice && data.extendedSupplyData?.circulatingSupply
+    ? data.currentPrice * data.extendedSupplyData.circulatingSupply
+    : data.marketCap;
+
+// Fees and mempool come from separate calls that can fail on their own; a
+// null from one failed poll shouldn't blank a value we already had.
+const keepLastGood = (prev, next) => {
+  if (next === null || next === undefined) return prev;
+  if (typeof next !== 'object' || Array.isArray(next)) return next;
+  const merged = { ...next };
+  Object.keys(next).forEach((key) => {
+    merged[key] = keepLastGood(prev?.[key], next[key]);
+  });
+  return merged;
+};
+
 class CacheService {
   constructor() {
     this.cache = this.initializeCache();
@@ -117,7 +136,7 @@ class CacheService {
   /**
    * Update market data in cache
    */
-  updateMarketData(data, source) {
+  updateMarketData(data, source, { quiet = false } = {}) {
     if (!validateMarketData(data)) {
       console.warn(`Invalid market data from ${source}:`, data);
       return false;
@@ -133,7 +152,10 @@ class CacheService {
 
     if (updated.length > 0) {
       this.recordUpdate('market', source, updated);
-      console.log(`[Cache] Updated market data from ${source}:`, updated);
+      // The live stream updates every second; don't flood the logs
+      if (!quiet) {
+        console.log(`[Cache] Updated market data from ${source}:`, updated);
+      }
       return true;
     }
 
@@ -179,8 +201,13 @@ class CacheService {
 
     const updated = [];
     FIELD_MAPPINGS.BLOCKCHAIN_DATA.forEach((field) => {
-      if (data[field] !== undefined && data[field] !== this.cache[field]) {
-        this.cache[field] = data[field];
+      if (data[field] === undefined) return;
+      const value =
+        field === 'networkData'
+          ? keepLastGood(this.cache[field], data[field])
+          : data[field];
+      if (value !== this.cache[field]) {
+        this.cache[field] = value;
         updated.push(field);
       }
     });
@@ -269,10 +296,15 @@ class CacheService {
   /**
    * Update current timeframe
    */
-  updateCurrentTimeframe(timeframe) {
+  updateCurrentTimeframe(timeframe, rotation = null) {
     if (!TIMEFRAMES.includes(timeframe)) {
       console.warn(`Invalid timeframe: ${timeframe}`);
       return false;
+    }
+
+    if (rotation) {
+      this.cache.timeframeRotatedAt = rotation.rotatedAt;
+      this.cache.timeframeRotationMs = rotation.intervalMs;
     }
 
     if (this.cache.currentTimeframe !== timeframe) {
@@ -367,20 +399,23 @@ class CacheService {
   /**
    * Get cache data formatted for frontend
    */
+  /**
+   * Just the fast-moving market fields, for the per-second price ticks
+   * pushed to clients (the full payload carries ~300 candles).
+   */
+  getMarketSnapshot() {
+    const snapshot = {};
+    FIELD_MAPPINGS.MARKET_DATA.forEach((field) => {
+      snapshot[field] = this.cache[field];
+    });
+    snapshot.marketCap = liveMarketCap(this.cache);
+    snapshot.lastUpdate = this.cache.lastUpdate;
+    return snapshot;
+  }
+
   getFormattedData() {
     const data = { ...this.cache };
-
-    // Compute marketCap fallback from price × circulating supply when the
-    // current source (e.g. Binance) doesn't provide one.
-    if (
-      (!data.marketCap || data.marketCap === 0) &&
-      data.currentPrice &&
-      data.extendedSupplyData?.circulatingSupply
-    ) {
-      data.marketCap =
-        data.currentPrice * data.extendedSupplyData.circulatingSupply;
-    }
-
+    data.marketCap = liveMarketCap(data);
     return {
       ...data,
       currentTimeframe: data.currentTimeframe || DEFAULT_TIMEFRAME,

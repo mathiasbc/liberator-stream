@@ -1,0 +1,67 @@
+// Placeholder posts for designing the social loop. Accounts are fictional and
+// the panel shows a SAMPLE tag while these are in use. The backend will later
+// send the same shape on the WebSocket as `tweets`:
+//   { id, name, handle, text, createdAt (ISO) | minutesAgo,
+//     replies, reposts, likes, avatarUrl? }
+export const SAMPLE_TWEETS = [
+  {
+    id: 'sample-1',
+    name: 'The Liberator',
+    handle: 'liberator_sample',
+    text: 'This is where selected posts will loop during the stream. Mention us with #Bitcoin and you might end up on screen.',
+    minutesAgo: 4,
+    replies: 18,
+    reposts: 64,
+    likes: 412,
+  },
+  {
+    id: 'sample-2',
+    name: 'Sample Pleb',
+    handle: 'sample_pleb',
+    text: 'Stacked another week of sats. No charts, no stress, just the plan. $BTC',
+    minutesAgo: 12,
+    replies: 24,
+    reposts: 112,
+    likes: 1240,
+  },
+  {
+    id: 'sample-3',
+    name: 'Demo Node Runner',
+    handle: 'demo_node',
+    text: "Running my own node means I don't have to trust anyone's numbers, including this stream's. Don't trust, verify.",
+    minutesAgo: 27,
+    replies: 41,
+    reposts: 230,
+    likes: 2890,
+  },
+  {
+    id: 'sample-4',
+    name: 'Placeholder Miner',
+    handle: 'placeholder_miner',
+    text: 'Fees are sitting near the floor right now. Quiet mempools are a good moment to consolidate small UTXOs.',
+    minutesAgo: 48,
+    replies: 9,
+    reposts: 37,
+    likes: 318,
+  },
+  {
+    id: 'sample-5',
+    name: 'Example Hodler',
+    handle: 'example_hodler',
+    text: 'Every block that lands is another ten minutes of the most boring, reliable ledger on earth. Love to see it. #Bitcoin',
+    minutesAgo: 75,
+    replies: 15,
+    reposts: 88,
+    likes: 976,
+  },
+  {
+    id: 'sample-6',
+    name: 'Test Account',
+    handle: 'test_zoomout',
+    text: 'Zooming out on the weekly chart always helps. One candle never tells the whole story.',
+    minutesAgo: 130,
+    replies: 6,
+    reposts: 21,
+    likes: 204,
+  },
+];
