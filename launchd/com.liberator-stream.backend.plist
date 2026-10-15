@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Template: launchd/install.sh fills in the __PLACEHOLDERS__ -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.liberator-stream.backend</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__NODE__</string>
+    <string>src/app.js</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__REPO__/backend</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>NODE_ENV</key>
+    <string>production</string>
+    <key>PATH</key>
+    <string>__PATH__</string>
+  </dict>
+  <!-- Start at login and restart whenever it exits -->
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <!-- Don't let macOS throttle it like a background task -->
+  <key>ProcessType</key>
+  <string>Interactive</string>
+  <key>StandardOutPath</key>
+  <string>__LOGS__/backend.log</string>
+  <key>StandardErrorPath</key>
+  <string>__LOGS__/backend.log</string>
+</dict>
+</plist>

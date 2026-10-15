@@ -18,9 +18,9 @@ const fit = () => {
   };
 };
 
-// The broadcast is designed on a fixed 1920×1080 canvas (what OBS captures)
-// and scaled to fit any other window, letterboxed, so the layout never
-// reflows or scrolls.
+// The broadcast is designed on a fixed 1920×1080 canvas (what the streamer
+// captures) and scaled to fit any other window, letterboxed, so the layout
+// never reflows or scrolls.
 const Stage = ({ children }) => {
   const [{ scale, left, top }, setFit] = useState(fit);
 

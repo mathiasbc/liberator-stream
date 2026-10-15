@@ -1,0 +1,19 @@
+{
+  "name": "liberator-streamer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Streams the dashboard to YouTube: headless Chrome screencast into ffmpeg",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "puppeteer": "25.12.0"
+  },
+  "author": "Mathias Bustamante",
+  "license": "MIT"
+}

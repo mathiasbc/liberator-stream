@@ -13,6 +13,10 @@ dist/
 .env.test.local
 .env.production.local
 
+# Streamer: YouTube stream key and Puppeteer's Chrome download
+streamer/stream.env
+streamer/.cache/
+
 # Logs
 npm-debug.log*
 yarn-debug.log*

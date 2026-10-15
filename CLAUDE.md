@@ -48,6 +48,18 @@ The UI is an "On Air" broadcast designed on a fixed 1920×1080 canvas (the frame
 - `frontend/src/components/Sketch.js`: Hand-drawn metric doodles
 - `frontend/src/theme/theme.js`: Palette and font tokens; `frontend/src/utils/`: formatters and derived metrics
 
+### Streamer and Services (`streamer/`, `launchd/`)
+
+The dashboard streams 24/7 to YouTube from a Mac: two launchd agents, `com.liberator-stream.backend` and `com.liberator-stream.streamer`, installed by `make services-install` from the templates in `launchd/`. Logs go to `~/Library/Logs/liberator-stream/`.
+
+- `streamer/src/index.js`: Entry point; waits for `YOUTUBE_STREAM_KEY` in the gitignored `streamer/stream.env` (re-read every 30 s), rotates the logs hourly (launchd never does)
+- `streamer/src/streamer.js`: Runs Chrome and ffmpeg side by side with watchdogs (no frames for 20 s → restart Chrome; no ffmpeg progress for 30 s → kill ffmpeg; daily Chrome restart) and holds a `caffeinate` assertion. While Chrome restarts, ffmpeg repeats the last frame so the stream stays up
+- `streamer/src/browser.js`: Puppeteer's pinned Chrome (downloaded into `streamer/.cache/`) at 1920×1080, DevTools `Page.startScreencast` JPEG frames
+- `streamer/src/frame-clock.js`: Feeds the latest frame to ffmpeg at a constant 30 fps, correcting timer drift
+- `streamer/src/ffmpeg.js`: ffmpeg arguments (`h264_videotoolbox` CBR, 2 s keyframes, BT.709, silent AAC) and process wrapper. Don't add `-shortest`: it buffers ~10 s of raw 1080p frames (~1 GB)
+- `streamer/src/config.js`: `stream.env` settings; environment variables override them. `STREAM_OUTPUT` sends the stream to a `.flv` file or `rtmp://` URL instead of YouTube, for testing
+- The stream key must never be committed or logged; `streamer/src/log.js` redacts it from every log line
+
 ## Design Rules (broadcast UI)
 
 These come from the owner's review of the On Air design; follow them for any UI change:
@@ -71,6 +83,13 @@ make start       # Start in production mode
 make test        # Run all tests
 make lint        # Run linters
 make format      # Format code with prettier
+
+# Background services (macOS)
+make services-install    # Install and start backend + streamer launchd agents
+make services-status     # State, sleep assertion, recent logs
+make services-restart    # Restart both
+make logs                # Follow both logs
+make services-uninstall  # Stop and remove both
 ```
 
 ### Manual Commands

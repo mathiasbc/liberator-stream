@@ -19,7 +19,8 @@ define load_node
 	fi &&
 endef
 
-.PHONY: install install-all build start dev run-dev clean lint lint-fix format test test-backend test-frontend help
+.PHONY: install install-all build start dev run-dev clean lint lint-fix format test test-backend test-frontend test-streamer help \
+	stream-config services-install services-uninstall services-restart services-status logs
 
 # Default target
 help:
@@ -28,7 +29,7 @@ help:
 	@echo "Usage: make [target]"
 	@echo ""
 	@echo "Setup & Installation:"
-	@echo "  install        Install all dependencies (root, backend, frontend)"
+	@echo "  install        Install all dependencies (root, backend, frontend, streamer)"
 	@echo "  install-all    Alias for install"
 	@echo "  build          Build frontend for production"
 	@echo ""
@@ -36,6 +37,14 @@ help:
 	@echo "  dev            Run in development mode (hot reload)"
 	@echo "  run-dev        Alias for dev"
 	@echo "  start          Run in production mode"
+	@echo ""
+	@echo "Streaming (macOS background services):"
+	@echo "  stream-config      Create streamer/stream.env for the YouTube stream key"
+	@echo "  services-install   Install and start the backend and streamer services"
+	@echo "  services-uninstall Stop and remove both services"
+	@echo "  services-restart   Restart both services"
+	@echo "  services-status    Show service state and recent log lines"
+	@echo "  logs               Follow both service logs"
 	@echo ""
 	@echo "Quality:"
 	@echo "  lint           Run linters on backend and frontend"
@@ -46,6 +55,7 @@ help:
 	@echo "  test           Run all tests"
 	@echo "  test-backend   Run backend tests only"
 	@echo "  test-frontend  Run frontend tests only"
+	@echo "  test-streamer  Run streamer tests only"
 	@echo ""
 	@echo "Utilities:"
 	@echo "  clean          Remove node_modules and build artifacts"
@@ -55,6 +65,7 @@ install:
 	$(load_node) npm install
 	$(load_node) cd frontend && npm install
 	$(load_node) cd backend && npm install
+	$(load_node) cd streamer && npm install
 
 install-all: install
 
@@ -71,6 +82,31 @@ dev:
 
 run-dev: dev
 
+# Streaming: backend and streamer as launchd services (see launchd/)
+LOG_DIR := $(HOME)/Library/Logs/liberator-stream
+
+stream-config:
+	@if [ ! -f streamer/stream.env ]; then \
+		cp streamer/stream.env.example streamer/stream.env && chmod 600 streamer/stream.env && \
+		echo "Created streamer/stream.env: add your YouTube stream key there"; \
+	fi
+
+services-install: stream-config
+	./launchd/install.sh
+
+services-uninstall:
+	./launchd/uninstall.sh
+
+services-restart:
+	launchctl kickstart -k gui/$$(id -u)/com.liberator-stream.backend
+	launchctl kickstart -k gui/$$(id -u)/com.liberator-stream.streamer
+
+services-status:
+	@./launchd/status.sh
+
+logs:
+	tail -n 20 -F $(LOG_DIR)/backend.log $(LOG_DIR)/streamer.log
+
 # Linting & Formatting
 lint:
 	$(load_node) cd backend && npm run lint
@@ -85,7 +121,7 @@ format:
 	$(load_node) cd frontend && npm run format
 
 # Testing
-test: test-backend test-frontend
+test: test-backend test-frontend test-streamer
 
 test-backend:
 	$(load_node) cd backend && npm test
@@ -93,9 +129,14 @@ test-backend:
 test-frontend:
 	$(load_node) cd frontend && npm test -- --watchAll=false
 
+test-streamer:
+	$(load_node) cd streamer && npm test
+
 # Cleanup
 clean:
 	rm -rf node_modules
 	rm -rf backend/node_modules
 	rm -rf frontend/node_modules
+	rm -rf streamer/node_modules
+	rm -rf streamer/.cache
 	rm -rf frontend/build

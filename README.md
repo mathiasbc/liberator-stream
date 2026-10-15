@@ -21,7 +21,7 @@ A 24/7 live Bitcoin dashboard built as a broadcast graphic for a YouTube live st
 | Live price | Done: Binance WebSocket, about 1 update/s, REST fallback |
 | Network data (blocks, fees, mempool) | Done: Blockstream |
 | Hosting | The old Render deployment (btc-dash.com) is retired; the domain isn't serving the app |
-| 24/7 YouTube stream | **In progress:** a background streamer on a Mac (see below) |
+| 24/7 YouTube stream | Built: background services on a Mac (see below); goes live once the stream key is in `streamer/stream.env` |
 | Selected-posts ("ON X") loop | Placeholder: shows sample posts with a SAMPLE tag until a backend sends `tweets` |
 
 ## What's on screen
@@ -52,7 +52,7 @@ Clients get the full data once on connect and on changes, plus small (~200 byte)
 Requires Node 22.
 
 ```bash
-make install   # root, backend and frontend dependencies
+make install   # root, backend, frontend and streamer dependencies
 make build     # production build of the frontend
 make start     # backend on http://localhost:3001 (serves the built app)
 ```
@@ -79,19 +79,56 @@ The page is designed for 1920×1080 and scales to fit any window.
 - `/api/cache`: current data
 - `/api/memory`: process memory
 
-## Streaming to YouTube (in progress)
+## Streaming to YouTube
 
-The plan is to run it all on one Mac, with no cloud hosting:
+Everything runs on one Mac, with no cloud hosting. Two `launchd` services start at login and restart if they exit:
 
-1. The backend runs locally as a macOS `launchd` service.
-2. A streamer service opens `localhost:3001` in headless Chrome at 1920×1080 and captures it at 30 fps (about 1 core on an M2).
-3. It encodes with ffmpeg on the Mac's hardware encoder (`h264_videotoolbox`, ~4.5 Mbps) and sends RTMPS to YouTube.
-4. `launchd` and a watchdog restart anything that stalls, and `caffeinate` keeps the Mac awake.
+- **backend** (`com.liberator-stream.backend`): the app on `localhost:3001`.
+- **streamer** (`com.liberator-stream.streamer`, in `streamer/`): opens the page in headless Chrome at 1920×1080, captures it with the DevTools screencast, and feeds the frames at a constant 30 fps into ffmpeg. ffmpeg encodes on the Mac's hardware encoder (`h264_videotoolbox`, 4.5 Mbps constant bit rate, a keyframe every 2 s, silent AAC audio) and sends RTMPS to YouTube. About 0.9 of a core and 1 GB of memory on an M2.
+
+### Set up
+
+Requires Node 22 and ffmpeg (`brew install node@22 ffmpeg`).
+
+```bash
+make install            # also downloads the streamer's pinned Chrome
+make build
+make services-install   # creates streamer/stream.env, installs and starts both services
+```
+
+Then put your stream key in `streamer/stream.env` (git ignores it). In YouTube Studio: **Go live** → **Stream**, use a persistent key, turn auto-start on and auto-stop off. The streamer checks the file every 30 s and starts streaming once the key is there. After changing the key later, run `make services-restart`. Other settings (bit rate, frame rate, ingest URL) are listed in `streamer/stream.env.example`.
+
+### What keeps it running
+
+| Problem | What happens |
+| --- | --- |
+| A service exits or crashes | `launchd` restarts it after 10 s |
+| ffmpeg exits (upload dropped, YouTube hiccup) | Restarted with backoff: 2 s, 4 s … up to 60 s |
+| ffmpeg hangs (no progress for 30 s) | Killed and restarted |
+| Chrome crashes, or the page stops producing frames for 20 s | Chrome is restarted; meanwhile ffmpeg repeats the last frame, so the stream stays up |
+| Chrome's memory creeps up over days | Chrome restarts once a day (`CHROME_RESTART_HOURS`) |
+| The Mac wants to sleep | The streamer holds a `caffeinate` assertion (idle, disk and system sleep, on AC power) while it streams; the display can still turn off |
+| Logs grow | Both logs rotate at 10 MB, keeping 3 old copies |
+
+### Day to day
+
+```bash
+make services-status     # running? last exit, sleep assertion, recent log lines
+make logs                # follow both logs (~/Library/Logs/liberator-stream/)
+make services-restart
+make services-uninstall  # stop both and remove them from login
+```
+
+### Mac settings
+
+- Keep the Mac on power with the lid open: a closed laptop without an external display sleeps regardless.
+- Services start at login, so turn on automatic login (System Settings → Users & Groups; needs FileVault off) to come back after a reboot or macOS update.
+- To start again after a power cut: `sudo pmset autorestart 1`.
 
 ## Development
 
 ```bash
-make test      # backend + frontend tests
+make test      # backend, frontend and streamer tests
 make lint      # ESLint (+ Prettier rules)
 make format    # Prettier
 ```
@@ -117,6 +154,11 @@ liberator-stream/
 │       ├── data/         # sample posts for the ON X loop
 │       ├── hooks/, utils/, theme/
 │       └── __tests__/
+├── streamer/
+│   ├── src/              # Chrome capture, ffmpeg, frame clock, watchdogs
+│   ├── test/
+│   └── stream.env.example
+├── launchd/              # service templates, install/uninstall/status scripts
 ├── Makefile
 └── CLAUDE.md
 ```

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Template: launchd/install.sh fills in the __PLACEHOLDERS__ -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.liberator-stream.streamer</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__NODE__</string>
+    <string>src/index.js</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__REPO__/streamer</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>__PATH__</string>
+    <!-- The streamer rotates every *.log here, the backend's included -->
+    <key>LOG_DIR</key>
+    <string>__LOGS__</string>
+  </dict>
+  <!-- Start at login and restart whenever it exits -->
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <!-- Time to stop ffmpeg and Chrome cleanly before launchd kills them -->
+  <key>ExitTimeOut</key>
+  <integer>20</integer>
+  <!-- Don't let macOS throttle it like a background task -->
+  <key>ProcessType</key>
+  <string>Interactive</string>
+  <key>StandardOutPath</key>
+  <string>__LOGS__/streamer.log</string>
+  <key>StandardErrorPath</key>
+  <string>__LOGS__/streamer.log</string>
+</dict>
+</plist>
