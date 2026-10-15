@@ -5,7 +5,6 @@ import { toNumber } from './format';
 export const HALVING_INTERVAL = 210000;
 export const DIFFICULTY_EPOCH = 2016;
 export const TARGET_BLOCK_SECONDS = 600;
-export const MAX_SUPPLY = 21000000;
 
 // A 10-block average is noisy; only trust it inside a sane band
 const blockSeconds = (avg) =>

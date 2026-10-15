@@ -9,257 +9,114 @@
 ╚═════╝    ╚═╝    ╚═════╝      ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
 ```
 
-## [btc-dash.com](https://btc-dash.com)
+![The Liberator, On Air dashboard](screenshot.png)
 
-![BTC-DASH Screenshot](screenshot.png)
+A 24/7 live Bitcoin dashboard built as a broadcast graphic for a YouTube live stream. A Node.js backend pulls data from several public APIs (with fallbacks) and pushes it over a WebSocket to a React page designed on a fixed 1920×1080 canvas.
 
-This project is a real-time Bitcoin dashboard that streams live data to a web interface with intelligent **multi-source API architecture**. It provides comprehensive Bitcoin information with live price updates, historical chart data, and key blockchain metrics. The dashboard features automatic API rotation, fallback mechanisms, and memory-efficient operation for 24/7 deployment.
+## Status (October 2026)
 
-## Project Overview
+| Area | State |
+| --- | --- |
+| "On Air" broadcast redesign | Done |
+| Live price | Done: Binance WebSocket, about 1 update/s, REST fallback |
+| Network data (blocks, fees, mempool) | Done: Blockstream |
+| Hosting | The old Render deployment (btc-dash.com) is retired; the domain isn't serving the app |
+| 24/7 YouTube stream | **In progress:** a background streamer on a Mac (see below) |
+| Selected-posts ("ON X") loop | Placeholder: shows sample posts with a SAMPLE tag until a backend sends `tweets` |
 
-The application provides a live dashboard with the following features:
+## What's on screen
 
-- **Real-time Price Updates**: Live Bitcoin price updates streamed directly to the dashboard with automatic API source rotation
-- **Historical OHLC Data**: Interactive charts displaying Open, High, Low, and Close (OHLC) data across multiple timeframes (5M, 1H, 4H, 1D, 1W)
-- **Key Blockchain Metrics**: Displays critical blockchain information, including current block height, market dominance, and total supply
-- **Dynamic Timeframe Rotation**: The backend automatically rotates through different timeframes, providing a comprehensive view of the market
-- **Multi-Source API Management**: Intelligent rotation between multiple data sources (CoinGecko, CoinCap, Binance, Blockstream) with automatic failover
-- **Memory-Efficient Operation**: Built for long-running deployment with automatic memory cleanup and overflow protection
-- **Comprehensive Monitoring**: Real-time system health monitoring with detailed API adapter status
+- **On-air bar:** LIVE (turns DELAYED if the price stalls for 45 s, RECONNECTING if the server connection drops), world clocks, UTC clock.
+- **Header:** logo, live price with a per-tick readout and the 24 h range, six metric plates (market cap, dominance, sats per dollar, 24 h volume, distance from the all-time high, supply mined).
+- **Chart:** candles that rotate through 5M / 1H / 4H / 1D / 1W every 60 s, with a logo wipe on each switch. The last candle follows the live price. Also volume, a 20-period average, high/low markers, a plain-language legend and a candle-close countdown.
+- **Network panel:** last block, fees, mempool, difficulty adjustment and halving countdowns.
+- **ON X:** rotating selected posts.
+- **Ticker:** only facts not shown anywhere else on screen.
 
 ## Architecture
 
-The project uses a **unified architecture** where a single Node.js backend serves both API endpoints and the React frontend as static files, while intelligently managing multiple data sources for maximum reliability.
+One Koa backend (`backend/`) serves the API, the WebSocket and the built React app (`frontend/build`).
 
-### Frontend
+| Data | Source (fallbacks) | Refresh |
+| --- | --- | --- |
+| Price, 24 h stats | Binance WebSocket; REST only while the stream is down (Binance → CoinGecko → CoinPaprika → CoinCap) | ~1 s (REST every 30 s) |
+| Candles | Binance (CoinGecko) | 5M: 1 min · 1H: 5 min · 4H: 30 min · 1D: 12 h · 1W: 24 h |
+| Block, fees, mempool | Blockstream | 1 min |
+| Supply, ATH | CoinGecko (CoinPaprika, CoinCap) | 30 min |
+| Dominance, total market | CoinGecko (CoinPaprika) | 15 min |
 
-The frontend is a single-page application built with **React**. It uses:
+Clients get the full data once on connect and on changes, plus small (~200 byte) price ticks once a second. Details for contributors are in [CLAUDE.md](CLAUDE.md).
 
-- **Chakra UI**: For a clean and modern user interface.
-- **Lightweight Charts**: To render interactive financial charts.
-- **WebSockets**: To receive real-time data from the backend.
+## Run it locally
 
-### Backend
-
-The backend is a **Koa.js** application with intelligent API management that serves four primary purposes:
-
-1.  **Multi-Source Data Aggregation**: Uses multiple API adapters with automatic rotation and failover:
-    - **CoinGecko**: Primary source for market data, OHLC information, and global metrics
-    - **CoinCap**: Alternative market data source with fast response times
-    - **Binance**: High-frequency OHLC data source
-    - **Blockstream**: Dedicated blockchain metrics (block height, network data)
-2.  **Smart Caching Layer**: Centralized cache service that validates and stores data from multiple sources
-3.  **Real-time Streaming**: WebSocket server pushes aggregated data to all connected clients with efficient memory management
-4.  **Static File Serving**: Serves the built React application as static files with proper routing
-
-### API Routes
-
-The backend exposes comprehensive monitoring and data endpoints:
-- `/api/health` - System health check with architecture info
-- `/api/stats` - Comprehensive scheduler and cache statistics  
-- `/api/memory` - Real-time memory usage and system metrics
-- `/api/adapters` - API adapter health status and performance metrics
-- `/api/cache` - Current cached data for debugging
-- `/api/admin/cleanup` - Manual memory cleanup trigger
-- `/` - Serves the React application (catch-all for client-side routing)
-
-### Multi-Source API Architecture
-
-The system features intelligent API management:
-
-- **Adaptive Rotation**: Automatically cycles between API sources to prevent rate limiting
-- **Fallback Mechanisms**: Seamlessly switches to alternative sources when primary APIs fail
-- **Memory Management**: Automatic cleanup with overflow protection for 24/7 operation
-- **Health Monitoring**: Real-time tracking of adapter performance and automatic recovery
-- **Centralized Configuration**: Single source of truth for timeframes and API settings
-
-## Tech Stack
-
-| Area            | Technology                               |
-| --------------- | ---------------------------------------- |
-| **Frontend**    | React, Chakra UI, Lightweight Charts     |
-| **Backend**     | Koa.js, WebSockets (`ws`), Axios, koa-static |
-| **API Sources** | CoinGecko, CoinCap, Binance, Blockstream |
-| **DevOps**      | Docker, Docker Compose                   |
-| **Deployment**  | Oracle Cloud Always Free + Caddy ([guide](deploy/oracle/README.md)) |
-| **Testing**     | Jest, React Testing Library              |
-| **Linting**     | ESLint, Prettier                         |
-
-## Quick Start
-
-### Using Make (Recommended)
+Requires Node 22.
 
 ```bash
-# Install all dependencies
-make install
-
-# Run in development mode (hot reload)
-make dev
-
-# Build and run in production mode
-make build
-make start
+make install   # root, backend and frontend dependencies
+make build     # production build of the frontend
+make start     # backend on http://localhost:3001 (serves the built app)
 ```
 
-### Manual Setup
+`make dev` runs the frontend dev server (port 3000) and the backend with auto-reload.
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/liberator-stream.git
-    cd liberator-stream
-    ```
+The page is designed for 1920×1080 and scales to fit any window.
 
-2.  **Install dependencies and build:**
-    ```bash
-    npm install
-    npm run build
-    ```
+### Configuration (environment variables)
 
-3.  **Start the application:**
-    ```bash
-    npm start
-    ```
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `PORT` | `3001` | Backend port |
+| `COINGECKO_API_KEY` | none | Optional; avoids CoinGecko free-tier rate limits |
+| `BINANCE_WS_URL` | Binance market-data stream | Comma-separated override for the live price stream |
+| `PRICE_STREAM` | on | `off` disables the WebSocket and polls REST every 30 s |
+| `REACT_APP_WS_URL` | same host | Frontend build-time override for the WebSocket URL |
 
-4.  **Access the application and monitoring:**
-    - **Application**: [http://localhost:3001](http://localhost:3001)
-    - **System Stats**: [http://localhost:3001/api/stats](http://localhost:3001/api/stats)
-    - **API Health**: [http://localhost:3001/api/adapters](http://localhost:3001/api/adapters)
-    - **Memory Usage**: [http://localhost:3001/api/memory](http://localhost:3001/api/memory)
+### Monitoring
 
-### Development Mode
+- `/api/health`: is the app up
+- `/api/stats`: scheduler, cache, live price stream health, skipped REST polls
+- `/api/adapters`: health of each API source
+- `/api/cache`: current data
+- `/api/memory`: process memory
 
-For development with hot-reload:
+## Streaming to YouTube (in progress)
+
+The plan is to run it all on one Mac, with no cloud hosting:
+
+1. The backend runs locally as a macOS `launchd` service.
+2. A streamer service opens `localhost:3001` in headless Chrome at 1920×1080 and captures it at 30 fps (about 1 core on an M2).
+3. It encodes with ffmpeg on the Mac's hardware encoder (`h264_videotoolbox`, ~4.5 Mbps) and sends RTMPS to YouTube.
+4. `launchd` and a watchdog restart anything that stalls, and `caffeinate` keeps the Mac awake.
+
+## Development
 
 ```bash
-make dev
-# or
-npm run dev
+make test      # backend + frontend tests
+make lint      # ESLint (+ Prettier rules)
+make format    # Prettier
 ```
 
-### Development with Docker Compose
-
-```bash
-make docker-up
-# or
-docker-compose up --build
-```
-
-Access the application:
-- **Frontend**: [http://localhost:3000](http://localhost:3000)
-- **Backend Health Check**: [http://localhost:3001/api/health](http://localhost:3001/api/health)
-
-## Development and Testing
-
-### Development Commands
-
-```bash
-# Development with hot reload
-make dev
-
-# Production mode
-make start
-
-# Linting
-make lint
-
-# Format code
-make format
-```
-
-### Testing
-
-```bash
-# Run all tests
-make test
-
-# Backend tests only
-make test-backend
-
-# Frontend tests only
-make test-frontend
-
-# Watch mode (backend)
-cd backend && npm run test:watch
-```
-
-### Monitoring and Debugging
-
-The application provides comprehensive monitoring:
-
-**System Health:**
-- `/api/health` - Basic system status
-- `/api/stats` - Detailed scheduler and cache statistics
-- `/api/memory` - Memory usage and system metrics
-
-**API Management:**
-- `/api/adapters` - Health status of all API adapters
-- `/api/cache` - Current cached data for debugging
-
-**Administration:**
-- `/api/admin/cleanup` - Manual memory cleanup trigger
-
-
-## Project Structure
+## Project structure
 
 ```
 liberator-stream/
 ├── backend/
-│   ├── src/
-│   │   ├── adapters/       # API adapters (CoinGecko, CoinCap, Binance, Blockstream)
-│   │   ├── cache/          # Centralized caching system
-│   │   ├── config/         # Configuration management
-│   │   ├── services/       # Business logic services
-│   │   ├── websocket/      # WebSocket server implementation
-│   │   ├── __tests__/      # Test suites
-│   │   └── app.js          # Main Koa application
-│   ├── Dockerfile
-│   └── package.json
+│   └── src/
+│       ├── adapters/     # Binance, CoinGecko, CoinPaprika, CoinCap, Blockstream
+│       ├── cache/        # cache + schema/validation
+│       ├── config/       # timeframes and refresh intervals
+│       ├── services/     # scheduler, API manager, Binance ticker stream
+│       ├── websocket/    # client WebSocket server
+│       ├── __tests__/
+│       └── app.js
 ├── frontend/
-│   ├── src/
-│   │   ├── components/     # React components
-│   │   ├── theme/          # Chakra UI theme
-│   │   ├── __tests__/      # Test suites
-│   │   └── App.js          # Main application component
-│   ├── build/              # Production build output (created by make build)
-│   ├── Dockerfile
-│   └── package.json
-├── Makefile                # Development commands
-├── package.json            # Root package.json for unified builds
-├── docker-compose.yml      # Docker Compose configuration
-├── CLAUDE.md               # Claude Code development guidance
-└── README.md
+│   ├── assets/           # original logo artwork (source)
+│   ├── public/           # index.html, recoloured logo
+│   └── src/
+│       ├── components/   # Stage, OnAirBar, PriceSection, Chart, NetworkPulse, SocialWire, Ticker, Logo, Sketch
+│       ├── data/         # sample posts for the ON X loop
+│       ├── hooks/, utils/, theme/
+│       └── __tests__/
+├── Makefile
+└── CLAUDE.md
 ```
-
-## How It Works
-
-### Multi-Source Architecture
-
-The backend provides intelligent API management and memory optimization:
-
-**Startup Process:**
-1. **Initializes API Adapters**: Sets up multiple API sources with health monitoring
-2. **Starts Cache Service**: Initializes centralized cache with memory management
-3. **Serves React Application**: Static files served from `/frontend/build` directory
-4. **Establishes WebSocket Connection**: Real-time data streaming to clients
-5. **Fetches Initial Data**: Loads data from multiple sources with fallback
-6. **Starts Scheduler**: Multiple update intervals for different data types
-
-**Update Cycles with Intelligent Management:**
-- **Market Data (30s)**: Rotates between CoinGecko → CoinCap → Binance
-- **OHLC Data (60s)**: Rotates timeframes (5M → 1H → 4H → 1D → 1W) with source rotation
-- **Blockchain Data (2min)**: Fetches from Blockstream with fallback
-- **Global Data (5min)**: Market dominance and supply data from CoinGecko
-
-**Memory Management:**
-- Automatic counter overflow protection
-- Periodic cleanup of historical data
-- Bounded arrays with circular buffer behavior
-- Real-time memory monitoring and reporting
-
-**Fallback Mechanisms:**
-- Automatic source switching on API failures
-- Health monitoring with recovery detection
-- Intelligent retry with exponential backoff
-- Rate limiting to prevent API exhaustion
-
-The frontend receives these WebSocket messages and updates the UI in real-time, providing a seamless live experience. The dynamic WebSocket URL ensures the connection works in both development and production environments.

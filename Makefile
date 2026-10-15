@@ -14,7 +14,7 @@ define load_nvm
 	fi && nvm use 22 --silent &&
 endef
 
-.PHONY: install install-all build start dev run-dev clean lint lint-fix format test test-backend test-frontend docker-up docker-down help
+.PHONY: install install-all build start dev run-dev clean lint lint-fix format test test-backend test-frontend help
 
 # Default target
 help:
@@ -41,10 +41,6 @@ help:
 	@echo "  test           Run all tests"
 	@echo "  test-backend   Run backend tests only"
 	@echo "  test-frontend  Run frontend tests only"
-	@echo ""
-	@echo "Docker:"
-	@echo "  docker-up      Start with docker-compose"
-	@echo "  docker-down    Stop docker-compose services"
 	@echo ""
 	@echo "Utilities:"
 	@echo "  clean          Remove node_modules and build artifacts"
@@ -91,13 +87,6 @@ test-backend:
 
 test-frontend:
 	$(load_nvm) cd frontend && npm test -- --watchAll=false
-
-# Docker
-docker-up:
-	docker-compose up --build
-
-docker-down:
-	docker-compose down
 
 # Cleanup
 clean:

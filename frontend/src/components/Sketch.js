@@ -64,54 +64,6 @@ const DRAWINGS = {
       <path d='M18 32 h7 M40 32 h7' />
     </>
   ),
-  hourglass: () => (
-    <>
-      <path d='M16 7 H48 M16 57 H48' />
-      <path d='M20 7 C20 23 30 27 32 32 C34 37 44 41 44 57' />
-      <path d='M44 7 C44 23 34 27 32 32 C30 37 20 41 20 57' />
-      <path d='M25 55 L39 55 L32 46 Z' style={fill} />
-    </>
-  ),
-  flame: () => (
-    <>
-      <path d='M32 58 C17 58 11 45 16 34 C19 27 26 22 26 10 C35 17 41 25 41 33 C43 29 45 26 45 21 C52 30 54 39 51 46 C48 53 42 58 32 58 Z' />
-      <path
-        d='M32 52 C26 52 24 46 27 41 C29 38 31 36 31 31 C36 35 39 40 38 45 C37 49 35 52 32 52 Z'
-        style={fill}
-      />
-    </>
-  ),
-  queue: () => (
-    <>
-      <rect x='6' y='38' width='14' height='14' rx='2' />
-      <rect x='25' y='38' width='14' height='14' rx='2' />
-      <rect x='44' y='38' width='14' height='14' rx='2' />
-      <rect x='15' y='20' width='14' height='14' rx='2' />
-      <rect x='34' y='20' width='14' height='14' rx='2' style={fill} />
-      <rect x='25' y='4' width='14' height='13' rx='2' />
-      <path d='M4 58 H60' />
-    </>
-  ),
-  clock: () => (
-    <>
-      <circle cx='32' cy='33' r='23' />
-      <path d='M32 18 V33 L42 39' />
-      <path d='M26 5 H38 M32 5 V10' />
-    </>
-  ),
-  dial: ({ share = 0.5 }) => {
-    const a = Math.PI * (1 - Math.min(1, Math.max(0, share)));
-    const x = 32 + 20 * Math.cos(a);
-    const y = 44 - 20 * Math.sin(a);
-    return (
-      <>
-        <path d='M6 44 A26 26 0 0 1 58 44' />
-        <path d={`M32 44 L${x.toFixed(1)} ${y.toFixed(1)}`} />
-        <circle cx='32' cy='44' r='3.6' style={dot} />
-        <path d='M10 52 H54' />
-      </>
-    );
-  },
 };
 
 const Sketch = ({ name, color, size = 56, glow = true, ...props }) => {

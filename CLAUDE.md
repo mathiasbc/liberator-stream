@@ -23,8 +23,9 @@ This is a real-time Bitcoin dashboard application with a **multi-source API arch
 - `backend/src/adapters/base-adapter.js`: Abstract base class for all API adapters with retry logic and rate limiting
 - `backend/src/adapters/coingecko-adapter.js`: CoinGecko API implementation (market, OHLC, supply, global data)
 - `backend/src/adapters/coincap-adapter.js`: CoinCap API implementation (market, OHLC, supply data)
+- `backend/src/adapters/coinpaprika-adapter.js`: CoinPaprika fallback (market, supply/ATH, global data) for when CoinGecko rate-limits
 - `backend/src/adapters/binance-adapter.js`: Binance API implementation (market, OHLC data)
-- `backend/src/adapters/blockstream-adapter.js`: Blockstream API implementation (blockchain data)
+- `backend/src/adapters/blockstream-adapter.js`: Blockstream API implementation (block height, last block time, fees, mempool)
 - `backend/src/services/api-manager.js`: API rotation manager with health monitoring and fallback logic
 - `backend/src/services/scheduler.js`: Advanced scheduler with memory management and multiple update intervals
 - `backend/src/services/binance-ticker-stream.js`: Live BTCUSDT price over one Binance WebSocket (backoff, attempt cap, stale watchdog). While it's healthy the scheduler skips REST price polling and pushes ~200-byte price ticks to clients once a second; when it drops, REST polling and the adapter fallbacks take over. `BINANCE_WS_URL` (comma-separated) overrides the endpoints, `PRICE_STREAM=off` disables it
@@ -33,19 +34,30 @@ This is a real-time Bitcoin dashboard application with a **multi-source API arch
 
 ### Frontend Components
 
-The UI is an "On Air" broadcast designed on a fixed 1920×1080 canvas (what OBS captures for the YouTube stream) and scaled to fit other windows.
+The UI is an "On Air" broadcast designed on a fixed 1920×1080 canvas (the frame captured for the YouTube stream) and scaled to fit other windows.
 
 - `frontend/src/components/Dashboard.js`: WebSocket integration and the broadcast layout
 - `frontend/src/components/Stage.js`: Fixed 1920×1080 stage, scaled and letterboxed to the window
-- `frontend/src/components/OnAirBar.js`: LIVE block, world clocks, data freshness, UTC clock
+- `frontend/src/components/OnAirBar.js`: LIVE / DELAYED / RECONNECTING block, world clocks, UTC clock
 - `frontend/src/components/PriceSection.js`: Logo, live price with day range, sketched metric plates
 - `frontend/src/components/Chart.js`: Lightweight Charts candles + volume + MA 20, live last candle, timeframe switch wipe
 - `frontend/src/components/SocialWire.js`: Rotating selected-posts loop (sample data in `frontend/src/data/sampleTweets.js` until the backend sends `tweets`)
 - `frontend/src/components/NetworkPulse.js`: Last block, fees, mempool, difficulty and halving countdowns
 - `frontend/src/components/Ticker.js`: Bottom news crawl
-- `frontend/src/components/Logo.js`: The original logo recoloured to the palette (`frontend/public/assets/the_liberator_neon.png`; the untouched original is `the_liberator_horizontal.png`)
+- `frontend/src/components/Logo.js`: The original logo recoloured to the palette (`frontend/public/assets/the_liberator_neon.png`; the untouched original artwork is `frontend/assets/the_liberator_horizontal.png`)
 - `frontend/src/components/Sketch.js`: Hand-drawn metric doodles
 - `frontend/src/theme/theme.js`: Palette and font tokens; `frontend/src/utils/`: formatters and derived metrics
+
+## Design Rules (broadcast UI)
+
+These come from the owner's review of the On Air design; follow them for any UI change:
+
+- **Each data point appears once on screen.** Before adding a metric, label or ticker item, check the header plates, network panel, chart toolbar/legend and ticker. The ticker only carries facts shown nowhere else.
+- **Colour carries meaning.** Values are neutral white; green/red only for up/down changes; the 20-period average stays purple to match its chart line; one colour per metric family (palette in `frontend/src/theme/theme.js`).
+- **Plain-language labels** for a YouTube audience (OPEN/HIGH/LOW, "THIS HOUR"), not trader shorthand.
+- **No static indicators**: show problems only when they happen (LIVE → DELAYED), not "updated 0s ago".
+- **Logo**: keep the original artwork, only recoloured (`the_liberator_neon.png`); new drawn logos were rejected.
+- **No dead space and no clipped text at 1920×1080.** Verify every UI change with a 1920×1080 screenshot.
 
 ## Development Commands
 
@@ -59,7 +71,6 @@ make start       # Start in production mode
 make test        # Run all tests
 make lint        # Run linters
 make format      # Format code with prettier
-make docker-up   # Start with docker-compose
 ```
 
 ### Manual Commands
@@ -92,13 +103,6 @@ cd frontend && npm test
 
 # Watch mode for development
 cd backend && npm run test:watch
-```
-
-### Docker Development
-
-```bash
-make docker-up   # or: docker-compose up --build
-make docker-down # Stop containers
 ```
 
 ### Linting and Formatting

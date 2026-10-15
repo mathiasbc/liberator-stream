@@ -14,11 +14,11 @@ import {
 export const TIMEFRAMES = ['5M', '1H', '4H', '1D', '1W'];
 
 const TF = {
-  '5M': { seconds: 300, name: '5-MINUTE', span: 'hours' },
-  '1H': { seconds: 3600, name: 'HOURLY', span: 'hours' },
-  '4H': { seconds: 14400, name: '4-HOUR', span: 'days' },
-  '1D': { seconds: 86400, name: 'DAILY', span: 'days' },
-  '1W': { seconds: 604800, name: 'WEEKLY', span: 'weeks' },
+  '5M': { seconds: 300, name: '5-MINUTE' },
+  '1H': { seconds: 3600, name: 'HOURLY' },
+  '4H': { seconds: 14400, name: '4-HOUR' },
+  '1D': { seconds: 86400, name: 'DAILY' },
+  '1W': { seconds: 604800, name: 'WEEKLY' },
 };
 
 const MA_PERIOD = 20;
