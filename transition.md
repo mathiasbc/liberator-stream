@@ -57,7 +57,8 @@ Start by checking this Mac (chip, RAM, macOS, Homebrew, Node 22), then build the
 
 - **Done and on `main`:** the On Air redesign, the live Binance price stream with REST fallback, Blockstream network data, tests.
 - **Built:** the background streamer above (`streamer/`, `launchd/`; see README "Streaming to YouTube"). `make services-install`, then add the stream key to `streamer/stream.env`.
-- **Next:** wire the "ON X" panel to real posts; it shows sample posts until the backend sends `tweets`.
+- **Selected posts:** 48 hand-picked posts are in `content/posts.json`, curated in two review rounds (the rules are in CLAUDE.md).
+- **Next:** wire the "ON X" panel to those posts; it shows sample posts until the backend sends `tweets`.
 - **Hosting:** none. The Render deployment is retired, and Oracle (no free capacity in Santiago) and Hetzner (too expensive for a hobby) were ruled out.
 - **btc-dash.com:** still points at Render, which no longer serves it, so visitors get an HTTPS error. Either forward it to the YouTube live page with GoDaddy's free domain forwarding, or let it lapse.
 - **Hetzner:** close the account and request the $25 verification credit back through a support request. It's only refunded after the account is closed.

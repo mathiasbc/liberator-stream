@@ -1,0 +1,389 @@
+{
+  "about": "Hand-picked posts for the ON X panel. Text and dates are exactly as X returned them when verified (first batch 2026-10-15, second batch 2026-10-16). Add a post with its url; set \"hidden\": true to take one off air without deleting it.",
+  "posts": [
+    {
+      "url": "https://x.com/halfin/status/1110302988",
+      "name": "Hal Finney",
+      "handle": "halfin",
+      "date": "2009-01-11",
+      "text": "Running bitcoin",
+      "theme": "history"
+    },
+    {
+      "url": "https://x.com/lopp/status/910271889016332288",
+      "name": "Jameson Lopp",
+      "handle": "lopp",
+      "date": "2017-09-19",
+      "text": "Q: Who controls Bitcoin?\nA: Anyone who cares enough to enforce the rules to which they agree.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/gladstein/status/1472812857641213954",
+      "name": "Alex Gladstein 🌋 ⚡",
+      "handle": "gladstein",
+      "date": "2021-12-20",
+      "text": "Humans can do incredible things.\n\nThe Pyramids.\n\nFlight.\n\nGoing to the moon.\n\nNuclear power.\n\nBut creating a money system that no one can corrupt might be our most impressive and improbable achievement.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/naval/status/955998687670411264",
+      "name": "Naval",
+      "handle": "naval",
+      "date": "2018-01-24",
+      "text": "Bitcoin is a tool for freeing humanity from oligarchs and tyrants, dressed up as a get-rich-quick scheme.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/real_vijay/status/1146190588707868678",
+      "name": "Vijay Boyapati",
+      "handle": "real_vijay",
+      "date": "2019-07-02",
+      "text": "The twin pillars of #Bitcoin's value proposition:\n\n1. It's possible to secure and transport your wealth without anyone's permission\n\n2. Your wealth cannot be debased \n\nEverything else is noise.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/jack/status/1683324044639375362",
+      "name": "jack",
+      "handle": "jack",
+      "date": "2023-07-24",
+      "text": "tick tock, next block",
+      "theme": "culture"
+    },
+    {
+      "url": "https://x.com/lopp/status/1171847107243859968",
+      "name": "Jameson Lopp",
+      "handle": "lopp",
+      "date": "2019-09-11",
+      "text": "Bitcoin isn't a get rich quick scheme, it's a don't get poor slowly scheme.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/TuurDemeester/status/957377697759612933",
+      "name": "Tuur Demeester",
+      "handle": "TuurDemeester",
+      "date": "2018-01-27",
+      "text": "Bitcoin is the revenge of the nerds: no politics, just code.",
+      "theme": "culture"
+    },
+    {
+      "url": "https://x.com/slush/status/10032993557020672",
+      "name": "slush",
+      "handle": "slush",
+      "date": "2010-12-01",
+      "text": "Just mined my first #bitcoin block! I wish you long and beautiful life, block No.94933...",
+      "theme": "history"
+    },
+    {
+      "url": "https://x.com/real_vijay/status/1375575610949476352",
+      "name": "Vijay Boyapati",
+      "handle": "real_vijay",
+      "date": "2021-03-26",
+      "text": "#Bitcoin is the most important innovation to money in 1000 years.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/marttimalmi/status/1339908805719633921",
+      "name": "Martti Malmi",
+      "handle": "marttimalmi",
+      "date": "2020-12-18",
+      "text": "Thank you, Satoshi and others who have made Bitcoin what it is today. May it bring peace and prosperity to the world. Long live Bitcoin.",
+      "theme": "history"
+    },
+    {
+      "url": "https://x.com/aantonop/status/1490741013748404224",
+      "name": "Andreas (aantonop Team)",
+      "handle": "aantonop",
+      "date": "2022-02-07",
+      "text": "#Bitcoin is not owned by a person, country, bank, or entity. Bitcoin gives power and control to users. 💪",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/NickSzabo4/status/639663431918850048",
+      "name": "Nick Szabo",
+      "handle": "NickSzabo4",
+      "date": "2015-09-04",
+      "text": "Decentralization is what allows Bitcoin to substitute an army of computers for an army of accountants, investigators, and lawyers.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/JeffBooth/status/1721192629910594026",
+      "name": "Jeff Booth ⚡️",
+      "handle": "JeffBooth",
+      "date": "2023-11-05",
+      "text": "Deflation is the natural state of a free market. \nAnd only #Bitcoin can measure it.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/lopp/status/1397208913389531154",
+      "name": "Jameson Lopp",
+      "handle": "lopp",
+      "date": "2021-05-25",
+      "text": "Bitcoin rejects kings, presidents, and voting.\n\nBitcoin rests upon rough consensus and running code.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/fernandoulrich/status/1731492641697579162",
+      "name": "Fernando Ulrich",
+      "handle": "fernandoulrich",
+      "date": "2023-12-04",
+      "text": "Don’t trust, verify.\n\n#Bitcoin",
+      "theme": "culture"
+    },
+    {
+      "url": "https://x.com/BitcoinPierre/status/1958912732763464009",
+      "name": "Pierre Rochard",
+      "handle": "BitcoinPierre",
+      "date": "2025-08-22",
+      "text": "Bitcoin never changes its monetary policy in response to political pressure.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/jimmysong/status/1081687186683187200",
+      "name": "Jimmy Song (송재준)",
+      "handle": "jimmysong",
+      "date": "2019-01-05",
+      "text": "Too many people make a category error when it comes to Bitcoin.\n\nBitcoin is not a tech play like Instagram where you have to constantly innovate to win. \nBitcoin is a monetary play like gold where stability and security are what make it valuable.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/BitcoinIsSaving/status/1584955357600051200",
+      "name": "Bitcoin is Saving",
+      "handle": "BitcoinIsSaving",
+      "date": "2022-10-25",
+      "text": "The Bitcoin network doesn’t know who you are.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/fermatslibrary/status/1875468516498751714",
+      "name": "Fermat's Library",
+      "handle": "fermatslibrary",
+      "date": "2025-01-04",
+      "text": "16 years ago today, Satoshi Nakamoto mined the Bitcoin Genesis Block, embedding the message: 'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks.' \n\nA subtle reference to the financial crisis that inspired it and the birth of decentralized money. https://t.co/omnEsr41Ce",
+      "theme": "history"
+    },
+    {
+      "url": "https://x.com/bitstein/status/1468023981349482497",
+      "name": "Bitstein",
+      "handle": "bitstein",
+      "date": "2021-12-07",
+      "text": "Sound money is not a mere \"use case.\"\n\nIt is the foundation of civilization itself.\n\nKeep your eyes on the prize. Focus on #Bitcoin.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/lopp/status/1194637281291689985",
+      "name": "Jameson Lopp",
+      "handle": "lopp",
+      "date": "2019-11-13",
+      "text": "Q: Is 21 million bitcoin enough to power a global economy?\nA: No, but 2.1 quadrillion satoshis ought to suffice.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/MartyBent/status/1257388659806011400",
+      "name": "Marty Bent",
+      "handle": "MartyBent",
+      "date": "2020-05-04",
+      "text": "Fix the money, fix the world. It's really that simple.",
+      "theme": "culture"
+    },
+    {
+      "url": "https://x.com/_JustinMoon_/status/1062491868552929282",
+      "name": "Justin Moon",
+      "handle": "_JustinMoon_",
+      "date": "2018-11-13",
+      "text": "Be skeptical of anyone who says \"Bitcoin created a new asset class\".\n\nBitcoin is money and money is the oldest asset class there is.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/aantonop/status/1440408006131216386",
+      "name": "Andreas (aantonop Team)",
+      "handle": "aantonop",
+      "date": "2021-09-21",
+      "text": "Bitcoin can change the world. Access to this technology can change people's lives -- especially in places where there is very little access to financial services, to fair and open systems, or the ability to record the truth.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/corybates1895/status/1889030442885722322",
+      "name": "Cory Bates",
+      "handle": "corybates1895",
+      "date": "2025-02-10",
+      "text": "Bitcoin passes an audit every 10 minutes.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/TuurDemeester/status/1164610233861382144",
+      "name": "Tuur Demeester",
+      "handle": "TuurDemeester",
+      "date": "2019-08-22",
+      "text": "The Bitcoin motto \"Vires in Numeris\" (strength in numbers) was first suggested on the BitcoinTalk forum in May 2011. It became popular after being printed on the Casascius physical bitcoins. https://t.co/egq0BsthFJ",
+      "theme": "culture"
+    },
+    {
+      "url": "https://x.com/JeffBooth/status/1403853087731699712",
+      "name": "Jeff Booth ⚡️",
+      "handle": "JeffBooth",
+      "date": "2021-06-12",
+      "text": "Money is just information, so it makes sense that if it is corrupted in the form of printing, we would get misinformation everywhere else. \n\n#Bitcoin",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/LynAldenContact/status/1757942722713854073",
+      "name": "Lyn Alden",
+      "handle": "LynAldenContact",
+      "date": "2024-02-15",
+      "text": "I won’t believe in gold as an alternative to bitcoin until you can point me to a way to transport my gold globally via self custody as I regularly move around the world.\n\n(And I say that as someone who owns gold.)",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/parkeralewis/status/1352658752021950471",
+      "name": "Parker Lewis",
+      "handle": "parkeralewis",
+      "date": "2021-01-22",
+      "text": "#Bitcoin repeals the highly regressive inflation tax.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/adam3us/status/676227695219449859",
+      "name": "Adam Back",
+      "handle": "adam3us",
+      "date": "2015-12-14",
+      "text": "for bitcoin to be bearer requires the blockchain to be censor resistant, otherwise ownership is an IOU from whoever controls the chain.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/jack/status/1349510779033174016",
+      "name": "jack",
+      "handle": "jack",
+      "date": "2021-01-14",
+      "text": "The reason I have so much passion for #Bitcoin is largely because of the model it demonstrates: a foundational internet technology that is not controlled or influenced by any single individual or entity. This is what the internet wants to be, and over time, more of it will be.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/TuurDemeester/status/874299151726637057",
+      "name": "Tuur Demeester",
+      "handle": "TuurDemeester",
+      "date": "2017-06-12",
+      "text": "Don't mistake Bitcoin's immutability and censorship resistance for inertia. This is what guarantees its neutrality as a reserve asset.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/NickSzabo4/status/511624011390779392",
+      "name": "Nick Szabo",
+      "handle": "NickSzabo4",
+      "date": "2014-09-15",
+      "text": "IDs are insecure, local, and labor-intensive. Nakamoto consensus is secure, global, and automated.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/stephanlivera/status/1335035231473004544",
+      "name": "Stephan Livera",
+      "handle": "stephanlivera",
+      "date": "2020-12-05",
+      "text": "Bitcoin will give us the benefits of globalisation, and the benefits of localism.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/LynAldenContact/status/1454230807233581061",
+      "name": "Lyn Alden",
+      "handle": "LynAldenContact",
+      "date": "2021-10-29",
+      "text": "@skwp People often view bitcoin as a speculation when in reality, a self-custodied asset that can be sent anywhere globally in an hour with no centralized third party, or brought through an airport on a phone or in one's mind, is insurance. \n\nGlobal savings.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/lopp/status/929338030976045056",
+      "name": "Jameson Lopp",
+      "handle": "lopp",
+      "date": "2017-11-11",
+      "text": "Bitcoin doesn't care if you're the CEO of a billion dollar unicorn or a teenage whiz kid in your mother's basement. Contributions are welcome and will be judged by their merit.",
+      "theme": "culture"
+    },
+    {
+      "url": "https://x.com/Swan/status/1907161382409138673",
+      "name": "Swan",
+      "handle": "Swan",
+      "date": "2025-04-01",
+      "text": "\"I've developed a new open source P2P e-cash system called Bitcoin. It's completely decentralized, with no central server or trusted parties.\"\n      — Satoshi Nakamoto",
+      "theme": "history"
+    },
+    {
+      "url": "https://x.com/BitcoinPierre/status/2065929454442963275",
+      "name": "Pierre Rochard",
+      "handle": "BitcoinPierre",
+      "date": "2026-06-13",
+      "text": "Bitcoin wins because its scarcity is credible. Gold miners respond to higher prices by digging more; fiat issuers respond to political pressure by printing more. Bitcoin responds to work and time with difficulty adjustments and decentralized nodes that reject inflation.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/real_vijay/status/969284549283737600",
+      "name": "Vijay Boyapati",
+      "handle": "real_vijay",
+      "date": "2018-03-01",
+      "text": "Sound money is the norm of human history and we will return to it with #Bitcoin. \n\nThe century between the gold standard and the Bitcoin standard - the fiat money interregnum - is the real anomaly of history.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/NickSzabo4/status/636015088705650688",
+      "name": "Nick Szabo",
+      "handle": "NickSzabo4",
+      "date": "2015-08-25",
+      "text": "Bitcoin is more secure and automated money. It is not magic pixie dust that changes the human mind or the laws of economics.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/jack/status/1092920168060088320",
+      "name": "jack",
+      "handle": "jack",
+      "date": "2019-02-05",
+      "text": "@edsilva90 Bitcoin is resilient. Bitcoin is principled. Bitcoin is native to internet ideals. And it’s a great brand.",
+      "theme": "culture"
+    },
+    {
+      "url": "https://x.com/LynAldenContact/status/1582192649024704512",
+      "name": "Lyn Alden",
+      "handle": "LynAldenContact",
+      "date": "2022-10-18",
+      "text": "Unlike other technology adoption curves of history, bitcoin is faced with growing through a multi-decade DDoS attack from thousands of other protocols, vying for attention and capital.\n\nAnd it couldn't have been otherwise, due to its open source and non-capital intensive nature.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/jimmysong/status/1795995684660715575",
+      "name": "Jimmy Song (송재준)",
+      "handle": "jimmysong",
+      "date": "2024-05-30",
+      "text": "Bitcoin is savings tech for people that want to save.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/MartyBent/status/1525977456808808448",
+      "name": "Marty Bent",
+      "handle": "MartyBent",
+      "date": "2022-05-15",
+      "text": "Bitcoin provides the ability for individuals to receive, save and send money in a self sovereign fashion. Stomaching volatility is worth the level of control that no other money on the planet can provide.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/BitcoinPierre/status/1975355010923044969",
+      "name": "Pierre Rochard",
+      "handle": "BitcoinPierre",
+      "date": "2025-10-07",
+      "text": "Bitcoin mining is decentralized because it is permissionless.",
+      "theme": "ideas"
+    },
+    {
+      "url": "https://x.com/slush/status/1842822497185530226",
+      "name": "slush",
+      "handle": "slush",
+      "date": "2024-10-06",
+      "text": "Whoever Satoshi was, they didn’t want us to know.",
+      "theme": "history"
+    },
+    {
+      "url": "https://x.com/lopp/status/657374374375374848",
+      "name": "Jameson Lopp",
+      "handle": "lopp",
+      "date": "2015-10-23",
+      "text": "Bitcoin's continued operation is proof that rules can be enforced without authority.",
+      "theme": "ideas"
+    }
+  ]
+}

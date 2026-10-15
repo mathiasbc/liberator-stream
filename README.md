@@ -22,7 +22,7 @@ A 24/7 live Bitcoin dashboard built as a broadcast graphic for a YouTube live st
 | Network data (blocks, fees, mempool) | Done: Blockstream |
 | Hosting | The old Render deployment (btc-dash.com) is retired; the domain isn't serving the app |
 | 24/7 YouTube stream | Built: background services on a Mac (see below); goes live once the stream key is in `streamer/stream.env` |
-| Selected-posts ("ON X") loop | Placeholder: shows sample posts with a SAMPLE tag until a backend sends `tweets` |
+| Selected-posts ("ON X") loop | 48 hand-picked posts in `content/posts.json`; the panel still shows sample posts until the backend sends them |
 
 ## What's on screen
 
@@ -154,6 +154,8 @@ liberator-stream/
 │       ├── data/         # sample posts for the ON X loop
 │       ├── hooks/, utils/, theme/
 │       └── __tests__/
+├── content/
+│   └── posts.json        # hand-picked posts for the ON X panel
 ├── streamer/
 │   ├── src/              # Chrome capture, ffmpeg, frame clock, watchdogs
 │   ├── test/

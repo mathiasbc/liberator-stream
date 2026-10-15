@@ -41,7 +41,7 @@ The UI is an "On Air" broadcast designed on a fixed 1920×1080 canvas (the frame
 - `frontend/src/components/OnAirBar.js`: LIVE / DELAYED / RECONNECTING block, world clocks, UTC clock
 - `frontend/src/components/PriceSection.js`: Logo, live price with day range, sketched metric plates
 - `frontend/src/components/Chart.js`: Lightweight Charts candles + volume + MA 20, live last candle, timeframe switch wipe
-- `frontend/src/components/SocialWire.js`: Rotating selected-posts loop (sample data in `frontend/src/data/sampleTweets.js` until the backend sends `tweets`)
+- `frontend/src/components/SocialWire.js`: Rotating selected-posts loop (sample data in `frontend/src/data/sampleTweets.js` until the backend sends `tweets`; the real list is `content/posts.json`)
 - `frontend/src/components/NetworkPulse.js`: Last block, fees, mempool, difficulty and halving countdowns
 - `frontend/src/components/Ticker.js`: Bottom news crawl
 - `frontend/src/components/Logo.js`: The original logo recoloured to the palette (`frontend/public/assets/the_liberator_neon.png`; the untouched original artwork is `frontend/assets/the_liberator_horizontal.png`)
@@ -59,6 +59,14 @@ The dashboard streams 24/7 to YouTube from a Mac: two launchd agents, `com.liber
 - `streamer/src/ffmpeg.js`: ffmpeg arguments (`h264_videotoolbox` CBR, 2 s keyframes, BT.709, silent AAC) and process wrapper. Don't add `-shortest`: it buffers ~10 s of raw 1080p frames (~1 GB)
 - `streamer/src/config.js`: `stream.env` settings; environment variables override them. `STREAM_OUTPUT` sends the stream to a `.flv` file or `rtmp://` URL instead of YouTube, for testing
 - The stream key must never be committed or logged; `streamer/src/log.js` redacts it from every log line
+
+### Selected Posts (`content/posts.json`)
+
+The owner's hand-picked posts for the ON X panel: each entry has `url`, `name`, `handle`, `date`, `text` (exactly as X returned it) and `theme` (`history`, `ideas` or `culture`); `"hidden": true` takes one off air without deleting it. The order is the rotation order: no author twice in a row, Hal Finney's "Running bitcoin" first. When suggesting additions, match what the owner kept in two review rounds:
+
+- **Keep:** short, declarative, timeless statements about what Bitcoin is and why it matters (no rulers, verify rather than trust, scarcity, savings, open to anyone), from respected voices; and only the most iconic moments (Running bitcoin, the genesis block, Satoshi's own words).
+- **Leave out:** trivia and anecdotes, jokes, how-to tips, greetings, tributes, technical musings, dated analogies; price, news, politics, jabs at people or altcoins; anything that needs its image or a reply's context; controversial people (Saylor, Musk, Ver, Bukele and similar) and the @Bitcoin account.
+- **Verify before adding:** never guess a status URL. Confirm the post exists and copy its text from X's public syndication endpoint (`cdn.syndication.twimg.com/tweet-result`, the one embedded posts use).
 
 ## Design Rules (broadcast UI)
 
