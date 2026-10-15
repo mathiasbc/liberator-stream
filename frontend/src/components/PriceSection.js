@@ -59,33 +59,78 @@ const Plate = ({ color, sketch, sketchProps, label, value, sub }) => (
   </Flex>
 );
 
+const RangeLabel = ({ label, value }) => (
+  <Flex align='baseline' gap='8px' lineHeight='1' whiteSpace='nowrap'>
+    <Text
+      fontFamily={fonts.display}
+      fontSize='16px'
+      fontWeight='600'
+      letterSpacing='0.16em'
+      color={palette.dim}
+    >
+      {label}
+    </Text>
+    <Text
+      fontFamily={fonts.mono}
+      fontSize='17px'
+      fontWeight='600'
+      color={palette.ink}
+      sx={{ fontVariantNumeric: 'tabular-nums' }}
+    >
+      {value}
+    </Text>
+  </Flex>
+);
+
+// Where the price sits in today's range. The track is neutral; only the
+// stretch from 24 hours ago to now is coloured, green if up and red if down
+// (the same move as the 24H badge), and the yellow dot is the price.
 const DayRange = ({ price, open, high, low }) => {
   const pos = rangePosition(price, low, high);
   const openPos = rangePosition(open, low, high);
+  const move =
+    pos !== null && openPos !== null
+      ? {
+          left: Math.min(pos, openPos),
+          width: Math.abs(pos - openPos),
+          color: price >= open ? palette.up : palette.down,
+        }
+      : null;
   return (
-    <Flex align='center' gap='12px' fontFamily={fonts.mono} fontSize='17px'>
-      <Text color={palette.dim}>
-        L{' '}
-        <Text as='span' color={palette.mute}>
-          {formatInt(low)}
-        </Text>
-      </Text>
-      <Box position='relative' w='200px' h='8px' borderRadius='99px'>
-        <Box
-          position='absolute'
-          inset={0}
-          borderRadius='99px'
-          bg={`linear-gradient(90deg, ${palette.down}AA, ${palette.accent}88 50%, ${palette.up}AA)`}
-        />
+    <Box flex='1' minW={0}>
+      <Flex justify='space-between'>
+        <RangeLabel label='24H LOW' value={formatUsd(low)} />
+        <RangeLabel label='24H HIGH' value={formatUsd(high)} />
+      </Flex>
+      <Box
+        position='relative'
+        h='6px'
+        mt='12px'
+        mx='8px'
+        borderRadius='99px'
+        bg={palette.line}
+      >
+        {move && (
+          <Box
+            position='absolute'
+            top={0}
+            bottom={0}
+            left={`${move.left * 100}%`}
+            w={`${move.width * 100}%`}
+            borderRadius='99px'
+            bg={move.color}
+            transition='left 0.8s ease, width 0.8s ease'
+          />
+        )}
         {openPos !== null && (
           <Box
             position='absolute'
-            top='-6px'
+            top='-5px'
             left={`${openPos * 100}%`}
             w='2px'
-            h='20px'
-            bg={palette.ink}
-            opacity={0.7}
+            h='16px'
+            bg={palette.mute}
+            transform='translateX(-50%)'
           />
         )}
         {pos !== null && (
@@ -93,24 +138,18 @@ const DayRange = ({ price, open, high, low }) => {
             position='absolute'
             top='50%'
             left={`${pos * 100}%`}
-            w='18px'
-            h='18px'
+            w='16px'
+            h='16px'
             borderRadius='50%'
             bg={palette.accent}
-            border={`4px solid ${palette.stage}`}
+            border={`3px solid ${palette.stage}`}
             transform='translate(-50%, -50%)'
-            boxShadow={`0 0 12px ${palette.accent}`}
+            boxShadow={`0 0 10px ${palette.accentGlow}`}
             transition='left 0.8s ease'
           />
         )}
       </Box>
-      <Text color={palette.dim}>
-        H{' '}
-        <Text as='span' color={palette.mute}>
-          {formatInt(high)}
-        </Text>
-      </Text>
-    </Flex>
+    </Box>
   );
 };
 
@@ -192,6 +231,7 @@ const PriceBlock = ({ price, change, open, high, low }) => {
       <Flex align='center' gap='22px' mt='14px'>
         <Flex
           align='center'
+          flex='none'
           gap='10px'
           bg={positive ? palette.up : palette.down}
           color={positive ? palette.onAccent : '#fff'}
