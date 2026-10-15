@@ -1,77 +1,10 @@
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex, Text } from '@chakra-ui/react';
 import { palette, fonts } from '../theme/theme';
-import {
-  formatDate,
-  formatInt,
-  formatPct,
-  formatUsd,
-  toNumber,
-} from '../utils/format';
-import { blockSubsidy } from '../utils/metrics';
+import { buildItems } from '../utils/ticker';
 
 // Crawl speed in px/s; slow enough to read on a phone
 const SPEED = 85;
-
-const formatBlockTime = (seconds) =>
-  `${Math.floor(seconds / 60)}M ${String(Math.round(seconds % 60)).padStart(2, '0')}S`;
-
-// Each item is a list of [text, highlighted?] segments. The crawl only
-// carries facts that aren't already on screen: ATH, halving, difficulty,
-// supply, fees, mempool and market cap all live in the panels above.
-const buildItems = (data) => {
-  const items = [];
-  const ext = data.extendedSupplyData || {};
-  const global = data.globalMarketData || {};
-  const net = data.networkData || {};
-
-  const atl = toNumber(ext.atlPrice);
-  if (atl) {
-    const since = data.currentPrice
-      ? (data.currentPrice / atl - 1) * 100
-      : null;
-    items.push([
-      ['ALL-TIME LOW'],
-      [formatUsd(atl, 2), true],
-      [`· ${formatDate(new Date(ext.atlDate)).toUpperCase()}`],
-      ...(since ? [['· UP'], [`${formatInt(since)}%`, true], ['SINCE']] : []),
-    ]);
-  }
-  const subsidy = blockSubsidy(data.blockHeight);
-  if (subsidy) {
-    items.push([
-      ['BLOCK REWARD'],
-      [`${subsidy} BTC`, true],
-      ['· DROPS TO'],
-      [`${subsidy / 2} BTC`, true],
-      ['AT THE NEXT HALVING'],
-    ]);
-  }
-  if (net.avgBlockSeconds) {
-    items.push([
-      ['THE LAST 10 BLOCKS CAME EVERY'],
-      [formatBlockTime(net.avgBlockSeconds), true],
-      ['ON AVERAGE · TARGET 10M 00S'],
-    ]);
-  }
-  const chg = toNumber(global.marketCapChangePercentage);
-  if (chg !== null) {
-    items.push([
-      ['WHOLE CRYPTO MARKET'],
-      [formatPct(chg, 1, { sign: true }), true],
-      ['IN 24H'],
-      ...(global.activeCryptocurrencies
-        ? [[`· ${formatInt(global.activeCryptocurrencies)} COINS TRACKED`]]
-        : []),
-    ]);
-  }
-  items.push([
-    ['DATA'],
-    ['BINANCE · COINGECKO · BLOCKSTREAM', true],
-    ['· NOT FINANCIAL ADVICE'],
-  ]);
-  return items;
-};
 
 const Ticker = ({ data }) => {
   const items = useMemo(() => buildItems(data), [data]);
