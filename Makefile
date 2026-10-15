@@ -1,17 +1,22 @@
 # Makefile for liberator-stream
 # Bitcoin Live Dashboard
 
-# Use bash and load nvm for npm/node access
+# Use bash and put Node 22 on the PATH for npm/node access
 SHELL := /bin/bash
 
-# Load nvm before each command (supports both standard and Homebrew installations)
-define load_nvm
+# Select Node 22 before each command: nvm if installed (standard or Homebrew),
+# otherwise Homebrew's node@22
+define load_node
 	export NVM_DIR="$(HOME)/.nvm" && \
 	if [ -s "/opt/homebrew/opt/nvm/libexec/nvm.sh" ]; then \
-		source "/opt/homebrew/opt/nvm/libexec/nvm.sh"; \
-	elif [ -s "$(NVM_DIR)/nvm.sh" ]; then \
-		source "$(NVM_DIR)/nvm.sh"; \
-	fi && nvm use 22 --silent &&
+		source "/opt/homebrew/opt/nvm/libexec/nvm.sh" && nvm use 22 --silent; \
+	elif [ -s "$$NVM_DIR/nvm.sh" ]; then \
+		source "$$NVM_DIR/nvm.sh" && nvm use 22 --silent; \
+	elif [ -x "/opt/homebrew/opt/node@22/bin/node" ]; then \
+		export PATH="/opt/homebrew/opt/node@22/bin:$$PATH"; \
+	else \
+		echo "Node 22 not found: install nvm or run 'brew install node@22'" >&2; false; \
+	fi &&
 endef
 
 .PHONY: install install-all build start dev run-dev clean lint lint-fix format test test-backend test-frontend help
@@ -47,46 +52,46 @@ help:
 
 # Installation
 install:
-	$(load_nvm) npm install
-	$(load_nvm) cd frontend && npm install
-	$(load_nvm) cd backend && npm install
+	$(load_node) npm install
+	$(load_node) cd frontend && npm install
+	$(load_node) cd backend && npm install
 
 install-all: install
 
 # Build
 build:
-	$(load_nvm) cd frontend && npm run build
+	$(load_node) cd frontend && npm run build
 
 # Running
 start:
-	$(load_nvm) cd backend && npm start
+	$(load_node) cd backend && npm start
 
 dev:
-	$(load_nvm) npm run dev
+	$(load_node) npm run dev
 
 run-dev: dev
 
 # Linting & Formatting
 lint:
-	$(load_nvm) cd backend && npm run lint
-	$(load_nvm) cd frontend && npm run lint
+	$(load_node) cd backend && npm run lint
+	$(load_node) cd frontend && npm run lint
 
 lint-fix:
-	$(load_nvm) cd backend && npm run lint -- --fix
-	$(load_nvm) cd frontend && npm run lint:fix
+	$(load_node) cd backend && npm run lint -- --fix
+	$(load_node) cd frontend && npm run lint:fix
 
 format:
-	$(load_nvm) cd backend && npm run format
-	$(load_nvm) cd frontend && npm run format
+	$(load_node) cd backend && npm run format
+	$(load_node) cd frontend && npm run format
 
 # Testing
 test: test-backend test-frontend
 
 test-backend:
-	$(load_nvm) cd backend && npm test
+	$(load_node) cd backend && npm test
 
 test-frontend:
-	$(load_nvm) cd frontend && npm test -- --watchAll=false
+	$(load_node) cd frontend && npm test -- --watchAll=false
 
 # Cleanup
 clean:

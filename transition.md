@@ -6,7 +6,7 @@ The goal on the new Mac: run the dashboard locally and stream it 24/7 to YouTube
 
 - **Claude Code:** install the Claude desktop app, sign in, open the **Code** tab. claude.ai/code in a browser runs in Anthropic's cloud, not on your Mac, so it can't set up the streamer.
 - **Homebrew:** <https://brew.sh>
-- **Node 22:** `brew install node@22`, or `nvm install 22` if you use nvm (the Makefile runs `nvm use 22`).
+- **Node 22:** `brew install node@22`, or `nvm install 22` if you use nvm (the Makefile uses nvm when it's installed, otherwise Homebrew's node@22).
 - **GitHub access:** add this Mac's SSH key to GitHub so you can push, or clone over HTTPS if you only need to pull.
 - **Power:** keep the Mac on its power adapter with the lid open. The display can turn off; the streamer will keep the Mac from sleeping.
 
