@@ -29,6 +29,7 @@ This is a real-time Bitcoin dashboard application with a **multi-source API arch
 - `backend/src/services/api-manager.js`: API rotation manager with health monitoring and fallback logic
 - `backend/src/services/scheduler.js`: Advanced scheduler with memory management and multiple update intervals
 - `backend/src/services/binance-ticker-stream.js`: Live BTCUSDT price over one Binance WebSocket (backoff, attempt cap, stale watchdog). While it's healthy the scheduler skips REST price polling and pushes ~200-byte price ticks to clients once a second; when it drops, REST polling and the adapter fallbacks take over. `BINANCE_WS_URL` (comma-separated) overrides the endpoints, `PRICE_STREAM=off` disables it
+- `backend/src/services/posts.js`: The ON X posts. Loads `content/posts.json`, drops t.co links and leading @replies, and sends the list to clients as `tweets` (kept outside the market snapshot, so it only goes out on connect and on change). Watches the file, so an edit is on screen within a second, no restart. Refreshes likes, replies and avatars once a day from X's public syndication endpoint; `POST_STATS=off` skips that, `POSTS_FILE` points elsewhere. `/api/posts` shows the current list
 - `backend/src/cache/cache-service.js`: Centralized cache with validation, memory cleanup, and overflow protection
 - `backend/src/config/timeframes.js`: Single source of truth for all timeframe configurations
 
@@ -41,7 +42,7 @@ The UI is an "On Air" broadcast designed on a fixed 1920×1080 canvas (the frame
 - `frontend/src/components/OnAirBar.js`: LIVE / DELAYED / RECONNECTING block, world clocks, UTC clock
 - `frontend/src/components/PriceSection.js`: Logo, live price with day range, sketched metric plates
 - `frontend/src/components/Chart.js`: Lightweight Charts candles + volume + MA 20, live last candle, timeframe switch wipe
-- `frontend/src/components/SocialWire.js`: Rotating selected-posts loop (sample data in `frontend/src/data/sampleTweets.js` until the backend sends `tweets`; the real list is `content/posts.json`)
+- `frontend/src/components/SocialWire.js`: Rotating selected-posts loop over the backend's `tweets` (falls back to `frontend/src/data/sampleTweets.js` with a SAMPLE tag). Old posts show their date; time on screen grows with length (8–20 s); the text size starts from an estimate in `frontend/src/utils/posts.js` and steps down after layout until nothing is clipped
 - `frontend/src/components/NetworkPulse.js`: Last block, fees, mempool, difficulty and halving countdowns
 - `frontend/src/components/Ticker.js`: Bottom news crawl
 - `frontend/src/components/Logo.js`: The original logo recoloured to the palette (`frontend/public/assets/the_liberator_neon.png`; the untouched original artwork is `frontend/assets/the_liberator_horizontal.png`)
@@ -62,7 +63,7 @@ The dashboard streams 24/7 to YouTube from a Mac: two launchd agents, `com.liber
 
 ### Selected Posts (`content/posts.json`)
 
-The owner's hand-picked posts for the ON X panel: each entry has `url`, `name`, `handle`, `date`, `text` (exactly as X returned it) and `theme` (`history`, `ideas` or `culture`); `"hidden": true` takes one off air without deleting it. The order is the rotation order: no author twice in a row, Hal Finney's "Running bitcoin" first. When suggesting additions, match what the owner kept in two review rounds:
+The owner's hand-picked posts for the ON X panel: each entry has `url`, `name`, `handle`, `date`, `text` (exactly as X returned it) and `theme` (`history`, `ideas` or `culture`); `"hidden": true` takes one off air without deleting it. Saved edits go on screen within a second. The order is the rotation order: no author twice in a row, Hal Finney's "Running bitcoin" first. When suggesting additions, match what the owner kept in two review rounds:
 
 - **Keep:** short, declarative, timeless statements about what Bitcoin is and why it matters (no rulers, verify rather than trust, scarcity, savings, open to anyone), from respected voices; and only the most iconic moments (Running bitcoin, the genesis block, Satoshi's own words).
 - **Leave out:** trivia and anecdotes, jokes, how-to tips, greetings, tributes, technical musings, dated analogies; price, news, politics, jabs at people or altcoins; anything that needs its image or a reply's context; controversial people (Saylor, Musk, Ver, Bukele and similar) and the @Bitcoin account.

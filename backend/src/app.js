@@ -11,12 +11,15 @@ const http = require('http');
 
 const websocketServer = require('./websocket/server');
 const Scheduler = require('./services/scheduler');
+const { PostsService } = require('./services/posts');
 
 const app = new Koa();
 const router = new Router();
 
 // Initialize scheduler
 const scheduler = new Scheduler();
+// Hand-picked posts for the ON X panel (content/posts.json)
+const posts = new PostsService();
 
 // Middleware
 app.use(cors());
@@ -64,6 +67,11 @@ router.post('/api/admin/cleanup', (ctx) => {
   };
 });
 
+// The posts the ON X panel rotates through
+router.get('/api/posts', (ctx) => {
+  ctx.body = posts.getPosts();
+});
+
 // Memory usage endpoint
 router.get('/api/memory', (ctx) => {
   ctx.body = {
@@ -109,6 +117,9 @@ const server = http.createServer(app.callback());
     // Start scheduler
     scheduler.start();
 
+    posts.on('change', (list) => websocketServer.setExtra('tweets', list));
+    posts.start();
+
     server.listen(PORT, () => {
       console.log(`🚀 Bitcoin Dashboard running on port ${PORT}`);
       console.log(
@@ -122,6 +133,7 @@ const server = http.createServer(app.callback());
     process.on('SIGTERM', () => {
       console.log('SIGTERM received, shutting down gracefully...');
       scheduler.stop();
+      posts.stop();
       server.close(() => {
         console.log('Server closed');
         process.exit(0);
@@ -131,6 +143,7 @@ const server = http.createServer(app.callback());
     process.on('SIGINT', () => {
       console.log('SIGINT received, shutting down gracefully...');
       scheduler.stop();
+      posts.stop();
       server.close(() => {
         console.log('Server closed');
         process.exit(0);

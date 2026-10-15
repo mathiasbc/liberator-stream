@@ -12,6 +12,9 @@ class WebSocketServer {
     this.wss = null;
     this.clients = new Set();
     this.cachedData = null;
+    // Fields kept outside the market snapshot (the ON X posts): sent to
+    // every new client and only re-broadcast when they change
+    this.extras = {};
     this.heartbeat = null;
   }
 
@@ -25,9 +28,10 @@ class WebSocketServer {
       });
       console.log(`[WS] client connected (${this.clients.size} total)`);
 
-      if (this.cachedData) {
+      const initial = { ...(this.cachedData || {}), ...this.extras };
+      if (Object.keys(initial).length) {
         try {
-          ws.send(JSON.stringify(this.cachedData));
+          ws.send(JSON.stringify(initial));
         } catch (error) {
           console.error('[WS] error sending initial data:', error.message);
         }
@@ -71,6 +75,11 @@ class WebSocketServer {
   broadcastPartial(partial) {
     if (this.cachedData) this.cachedData = { ...this.cachedData, ...partial };
     this.broadcast(partial);
+  }
+
+  setExtra(key, value) {
+    this.extras[key] = value;
+    this.broadcast({ [key]: value });
   }
 
   broadcast(data) {

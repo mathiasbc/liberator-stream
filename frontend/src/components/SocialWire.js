@@ -1,10 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Box, Flex, Image, Text } from '@chakra-ui/react';
 import { palette, fonts } from '../theme/theme';
-import { formatAgo, formatCompact } from '../utils/format';
+import {
+  SIZES,
+  fitPost,
+  formatCount,
+  postDuration,
+  postWhen,
+} from '../utils/posts';
 import { SAMPLE_TWEETS } from '../data/sampleTweets';
 
-const ROTATE_MS = 12000;
 const AVATAR_COLORS = [
   palette.cycle,
   palette.chain,
@@ -45,7 +50,7 @@ const Stat = ({ icon, value }) => (
       <path d={ICONS[icon]} />
     </svg>
     <Text fontSize='19px' fontWeight='600'>
-      {formatCompact(value)}
+      {formatCount(value)}
     </Text>
   </Flex>
 );
@@ -102,41 +107,45 @@ const RichText = ({ text }) =>
     )
   );
 
-const postAge = (post) => {
-  if (post.createdAt) {
-    return formatAgo((Date.now() - new Date(post.createdAt).getTime()) / 1000);
-  }
-  return formatAgo((post.minutesAgo || 0) * 60);
-};
-
-// Longer posts step down in size so a full 280-character post still fits
-const textSize = (text) => {
-  if (text.length <= 80) return { fontSize: '31px', lineHeight: 1.3, lines: 4 };
-  if (text.length <= 120)
-    return { fontSize: '27px', lineHeight: 1.32, lines: 5 };
-  if (text.length <= 190)
-    return { fontSize: '24px', lineHeight: 1.3, lines: 6 };
-  return { fontSize: '21px', lineHeight: 1.28, lines: 7 };
-};
-
 const SocialWire = ({ tweets }) => {
   const isSample = !tweets?.length;
   const posts = isSample ? SAMPLE_TWEETS : tweets;
   const [index, setIndex] = useState(0);
 
-  useEffect(() => {
-    const id = setInterval(
-      () => setIndex((i) => (i + 1) % posts.length),
-      ROTATE_MS
-    );
-    return () => clearInterval(id);
-  }, [posts.length]);
-
   const i = index % posts.length;
   const post = posts[i];
   const nextIndex = (i + 1) % posts.length;
   const next = posts[nextIndex];
-  const size = textSize(post.text);
+  // Longer posts step down in size and stay up longer. The size starts from
+  // an estimate; if the text still overflows once laid out, it steps down
+  // again before the frame is painted, so nothing is ever clipped.
+  const fitted = fitPost(post.text);
+  const [shrink, setShrink] = useState({ id: null, steps: 0 });
+  const steps = shrink.id === post.id ? shrink.steps : 0;
+  const size = SIZES[Math.min(fitted.index + steps, SIZES.length - 1)];
+  const duration = postDuration(fitted.text);
+  const textRef = useRef(null);
+  const bodyRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const text = textRef.current;
+    const body = bodyRef.current;
+    if (!text || !body) return;
+    const overflowing =
+      text.scrollHeight > text.clientHeight + 1 ||
+      body.scrollHeight > body.clientHeight + 1;
+    if (overflowing && fitted.index + steps < SIZES.length - 1) {
+      setShrink({ id: post.id, steps: steps + 1 });
+    }
+  }, [post.id, fitted.text, fitted.index, steps]);
+
+  useEffect(() => {
+    const id = setTimeout(
+      () => setIndex((n) => (n + 1) % posts.length),
+      duration
+    );
+    return () => clearTimeout(id);
+  }, [i, duration, posts.length]);
 
   return (
     <Flex
@@ -201,9 +210,11 @@ const SocialWire = ({ tweets }) => {
 
       <Flex
         key={post.id}
+        ref={bodyRef}
         direction='column'
         flex='1'
         minH={0}
+        overflow='hidden'
         px='22px'
         pt='20px'
         pb='16px'
@@ -223,25 +234,34 @@ const SocialWire = ({ tweets }) => {
               {post.name}
             </Text>
             <Text fontSize='19px' color={palette.dim} lineHeight='1.3'>
-              @{post.handle} · {postAge(post)}
+              @{post.handle} · {postWhen(post)}
             </Text>
           </Box>
         </Flex>
         <Text
+          ref={textRef}
           mt='16px'
           fontSize={size.fontSize}
           fontWeight='500'
           lineHeight={size.lineHeight}
           color={palette.ink}
+          whiteSpace='pre-line'
           noOfLines={size.lines}
         >
-          <RichText text={post.text} />
+          <RichText text={fitted.text} />
         </Text>
         <Box flex='1' />
         <Flex align='center' gap='26px' mt='12px' whiteSpace='nowrap'>
-          <Stat icon='reply' value={post.replies} />
-          <Stat icon='repost' value={post.reposts} />
-          <Stat icon='like' value={post.likes} />
+          {/* Counts X doesn't provide (reposts) are left out */}
+          {typeof post.replies === 'number' && (
+            <Stat icon='reply' value={post.replies} />
+          )}
+          {typeof post.reposts === 'number' && (
+            <Stat icon='repost' value={post.reposts} />
+          )}
+          {typeof post.likes === 'number' && (
+            <Stat icon='like' value={post.likes} />
+          )}
           <Box flex='1' />
           {posts.length > 1 && (
             <Flex align='center' gap='8px' minW={0}>
@@ -275,7 +295,7 @@ const SocialWire = ({ tweets }) => {
           key={`progress-${post.id}`}
           h='100%'
           bg={palette.accent}
-          animation={`progress ${ROTATE_MS}ms linear`}
+          animation={`progress ${duration}ms linear`}
         />
       </Box>
     </Flex>

@@ -22,7 +22,7 @@ A 24/7 live Bitcoin dashboard built as a broadcast graphic for a YouTube live st
 | Network data (blocks, fees, mempool) | Done: Blockstream |
 | Hosting | The old Render deployment (btc-dash.com) is retired; the domain isn't serving the app |
 | 24/7 YouTube stream | Built: background services on a Mac (see below); goes live once the stream key is in `streamer/stream.env` |
-| Selected-posts ("ON X") loop | 48 hand-picked posts in `content/posts.json`; the panel still shows sample posts until the backend sends them |
+| Selected-posts ("ON X") loop | Done: 48 hand-picked posts from `content/posts.json`, with real avatars and like/reply counts; edits go live without a restart |
 
 ## What's on screen
 
@@ -30,7 +30,7 @@ A 24/7 live Bitcoin dashboard built as a broadcast graphic for a YouTube live st
 - **Header:** logo, live price with a per-tick readout and the 24 h range, six metric plates (market cap, dominance, sats per dollar, 24 h volume, distance from the all-time high, supply mined).
 - **Chart:** candles that rotate through 5M / 1H / 4H / 1D / 1W every 60 s, with a logo wipe on each switch. The last candle follows the live price. Also volume, a 20-period average, high/low markers, a plain-language legend and a candle-close countdown.
 - **Network panel:** last block, fees, mempool, difficulty adjustment and halving countdowns.
-- **ON X:** rotating selected posts.
+- **ON X:** rotating hand-picked posts with the author's photo, the post date and its replies and likes; longer posts stay up longer.
 - **Ticker:** only facts not shown anywhere else on screen.
 
 ## Architecture
@@ -70,6 +70,8 @@ The page is designed for 1920×1080 and scales to fit any window.
 | `BINANCE_WS_URL` | Binance market-data stream | Comma-separated override for the live price stream |
 | `PRICE_STREAM` | on | `off` disables the WebSocket and polls REST every 30 s |
 | `REACT_APP_WS_URL` | same host | Frontend build-time override for the WebSocket URL |
+| `POSTS_FILE` | `content/posts.json` | The ON X posts |
+| `POST_STATS` | on | `off` stops fetching likes, replies and avatars from X |
 
 ### Monitoring
 
@@ -78,6 +80,7 @@ The page is designed for 1920×1080 and scales to fit any window.
 - `/api/adapters`: health of each API source
 - `/api/cache`: current data
 - `/api/memory`: process memory
+- `/api/posts`: the ON X posts as the panel gets them
 
 ## Streaming to YouTube
 
