@@ -14,10 +14,11 @@ dist/
 .env.production.local
 
 # Streamer: YouTube stream key, Puppeteer's Chrome download, music tracks
+# (the tracks' licences don't allow redistributing them)
 streamer/stream.env
 streamer/.cache/
-streamer/music/*
-!streamer/music/README.md
+content/background-music/*
+!content/background-music/README.md
 
 # Logs
 npm-debug.log*

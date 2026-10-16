@@ -15,9 +15,10 @@ const DEFAULTS = {
   JPEG_QUALITY: '80',
   CHROME_RESTART_HOURS: '24',
   FFMPEG_PATH: 'ffmpeg',
-  MUSIC_DIR: path.join(__dirname, '..', 'music'),
+  MUSIC_DIR: path.join(__dirname, '..', '..', 'content', 'background-music'),
   MUSIC_VOLUME: '1',
   MUSIC_LOUDNORM: 'on',
+  MUSIC_FADE_SECONDS: '3',
   YOUTUBE_CLIENT_ID: '',
   YOUTUBE_CLIENT_SECRET: '',
   YOUTUBE_REFRESH_TOKEN: '',
@@ -76,6 +77,13 @@ const loadConfig = ({
     musicDir: raw.MUSIC_DIR.trim(),
     musicVolume: toNumber('MUSIC_VOLUME', raw.MUSIC_VOLUME, 0.1, 2),
     musicLoudnorm: raw.MUSIC_LOUDNORM.trim().toLowerCase() !== 'off',
+    // Each track fades in and out over this many seconds; 0 turns it off
+    musicFadeSeconds: toNumber(
+      'MUSIC_FADE_SECONDS',
+      raw.MUSIC_FADE_SECONDS,
+      0,
+      15
+    ),
     youtube: {
       clientId: raw.YOUTUBE_CLIENT_ID.trim(),
       clientSecret: raw.YOUTUBE_CLIENT_SECRET.trim(),

@@ -2,8 +2,10 @@
 
 Drop audio files in this folder (mp3, m4a, aac, wav, flac, ogg, opus, aiff)
 and the streamer plays them on a loop, shuffled at every start, levelled to
--16 LUFS so quiet and loud tracks sit at the same volume. Git ignores
-everything here except this file. With no files, the stream is silent.
+-16 LUFS so quiet and loud tracks sit at the same volume, each fading in and
+out over 3 seconds. Git ignores everything here except this file: most
+licences, Pixabay's included, don't allow redistributing the tracks. With no
+files, the stream is silent.
 
 After adding or removing tracks, run `make services-restart`: ffmpeg reads
 the folder when it starts.
@@ -24,4 +26,5 @@ the folder when it starts.
   sometimes trigger false Content ID claims that you then have to dispute.
 
 Settings in `stream.env`: `MUSIC_DIR`, `MUSIC_VOLUME` (0.1–2, after
-levelling), `MUSIC_LOUDNORM=off` to keep tracks as they are.
+levelling), `MUSIC_FADE_SECONDS` (0 turns fades off), `MUSIC_LOUDNORM=off`
+to keep tracks as they are.

@@ -5,6 +5,7 @@ const path = require('node:path');
 const { test } = require('node:test');
 const { execFileSync } = require('node:child_process');
 const {
+  fadeFilters,
   findTracks,
   parseMeasurement,
   playlistText,
@@ -45,6 +46,18 @@ test('writes a concat list and escapes quotes', () => {
     "ffconcat version 1.0\nfile '/music/Don'\\''t Stop.mp3'\nfile '/music/b.mp3'\n"
   );
   assert.equal(playlistText([]), 'ffconcat version 1.0\n');
+});
+
+test('fades each end, shorter on short tracks', () => {
+  assert.deepEqual(fadeFilters(180, 3), [
+    'afade=t=in:st=0:d=3.00',
+    'afade=t=out:st=177.00:d=3.00',
+  ]);
+  assert.deepEqual(fadeFilters(8, 3), [
+    'afade=t=in:st=0:d=2.00',
+    'afade=t=out:st=6.00:d=2.00',
+  ]);
+  assert.deepEqual(fadeFilters(180, 0), []);
 });
 
 test('reads the loudness ffmpeg measured', () => {

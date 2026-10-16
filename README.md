@@ -23,7 +23,7 @@ A 24/7 live Bitcoin dashboard built as a broadcast graphic for a YouTube live st
 | Hosting | The old Render deployment (btc-dash.com) is retired; the domain isn't serving the app |
 | 24/7 YouTube stream | Built: background services on a Mac (see below); goes live once the stream key is in `streamer/stream.env` |
 | Selected-posts ("Bitcoin on X") loop | Done: 48 hand-picked posts from `content/posts.json`, with real avatars and like/reply counts; edits go live without a restart |
-| Music and live title | Built: tracks in `streamer/music/` play on a loop, levelled; the title follows the price once you've run `make youtube-auth` |
+| Music and live title | Done: 19 Pixabay jazz tracks in `content/background-music/` loop with a fade between tracks; the title follows the price (signed in) |
 
 ## What's on screen
 
@@ -116,7 +116,7 @@ Then put your stream key in `streamer/stream.env` (git ignores it). In YouTube S
 
 ### Music
 
-Put audio files in `streamer/music/` (mp3, m4a, aac, wav, flac, ogg, opus, aiff). At start the streamer levels each track to -16 LUFS once (two-pass, cached in `~/Library/Caches/liberator-stream/music`), then ffmpeg loops the shuffled list with no re-encoding. Without files the stream is silent. After changing the folder, `make services-restart`. [streamer/music/README.md](streamer/music/README.md) lists sources that are safe on YouTube; `MUSIC_VOLUME` and `MUSIC_LOUDNORM` are in `stream.env.example`.
+Put audio files in `content/background-music/` (mp3, m4a, aac, wav, flac, ogg, opus, aiff); git ignores them. At start the streamer levels each track to -16 LUFS and adds a 3-second fade at each end, once (two-pass, cached in `~/Library/Caches/liberator-stream/music`), then ffmpeg loops the shuffled list with no re-encoding. Without files the stream is silent. After changing the folder, `make services-restart`. [content/background-music/README.md](content/background-music/README.md) lists sources that are safe on YouTube; `MUSIC_VOLUME`, `MUSIC_FADE_SECONDS` and `MUSIC_LOUDNORM` are in `stream.env.example`.
 
 ### Live title
 

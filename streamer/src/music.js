@@ -33,7 +33,7 @@ const PLAYLIST_FILE = path.join(CACHE_DIR, 'playlist.txt');
 // YouTube's own loudness target
 const LOUDNESS = 'I=-16:TP=-1.5:LRA=11';
 // Bump when the prepared format changes, so old cache files are redone
-const PREP_VERSION = 1;
+const PREP_VERSION = 2;
 
 // Audio files in the music folder, in name order. Missing folder: no tracks.
 const findTracks = (dir) => {
@@ -82,12 +82,34 @@ const parseMeasurement = (stderr) => {
   return JSON.parse(stderr.slice(start, end + 1));
 };
 
+const probeDuration = async (src, ffprobePath) => {
+  // prettier-ignore
+  const { stdout } = await run(ffprobePath, [
+    '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', src,
+  ]);
+  const seconds = parseFloat(stdout);
+  if (!Number.isFinite(seconds) || seconds <= 0) throw new Error('no duration');
+  return seconds;
+};
+
+// Fade in at the start and out at the end, so one track eases into the
+// next. Short tracks get shorter fades so the two never overlap.
+const fadeFilters = (duration, fade) => {
+  const d = Math.min(fade, duration / 4);
+  if (!(d > 0)) return [];
+  return [
+    `afade=t=in:st=0:d=${d.toFixed(2)}`,
+    `afade=t=out:st=${(duration - d).toFixed(2)}:d=${d.toFixed(2)}`,
+  ];
+};
+
 /**
  * Encodes one track to the stream's audio format: 44.1 kHz stereo AAC in a
  * raw ADTS stream, levelled with two-pass loudnorm (linear gain, so no
- * pumping) and the user's volume on top.
+ * pumping), the user's volume on top, and a fade at each end.
  */
-const transcode = async (src, target, { loudnorm, volume, ffmpegPath }) => {
+const transcode = async (src, target, opts) => {
+  const { loudnorm, volume, fade, ffmpegPath } = opts;
   const filters = [];
   if (loudnorm) {
     const { stderr } = await run(
@@ -112,6 +134,10 @@ const transcode = async (src, target, { loudnorm, volume, ffmpegPath }) => {
     );
   }
   if (volume !== 1) filters.push(`volume=${volume}`);
+  if (fade > 0) {
+    const ffprobePath = ffmpegPath.replace(/ffmpeg$/, 'ffprobe');
+    filters.push(...fadeFilters(await probeDuration(src, ffprobePath), fade));
+  }
   const tmp = `${target}.tmp.aac`;
   // prettier-ignore
   await run(ffmpegPath, [
@@ -133,6 +159,7 @@ const prepareTracks = async ({
   dir,
   loudnorm = true,
   volume = 1,
+  fade = 3,
   ffmpegPath = 'ffmpeg',
   cacheDir = PREPARED_DIR,
 }) => {
@@ -145,14 +172,14 @@ const prepareTracks = async ({
     const key = crypto
       .createHash('sha1')
       .update(
-        `${src}|${stat.size}|${stat.mtimeMs}|${loudnorm}|${volume}|${PREP_VERSION}`
+        `${src}|${stat.size}|${stat.mtimeMs}|${loudnorm}|${volume}|${fade}|${PREP_VERSION}`
       )
       .digest('hex');
     const target = path.join(cacheDir, `${key}.aac`);
     if (!fs.existsSync(target)) {
       log.info(`Music: preparing ${path.basename(src)}`);
       try {
-        await transcode(src, target, { loudnorm, volume, ffmpegPath });
+        await transcode(src, target, { loudnorm, volume, fade, ffmpegPath });
       } catch (err) {
         log.warn(
           `Music: skipping ${path.basename(src)}: ${err.message.split('\n')[0]}`
@@ -179,4 +206,5 @@ module.exports = {
   writePlaylist,
   prepareTracks,
   parseMeasurement,
+  fadeFilters,
 };

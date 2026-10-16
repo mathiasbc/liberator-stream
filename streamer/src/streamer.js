@@ -82,11 +82,18 @@ class Streamer {
 
   // Tracks are levelled and encoded once (cached), then looped by ffmpeg
   async prepareMusic() {
-    const { musicDir, musicLoudnorm, musicVolume, ffmpegPath } = this.config;
+    const {
+      musicDir,
+      musicLoudnorm,
+      musicVolume,
+      musicFadeSeconds,
+      ffmpegPath,
+    } = this.config;
     this.tracks = await prepareTracks({
       dir: musicDir,
       loudnorm: musicLoudnorm,
       volume: musicVolume,
+      fade: musicFadeSeconds,
       ffmpegPath,
     });
     if (this.tracks.length) {
