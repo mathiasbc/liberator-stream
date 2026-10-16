@@ -89,8 +89,7 @@ class CoinPaprikaAdapter extends BaseAdapter {
           totalMarketCap: Number(data?.market_cap_usd) || 0,
           totalVolume: Number(data?.volume_24h_usd) || 0,
           activeCryptocurrencies: Number(data?.cryptocurrencies_number) || 0,
-          marketCapChangePercentage:
-            Number(data?.market_cap_change_24h) || 0,
+          marketCapChangePercentage: Number(data?.market_cap_change_24h) || 0,
         },
       };
     });
