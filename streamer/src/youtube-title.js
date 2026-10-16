@@ -128,7 +128,8 @@ class TitleUpdater {
 
   async activeBroadcast(token) {
     const res = await this.fetch(
-      `${BROADCASTS_URL}?part=id,snippet&broadcastStatus=active&mine=true`,
+      // broadcastStatus already means "this channel's"; adding mine=true is rejected
+      `${BROADCASTS_URL}?part=id,snippet&broadcastStatus=active`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     const body = await res.json();

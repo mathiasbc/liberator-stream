@@ -78,6 +78,11 @@ test('updates the active broadcast, keeping its description', async () => {
       scheduledStartTime: '2026-10-16T00:00:00Z',
     },
   });
+  const list = calls.find(
+    (c) => c.url.startsWith(BROADCASTS_URL) && !c.init.method
+  );
+  assert.match(list.url, /broadcastStatus=active/);
+  assert.doesNotMatch(list.url, /mine=/);
   const tokenCall = calls.find((c) => c.url === TOKEN_URL);
   assert.match(tokenCall.init.body, /grant_type=refresh_token/);
 
