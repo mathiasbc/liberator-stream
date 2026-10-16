@@ -9,15 +9,16 @@ import {
   formatEta,
   formatInt,
   formatMonthYear,
+  formatUsd,
 } from '../utils/format';
-import { difficultyInfo, halvingInfo } from '../utils/metrics';
+import { difficultyInfo, feeUsd, halvingInfo } from '../utils/metrics';
 
 const NEW_BLOCK_MS = 30000;
 
 const Label = ({ children, ...props }) => (
   <Text
     fontFamily={fonts.display}
-    fontSize='16px'
+    fontSize='18px'
     fontWeight='600'
     letterSpacing='0.18em'
     color={palette.dim}
@@ -31,7 +32,7 @@ const Label = ({ children, ...props }) => (
 
 // Countdown to a protocol milestone: big ETA, epoch progress, blocks left
 const Epoch = ({ label, value, progress, detail, color }) => (
-  <Box px='20px' py='12px'>
+  <Box px='20px' py='10px'>
     <Label>{label}</Label>
     <Text
       fontFamily={fonts.display}
@@ -55,7 +56,7 @@ const Epoch = ({ label, value, progress, detail, color }) => (
     </Box>
     <Text
       fontFamily={fonts.display}
-      fontSize='17px'
+      fontSize='20px'
       color={palette.mute}
       mt='6px'
       whiteSpace='nowrap'
@@ -76,11 +77,11 @@ const Fee = ({ label, value }) => (
     >
       {value ?? '—'}
     </Text>
-    <Label fontSize='14px'>{label}</Label>
+    <Label letterSpacing='0.12em'>{label}</Label>
   </Flex>
 );
 
-const NetworkPulse = ({ blockHeight, networkData }) => {
+const NetworkPulse = ({ blockHeight, networkData, price }) => {
   const now = useNow(1000);
   const net = networkData || {};
   const fees = net.fees || {};
@@ -100,6 +101,7 @@ const NetworkPulse = ({ blockHeight, networkData }) => {
   const sinceBlock = net.lastBlockTime ? now / 1000 - net.lastBlockTime : null;
   const difficulty = difficultyInfo(blockHeight, net.avgBlockSeconds);
   const halving = halvingInfo(blockHeight, now);
+  const sendCost = feeUsd(fees.fastest, price);
 
   return (
     <Flex
@@ -127,7 +129,6 @@ const NetworkPulse = ({ blockHeight, networkData }) => {
           NETWORK
         </Text>
         <Box flex='1' />
-        <Label>MEMPOOL</Label>
         <Text
           fontFamily={fonts.display}
           fontSize='20px'
@@ -136,8 +137,7 @@ const NetworkPulse = ({ blockHeight, networkData }) => {
         >
           {mempool.count ? formatCompact(mempool.count) : '—'}{' '}
           <Text as='span' color={palette.mute} fontWeight='500'>
-            tx
-            {mempool.vsize ? ` · ${(mempool.vsize / 1e6).toFixed(1)} vMB` : ''}
+            transactions waiting
           </Text>
         </Text>
       </Flex>
@@ -149,7 +149,7 @@ const NetworkPulse = ({ blockHeight, networkData }) => {
         <Box
           key={newBlockAt || 'block'}
           px='20px'
-          py='14px'
+          py='12px'
           borderRight={`1px solid ${palette.lineSoft}`}
           animation={isNew ? 'newBlock 2.4s ease-out 3' : undefined}
         >
@@ -176,38 +176,49 @@ const NetworkPulse = ({ blockHeight, networkData }) => {
           >
             #{formatInt(blockHeight)}
           </Text>
-          <Text fontFamily={fonts.display} fontSize='18px' color={palette.mute}>
+          <Text fontFamily={fonts.display} fontSize='20px' color={palette.mute}>
             {sinceBlock !== null ? `found ${formatAgo(sinceBlock)} ago` : '—'}
+          </Text>
+          <Text fontFamily={fonts.display} fontSize='20px' color={palette.mute}>
             {net.lastBlockTxCount
-              ? ` · ${formatInt(net.lastBlockTxCount)} tx`
+              ? `${formatInt(net.lastBlockTxCount)} transactions`
               : ''}
           </Text>
         </Box>
-        <Box px='16px' py='14px'>
+        <Box px='16px' py='12px'>
           <Flex align='center' gap='8px'>
             <Label>FEES</Label>
-            <Label fontSize='14px' letterSpacing='0.06em'>
-              sat/vB
-            </Label>
+            <Label letterSpacing='0.06em'>sat/vB</Label>
           </Flex>
           <Flex justify='space-around' mt='10px'>
             <Fee label='NEXT' value={fees.fastest} />
             <Fee label='30 MIN' value={fees.halfHour} />
             <Fee label='1 HOUR' value={fees.hour} />
           </Flex>
+          {/* What the next-block fee means for a typical transfer */}
+          <Text
+            fontFamily={fonts.display}
+            fontSize='20px'
+            color={palette.mute}
+            mt='8px'
+            textAlign='center'
+            whiteSpace='nowrap'
+          >
+            {sendCost !== null ? `≈ ${formatUsd(sendCost, 2)} to send` : ''}
+          </Text>
         </Box>
       </Grid>
 
       <Grid templateColumns='1fr 1fr'>
         <Box borderRight={`1px solid ${palette.lineSoft}`}>
           <Epoch
-            label='DIFFICULTY ADJ.'
+            label='DIFFICULTY CHANGE'
             color={palette.chain}
             value={difficulty ? `in ${formatEta(difficulty.secondsLeft)}` : '—'}
             progress={difficulty?.progress}
             detail={
               difficulty
-                ? `${formatInt(difficulty.blocksLeft)} blocks · ${Math.floor(difficulty.progress * 100)}% of epoch`
+                ? `${formatInt(difficulty.blocksLeft)} blocks to go`
                 : '—'
             }
           />
@@ -218,9 +229,7 @@ const NetworkPulse = ({ blockHeight, networkData }) => {
           value={halving ? `≈ ${formatMonthYear(halving.eta)}` : '—'}
           progress={halving?.progress}
           detail={
-            halving
-              ? `${formatInt(halving.blocksLeft)} blocks · ${Math.floor(halving.progress * 100)}% of epoch`
-              : '—'
+            halving ? `${formatInt(halving.blocksLeft)} blocks to go` : '—'
           }
         />
       </Grid>

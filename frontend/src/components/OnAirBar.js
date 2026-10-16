@@ -101,7 +101,7 @@ const OnAirBar = ({ lastMarketAt, connected }) => {
             </Text>
             <Text
               fontFamily={fonts.mono}
-              fontSize='19px'
+              fontSize='20px'
               fontWeight='600'
               color={palette.mute}
             >

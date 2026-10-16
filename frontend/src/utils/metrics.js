@@ -65,6 +65,14 @@ export const athInfo = (price, extended, now = Date.now()) => {
   };
 };
 
+// What a fee rate costs in dollars for an everyday transfer: one input, two
+// outputs, native segwit, about 140 vB
+export const TYPICAL_TX_VBYTES = 140;
+export const feeUsd = (satPerVb, price, vbytes = TYPICAL_TX_VBYTES) =>
+  typeof satPerVb === 'number' && satPerVb >= 0 && typeof price === 'number'
+    ? (satPerVb * vbytes * price) / 1e8
+    : null;
+
 // Where the price sits inside today's low–high range, 0..1
 export const rangePosition = (value, low, high) => {
   if (![value, low, high].every((v) => typeof v === 'number') || high <= low)

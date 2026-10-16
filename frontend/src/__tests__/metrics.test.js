@@ -2,6 +2,7 @@ import {
   athInfo,
   blockSubsidy,
   difficultyInfo,
+  feeUsd,
   halvingInfo,
   rangePosition,
   satsPerDollar,
@@ -43,6 +44,14 @@ describe('metrics', () => {
   test('sats per dollar', () => {
     expect(satsPerDollar(100000)).toBe(1000);
     expect(satsPerDollar(null)).toBeNull();
+  });
+
+  test('fee in dollars for a typical transfer', () => {
+    // 2 sat/vB × 140 vB = 280 sats; at $82,198 that is 23 cents
+    expect(feeUsd(2, 82198)).toBeCloseTo(0.23, 2);
+    expect(feeUsd(1, 100000, 200)).toBeCloseTo(0.2, 6);
+    expect(feeUsd(undefined, 82198)).toBeNull();
+    expect(feeUsd(2, null)).toBeNull();
   });
 
   test('ATH distance in both directions', () => {

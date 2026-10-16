@@ -12,7 +12,7 @@ export const palette = {
   lineSoft: 'rgba(238, 242, 255, 0.08)',
   ink: '#EEF2FF',
   mute: 'rgba(238, 242, 255, 0.64)',
-  dim: 'rgba(238, 242, 255, 0.40)',
+  dim: 'rgba(238, 242, 255, 0.50)',
   onAccent: '#0A0F22',
 
   accent: '#FFD60A',
@@ -68,9 +68,9 @@ const theme = extendTheme({
         '0%, 100%': { opacity: 1 },
         '50%': { opacity: 0.35 },
       },
-      '@keyframes marquee': {
-        from: { transform: 'translateX(0)' },
-        to: { transform: 'translateX(-50%)' },
+      '@keyframes tickerIn': {
+        from: { opacity: 0, transform: 'translateY(60%)' },
+        to: { opacity: 1, transform: 'translateY(0)' },
       },
       '@keyframes progress': {
         from: { width: '0%' },

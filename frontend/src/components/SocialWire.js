@@ -49,11 +49,19 @@ const Stat = ({ icon, value }) => (
     >
       <path d={ICONS[icon]} />
     </svg>
-    <Text fontSize='19px' fontWeight='600'>
+    <Text fontSize='20px' fontWeight='600'>
       {formatCount(value)}
     </Text>
   </Flex>
 );
+
+// For the NEXT preview: no emoji and no "(team)" asides, so it fits the row
+const shortName = (name) =>
+  name
+    .replace(/\s*\([^)]*\)/g, '')
+    .replace(/[^\p{L}\p{N}\p{M}\s.'’-]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim() || name;
 
 const initials = (name) =>
   name
@@ -184,7 +192,7 @@ const SocialWire = ({ tweets }) => {
         <Box flex='1' />
         {isSample && (
           <Text
-            fontSize='15px'
+            fontSize='18px'
             fontWeight='700'
             letterSpacing='0.16em'
             color={palette.sats}
@@ -205,8 +213,8 @@ const SocialWire = ({ tweets }) => {
         minH={0}
         overflow='hidden'
         px='22px'
-        pt='20px'
-        pb='16px'
+        pt='16px'
+        pb='12px'
         animation='postIn 0.6s ease-out'
       >
         <Flex align='center' gap='14px'>
@@ -222,14 +230,14 @@ const SocialWire = ({ tweets }) => {
             >
               {post.name}
             </Text>
-            <Text fontSize='19px' color={palette.dim} lineHeight='1.3'>
+            <Text fontSize='20px' color={palette.dim} lineHeight='1.3'>
               @{post.handle} · {postWhen(post)}
             </Text>
           </Box>
         </Flex>
         <Text
           ref={textRef}
-          mt='16px'
+          mt='12px'
           fontSize={size.fontSize}
           fontWeight='500'
           lineHeight={size.lineHeight}
@@ -240,7 +248,7 @@ const SocialWire = ({ tweets }) => {
           <RichText text={fitted.text} />
         </Text>
         <Box flex='1' />
-        <Flex align='center' gap='26px' mt='12px' whiteSpace='nowrap'>
+        <Flex align='center' gap='22px' mt='12px' whiteSpace='nowrap'>
           {/* Counts X doesn't provide (reposts) are left out */}
           {typeof post.replies === 'number' && (
             <Stat icon='reply' value={post.replies} />
@@ -251,12 +259,11 @@ const SocialWire = ({ tweets }) => {
           {typeof post.likes === 'number' && (
             <Stat icon='like' value={post.likes} />
           )}
-          <Box flex='1' />
           {posts.length > 1 && (
-            <Flex align='center' gap='8px' minW={0}>
+            <Flex align='center' justify='flex-end' gap='8px' flex='1' minW={0}>
               <Text
                 fontFamily={fonts.display}
-                fontSize='15px'
+                fontSize='18px'
                 fontWeight='600'
                 letterSpacing='0.18em'
                 color={palette.dim}
@@ -265,14 +272,14 @@ const SocialWire = ({ tweets }) => {
               </Text>
               <Avatar post={next} index={nextIndex} size={26} />
               <Text
-                fontSize='17px'
+                fontSize='19px'
                 fontWeight='600'
                 color={palette.mute}
-                maxW='120px'
+                minW={0}
                 overflow='hidden'
                 textOverflow='ellipsis'
               >
-                {next.name}
+                {shortName(next.name)}
               </Text>
             </Flex>
           )}

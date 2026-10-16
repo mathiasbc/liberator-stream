@@ -202,7 +202,7 @@ const Toolbar = ({ timeframe, rotatedAt, rotationMs, candles }) => {
             {change >= 0 ? '▲' : '▼'} {formatPct(Math.abs(change), 1)}
           </Text>
           <Text
-            fontSize='17px'
+            fontSize='18px'
             fontWeight='600'
             letterSpacing='0.2em'
             color={palette.dim}
@@ -233,7 +233,7 @@ const PERIOD = {
 const Label = ({ children }) => (
   <Text
     fontFamily={fonts.display}
-    fontSize='16px'
+    fontSize='18px'
     fontWeight='600'
     letterSpacing='0.14em'
     color={palette.dim}
@@ -268,7 +268,7 @@ const Legend = ({ timeframe, candles, ma }) => {
       gap='20px'
       px='22px'
       fontFamily={fonts.mono}
-      fontSize='19px'
+      fontSize='20px'
       fontWeight='500'
       whiteSpace='nowrap'
       bg='rgba(4, 8, 20, 0.35)'

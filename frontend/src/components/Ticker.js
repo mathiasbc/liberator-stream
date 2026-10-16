@@ -1,62 +1,83 @@
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Box, Flex, Text } from '@chakra-ui/react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Flex, Text } from '@chakra-ui/react';
 import { palette, fonts } from '../theme/theme';
-import { buildItems } from '../utils/ticker';
+import { buildItems, dwellMs, momentItems } from '../utils/ticker';
 
-// Crawl speed in px/s; slow enough to read on a phone
-const SPEED = 85;
+// Segment highlight: true = the accent, 'up'/'down' = the move's colour
+const segmentColor = (hi) => {
+  if (hi === 'up') return palette.up;
+  if (hi === 'down') return palette.down;
+  return hi ? palette.accent : palette.ink;
+};
 
-const Ticker = ({ data }) => {
-  const items = useMemo(() => buildItems(data), [data]);
-  const trackRef = useRef();
-  const [duration, setDuration] = useState(null);
+// One fact at a time: slides in, holds for a few seconds, then the next.
+// Nearly static between changes, which is kind to the encoder, and readable
+// at any size, unlike a crawl. A fresh moment (a round number crossed, a
+// new 24H high or low) jumps the queue.
+const Ticker = ({ data, moments = [] }) => {
+  const items = useMemo(
+    () => [...momentItems(moments), ...buildItems(data)],
+    [data, moments]
+  );
+  const [index, setIndex] = useState(0);
 
-  // Size the loop to the content so the crawl speed stays constant. Only
-  // re-time on big width changes; nudging the duration makes the crawl jump.
-  useLayoutEffect(() => {
-    const half = (trackRef.current?.scrollWidth || 0) / 2;
-    const next = Math.max(30, half / SPEED);
-    setDuration((d) => (d && Math.abs(next - d) / d < 0.15 ? d : next));
-  }, [items]);
+  const newest = moments.length ? moments[moments.length - 1].id : null;
+  const shown = useRef(newest);
+  useEffect(() => {
+    if (newest && newest !== shown.current) {
+      shown.current = newest;
+      setIndex(0);
+    }
+  }, [newest]);
+
+  const i = items.length ? index % items.length : 0;
+  const segments = items[i] || [];
+  const text = segments.map(([t]) => t).join(' ');
+  const dwell = dwellMs(text);
+
+  useEffect(() => {
+    const id = setTimeout(
+      () => setIndex((n) => (n + 1) % Math.max(1, items.length)),
+      dwell
+    );
+    return () => clearTimeout(id);
+  }, [i, dwell, items.length]);
 
   return (
     <Flex
       h='56px'
       flex='none'
+      align='center'
+      gap='16px'
+      px='28px'
       bg={palette.deep}
       borderTop={`2px solid ${palette.accent}`}
       fontFamily={fonts.display}
+      whiteSpace='nowrap'
       overflow='hidden'
     >
-      <Box flex='1' overflow='hidden' display='flex' alignItems='center'>
-        <Flex
-          ref={trackRef}
-          w='max-content'
-          whiteSpace='nowrap'
-          animation={
-            duration ? `marquee ${duration}s linear infinite` : undefined
-          }
-        >
-          {[...items, ...items].map((segments, i) => (
-            <Flex key={i} align='center' gap='10px' pl='28px'>
-              {segments.map(([text, hi], j) => (
-                <Text
-                  key={j}
-                  fontSize='24px'
-                  fontWeight={hi ? '700' : '600'}
-                  letterSpacing='0.08em'
-                  color={hi ? palette.accent : palette.ink}
-                >
-                  {text}
-                </Text>
-              ))}
-              <Text color={palette.live} fontSize='15px' pl='26px'>
-                ◆
-              </Text>
-            </Flex>
-          ))}
-        </Flex>
-      </Box>
+      <Text color={palette.live} fontSize='18px' flex='none'>
+        ◆
+      </Text>
+      <Flex
+        key={`${i}-${text}`}
+        align='center'
+        gap='10px'
+        minW={0}
+        animation='tickerIn 0.45s ease-out'
+      >
+        {segments.map(([t, hi], j) => (
+          <Text
+            key={j}
+            fontSize='25px'
+            fontWeight={hi ? '700' : '600'}
+            letterSpacing='0.08em'
+            color={segmentColor(hi)}
+          >
+            {t}
+          </Text>
+        ))}
+      </Flex>
     </Flex>
   );
 };

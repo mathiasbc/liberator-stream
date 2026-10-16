@@ -1,5 +1,30 @@
-import { formatInt, formatPct, toNumber } from './format';
+import { formatInt, formatPct, formatUsd, toNumber } from './format';
 import { athInfo, blockSubsidy } from './metrics';
+
+// Moments stay in the ticker this long
+export const MOMENT_TTL_MS = 60 * 60 * 1000;
+
+// Time on screen for one item: 6 s for a short one, up to 12 s
+export const dwellMs = (text) =>
+  Math.min(12000, Math.max(6000, 4000 + text.length * 50));
+
+const utcTime = (at) => new Date(at).toISOString().slice(11, 16);
+
+// Recent moments (round numbers crossed, new 24H highs and lows), newest
+// first. The arrow segment carries the direction colour.
+export const momentItems = (moments = [], now = Date.now()) =>
+  moments
+    .filter((m) => now - m.at < MOMENT_TTL_MS)
+    .slice()
+    .reverse()
+    .map((m) => [
+      [
+        `${m.dir === 'up' ? '▲' : '▼'} ${m.kind === 'cross' ? 'CROSSED' : `NEW 24H ${m.kind.toUpperCase()}`}`,
+        m.dir,
+      ],
+      [formatUsd(m.level), true],
+      [`AT ${utcTime(m.at)} UTC`],
+    ]);
 
 const formatBlockTime = (seconds) =>
   `${Math.floor(seconds / 60)}M ${String(Math.round(seconds % 60)).padStart(2, '0')}S`;

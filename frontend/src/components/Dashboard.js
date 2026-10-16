@@ -35,6 +35,11 @@ const Dashboard = () => {
   const [data, setData] = useState(INITIAL_DATA);
   const [lastMarketAt, setLastMarketAt] = useState(null);
   const [connected, setConnected] = useState(false);
+  // Round numbers crossed and new 24H highs/lows, for the ticker
+  const [moments, setMoments] = useState([]);
+  const addMoment = useCallback((moment) => {
+    setMoments((prev) => [...prev, moment].slice(-5));
+  }, []);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const lastMarketRef = useRef({ price: null, volume: null });
@@ -106,7 +111,7 @@ const Dashboard = () => {
       <Flex direction='column' h='100%'>
         <OnAirBar lastMarketAt={lastMarketAt} connected={connected} />
         <Box px='28px' pt='18px' flex='none'>
-          <PriceSection data={data} />
+          <PriceSection data={data} onMoment={addMoment} />
         </Box>
         <Flex flex='1' minH={0} gap='18px' px='28px' py='18px'>
           <Box flex='1' minW={0}>
@@ -122,11 +127,12 @@ const Dashboard = () => {
             <NetworkPulse
               blockHeight={data.blockHeight}
               networkData={data.networkData}
+              price={data.currentPrice}
             />
             <SocialWire tweets={data.tweets} />
           </Flex>
         </Flex>
-        <Ticker data={data} />
+        <Ticker data={data} moments={moments} />
       </Flex>
     </Stage>
   );
