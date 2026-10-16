@@ -9,10 +9,11 @@ const MAX_QUEUED_BYTES = 16 * 1024 * 1024;
 
 const isNetworkUrl = (url) => /^[a-z]+:\/\//i.test(url);
 
-const buildFfmpegArgs = (
-  { fps, videoBitrateKbps, keyframeSeconds },
-  output
-) => {
+// Harmless lines ffmpeg prints at every start or track change
+const NOISE = /Estimating duration from bitrate|deprecated pixel format used/;
+
+const buildFfmpegArgs = (config, output, { playlist = null } = {}) => {
+  const { fps, videoBitrateKbps, keyframeSeconds } = config;
   const kbps = videoBitrateKbps;
   // prettier-ignore
   return [
@@ -20,9 +21,12 @@ const buildFfmpegArgs = (
     '-progress', 'pipe:3', '-stats_period', '5',
     // Video: Chrome's JPEG frames on stdin, at a constant frame rate
     '-f', 'image2pipe', '-c:v', 'mjpeg', '-framerate', String(fps), '-i', 'pipe:0',
-    // Audio: YouTube expects an audio track, so send silence. (No -shortest:
-    // it buffers ~10 s of raw frames, close to 1 GB at 1080p.)
-    '-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=44100',
+    // Audio: the prepared music on a loop (see music.js), or silence (YouTube
+    // expects an audio track). No -shortest: it buffers ~10 s of raw frames,
+    // close to 1 GB at 1080p.
+    ...(playlist
+      ? ['-stream_loop', '-1', '-f', 'concat', '-safe', '0', '-i', playlist]
+      : ['-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=44100']),
     '-map', '0:v', '-map', '1:a',
     // Chrome's JPEGs are full-range BT.601; YouTube expects limited-range BT.709
     '-vf', 'scale=in_range=full:out_range=limited:in_color_matrix=bt601:out_color_matrix=bt709,format=nv12',
@@ -32,7 +36,8 @@ const buildFfmpegArgs = (
     '-b:v', `${kbps}k`, '-constant_bit_rate', '1',
     '-g', String(Math.round(fps * keyframeSeconds)),
     '-force_key_frames', `expr:gte(t,n_forced*${keyframeSeconds})`,
-    '-c:a', 'aac', '-b:a', '128k', '-ar', '44100',
+    // Prepared tracks are already 44.1 kHz stereo AAC: copy them as they are
+    ...(playlist ? ['-c:a', 'copy'] : ['-c:a', 'aac', '-b:a', '128k', '-ar', '44100']),
     // Give up on a network write that hangs for 20 s, so ffmpeg exits and restarts
     ...(isNetworkUrl(output) ? ['-rw_timeout', '20000000'] : []),
     '-f', 'flv', '-flvflags', 'no_duration_filesize', output,
@@ -100,7 +105,7 @@ class FfmpegProcess extends EventEmitter {
 
     const logLine = makeLineLogger();
     readline.createInterface({ input: child.stderr }).on('line', (line) => {
-      if (line.trim()) logLine(line.trim());
+      if (line.trim() && !NOISE.test(line)) logLine(line.trim());
     });
 
     // -progress writes key=value lines, ending each report with progress=...

@@ -20,7 +20,7 @@ define load_node
 endef
 
 .PHONY: install install-all build start dev run-dev clean lint lint-fix format test test-backend test-frontend test-streamer help \
-	stream-config services-install services-uninstall services-restart services-status logs
+	stream-config services-install services-uninstall services-restart services-status logs youtube-auth
 
 # Default target
 help:
@@ -45,6 +45,7 @@ help:
 	@echo "  services-restart   Restart both services"
 	@echo "  services-status    Show service state and recent log lines"
 	@echo "  logs               Follow both service logs"
+	@echo "  youtube-auth       One-time Google sign-in so the live title follows the price"
 	@echo ""
 	@echo "Quality:"
 	@echo "  lint           Run linters on backend and frontend"
@@ -106,6 +107,9 @@ services-status:
 
 logs:
 	tail -n 20 -F $(LOG_DIR)/backend.log $(LOG_DIR)/streamer.log
+
+youtube-auth: stream-config
+	$(load_node) cd streamer && node src/youtube-auth.js
 
 # Linting & Formatting
 lint:

@@ -2,6 +2,7 @@ const { loadConfig, outputUrl } = require('./config');
 const log = require('./log');
 const { rotateLogs } = require('./log-rotate');
 const Streamer = require('./streamer');
+const { TitleUpdater } = require('./youtube-title');
 
 const KEY_POLL_MS = 30000;
 const ROTATE_EVERY_MS = 60 * 60 * 1000;
@@ -51,10 +52,21 @@ const main = async () => {
     }
   }
   log.addSecret(config.streamKey);
+  log.addSecret(config.youtube.clientSecret);
+  log.addSecret(config.youtube.refreshToken);
 
   const streamer = new Streamer(config);
+  // The live title follows the price, only on the real YouTube stream
+  const title =
+    !config.output && config.youtube.refreshToken
+      ? new TitleUpdater({
+          ...config.youtube,
+          dashboardUrl: config.dashboardUrl,
+        })
+      : null;
   const shutdown = async (signal) => {
     log.info(`${signal} received, stopping`);
+    title?.stop();
     await streamer.stop();
     process.exit(0);
   };
@@ -62,6 +74,10 @@ const main = async () => {
   process.once('SIGINT', () => shutdown('SIGINT'));
 
   await streamer.start();
+  if (title) title.start();
+  else if (!config.output) {
+    log.info('Live title updates off: run `make youtube-auth` to turn them on');
+  }
 };
 
 main().catch((err) => {

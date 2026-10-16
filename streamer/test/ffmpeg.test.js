@@ -4,7 +4,12 @@ const { buildFfmpegArgs } = require('../src/ffmpeg');
 
 const config = { fps: 30, videoBitrateKbps: 4500, keyframeSeconds: 2 };
 
-const valueAfter = (args, flag) => args[args.indexOf(flag) + 1];
+// The value after the nth occurrence of a flag
+const valueAfter = (args, flag, nth = 0) => {
+  let at = -1;
+  for (let i = 0; i <= nth; i += 1) at = args.indexOf(flag, at + 1);
+  return args[at + 1];
+};
 
 test('encodes constant bit rate H.264 with 2 s keyframes', () => {
   const args = buildFfmpegArgs(config, 'rtmps://a.rtmps.youtube.com/live2/k');
@@ -22,6 +27,20 @@ test('adds silent audio', () => {
   assert.match(valueAfter(args, '-i'), /pipe:0/);
   assert.ok(args.some((arg) => arg.startsWith('anullsrc')));
   assert.equal(valueAfter(args, '-c:a'), 'aac');
+});
+
+test('plays the music playlist on a loop when there is one', () => {
+  const args = buildFfmpegArgs(
+    { ...config, musicLoudnorm: true, musicVolume: 0.8 },
+    '/tmp/out.flv',
+    { playlist: '/tmp/playlist.txt' }
+  );
+  assert.equal(valueAfter(args, '-stream_loop'), '-1');
+  assert.equal(valueAfter(args, '-f', 1), 'concat');
+  assert.ok(args.includes('/tmp/playlist.txt'));
+  assert.ok(!args.some((arg) => arg.startsWith('anullsrc')));
+  assert.equal(valueAfter(args, '-c:a'), 'copy');
+  assert.ok(!args.includes('-af'));
 });
 
 test('sets a network timeout only for network outputs', () => {

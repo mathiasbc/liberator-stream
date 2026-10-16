@@ -15,6 +15,14 @@ const DEFAULTS = {
   JPEG_QUALITY: '80',
   CHROME_RESTART_HOURS: '24',
   FFMPEG_PATH: 'ffmpeg',
+  MUSIC_DIR: path.join(__dirname, '..', 'music'),
+  MUSIC_VOLUME: '1',
+  MUSIC_LOUDNORM: 'on',
+  YOUTUBE_CLIENT_ID: '',
+  YOUTUBE_CLIENT_SECRET: '',
+  YOUTUBE_REFRESH_TOKEN: '',
+  YOUTUBE_TITLE_TEMPLATE: 'Bitcoin {price} {arrow} {change} · live 24/7',
+  TITLE_UPDATE_MINUTES: '10',
 };
 
 const toNumber = (name, value, min, max) => {
@@ -65,6 +73,21 @@ const loadConfig = ({
       168
     ),
     ffmpegPath: raw.FFMPEG_PATH,
+    musicDir: raw.MUSIC_DIR.trim(),
+    musicVolume: toNumber('MUSIC_VOLUME', raw.MUSIC_VOLUME, 0.1, 2),
+    musicLoudnorm: raw.MUSIC_LOUDNORM.trim().toLowerCase() !== 'off',
+    youtube: {
+      clientId: raw.YOUTUBE_CLIENT_ID.trim(),
+      clientSecret: raw.YOUTUBE_CLIENT_SECRET.trim(),
+      refreshToken: raw.YOUTUBE_REFRESH_TOKEN.trim(),
+      titleTemplate: raw.YOUTUBE_TITLE_TEMPLATE.trim(),
+      titleUpdateMinutes: toNumber(
+        'TITLE_UPDATE_MINUTES',
+        raw.TITLE_UPDATE_MINUTES,
+        1,
+        120
+      ),
+    },
   };
 };
 

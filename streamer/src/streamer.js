@@ -4,6 +4,7 @@ const { ChromeCapture } = require('./browser');
 const { outputUrl } = require('./config');
 const { FfmpegProcess, buildFfmpegArgs } = require('./ffmpeg');
 const { FrameClock } = require('./frame-clock');
+const { prepareTracks, shuffle, writePlaylist } = require('./music');
 const log = require('./log');
 
 const CHECK_EVERY_MS = 5000;
@@ -32,6 +33,7 @@ class Streamer {
     this.config = config;
     this.output = outputUrl(config);
     this.latestFrame = null;
+    this.tracks = [];
     this.capture = null;
     this.ffmpeg = null;
     this.clock = null;
@@ -53,6 +55,7 @@ class Streamer {
     );
     this.keepAwake();
     await this.waitForDashboard();
+    await this.prepareMusic();
     await this.startChrome();
     this.clock = new FrameClock({ fps, onFrame: () => this.sendFrame() });
     this.startFfmpeg();
@@ -75,6 +78,24 @@ class Streamer {
     this.caffeinate.on('exit', () => {
       if (!this.stopping) setTimeout(() => this.keepAwake(), 5000);
     });
+  }
+
+  // Tracks are levelled and encoded once (cached), then looped by ffmpeg
+  async prepareMusic() {
+    const { musicDir, musicLoudnorm, musicVolume, ffmpegPath } = this.config;
+    this.tracks = await prepareTracks({
+      dir: musicDir,
+      loudnorm: musicLoudnorm,
+      volume: musicVolume,
+      ffmpegPath,
+    });
+    if (this.tracks.length) {
+      log.info(
+        `Music: ${this.tracks.length} tracks from ${musicDir}, on a loop`
+      );
+    } else {
+      log.warn(`No music in ${musicDir}: the stream is silent`);
+    }
   }
 
   async waitForDashboard() {
@@ -137,9 +158,12 @@ class Streamer {
 
   startFfmpeg() {
     if (this.stopping) return;
+    const playlist = this.tracks.length
+      ? writePlaylist(shuffle(this.tracks))
+      : null;
     const ffmpeg = new FfmpegProcess({
       ffmpegPath: this.config.ffmpegPath,
-      args: buildFfmpegArgs(this.config, this.output),
+      args: buildFfmpegArgs(this.config, this.output, { playlist }),
     });
     ffmpeg.on('exit', ({ code, signal, error }) => {
       this.clock.stop();
