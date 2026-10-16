@@ -40,11 +40,11 @@ The UI is an "On Air" broadcast designed on a fixed 1920×1080 canvas (the frame
 - `frontend/src/components/Dashboard.js`: WebSocket integration and the broadcast layout
 - `frontend/src/components/Stage.js`: Fixed 1920×1080 stage, scaled and letterboxed to the window
 - `frontend/src/components/OnAirBar.js`: LIVE / DELAYED / RECONNECTING block, world clocks, UTC clock
-- `frontend/src/components/PriceSection.js`: Logo, live price with day range, sketched metric plates
+- `frontend/src/components/PriceSection.js`: Logo, live price with day range, sketched metric plates. Moments (`frontend/src/utils/moments.js`, pure and tested): a round number crossed shows "▲ CROSSED $83,000" where the tick readout is, a new 24H high/low lights its end of the range bar, both for 5 s; announced ones go to the ticker through `Dashboard`
 - `frontend/src/components/Chart.js`: Lightweight Charts candles + volume + MA 20, live last candle, timeframe switch wipe
 - `frontend/src/components/SocialWire.js`: The "BITCOIN ON X" panel (called ON X in code and docs): a rotating loop over the backend's `tweets`, with no post counter (falls back to `frontend/src/data/sampleTweets.js` with a SAMPLE tag). Old posts show their date; time on screen grows with length (8–20 s); the text size starts from an estimate in `frontend/src/utils/posts.js` and steps down after layout until nothing is clipped
 - `frontend/src/components/NetworkPulse.js`: Last block, fees, mempool, difficulty and halving countdowns
-- `frontend/src/components/Ticker.js`: Bottom news crawl
+- `frontend/src/components/Ticker.js`: Flip ticker: one item at a time, 6–12 s by length (`frontend/src/utils/ticker.js` builds the items; moments first, kept an hour). It replaced a crawl: constant motion is the most expensive thing for the encoder and the hardest to read on a TV
 - `frontend/src/components/Logo.js`: The original logo recoloured to the palette (`frontend/public/assets/the_liberator_neon.png`; the untouched original artwork is `frontend/assets/the_liberator_horizontal.png`)
 - `frontend/src/components/Sketch.js`: Hand-drawn metric doodles
 - `frontend/src/theme/theme.js`: Palette and font tokens; `frontend/src/utils/`: formatters and derived metrics
@@ -59,6 +59,8 @@ The dashboard streams 24/7 to YouTube from a Mac: two launchd agents, `com.liber
 - `streamer/src/frame-clock.js`: Feeds the latest frame to ffmpeg at a constant 30 fps, correcting timer drift
 - `streamer/src/ffmpeg.js`: ffmpeg arguments (`h264_videotoolbox` CBR, 2 s keyframes, BT.709, silent AAC) and process wrapper. Don't add `-shortest`: it buffers ~10 s of raw 1080p frames (~1 GB)
 - `streamer/src/config.js`: `stream.env` settings; environment variables override them. `STREAM_OUTPUT` sends the stream to a `.flv` file or `rtmp://` URL instead of YouTube, for testing
+- `streamer/src/music.js`: Tracks from `streamer/music/` are levelled (two-pass loudnorm to -16 LUFS) and encoded once to 44.1 kHz stereo AAC in `~/Library/Caches/liberator-stream/music`, keyed by file size, date and settings; ffmpeg then loops the shuffled concat list with `-c:a copy`. ffmpeg's concat input needs identical formats, which is why tracks are prepared rather than read directly
+- `streamer/src/youtube-title.js`: Updates the active broadcast's title with the price every `TITLE_UPDATE_MINUTES` (51 quota units a run) using a refresh token that `streamer/src/youtube-auth.js` (`make youtube-auth`) obtains once; off unless the token is set and the stream goes to YouTube
 - The stream key must never be committed or logged; `streamer/src/log.js` redacts it from every log line
 
 ### Selected Posts (`content/posts.json`)
@@ -79,6 +81,8 @@ These come from the owner's review of the On Air design; follow them for any UI 
 - **No static indicators**: show problems only when they happen (LIVE → DELAYED), not "updated 0s ago".
 - **Logo**: keep the original artwork, only recoloured (`the_liberator_neon.png`); new drawn logos were rejected.
 - **No dead space and no clipped text at 1920×1080.** Verify every UI change with a 1920×1080 screenshot.
+- **Legibility floor.** The stream is watched on TVs and monitors, often at 720p: 20 px minimum for anything meant to be read, 18 px only for uppercase letter-spaced labels, and `palette.dim` only at 20 px and up.
+- **Motion is expensive.** The encoder runs at 4.5 Mbps; prefer elements that change state to ones that move constantly.
 
 ## Development Commands
 

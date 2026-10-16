@@ -22,16 +22,17 @@ A 24/7 live Bitcoin dashboard built as a broadcast graphic for a YouTube live st
 | Network data (blocks, fees, mempool) | Done: Blockstream |
 | Hosting | The old Render deployment (btc-dash.com) is retired; the domain isn't serving the app |
 | 24/7 YouTube stream | Built: background services on a Mac (see below); goes live once the stream key is in `streamer/stream.env` |
-| Selected-posts ("ON X") loop | Done: 48 hand-picked posts from `content/posts.json`, with real avatars and like/reply counts; edits go live without a restart |
+| Selected-posts ("Bitcoin on X") loop | Done: 48 hand-picked posts from `content/posts.json`, with real avatars and like/reply counts; edits go live without a restart |
+| Music and live title | Built: tracks in `streamer/music/` play on a loop, levelled; the title follows the price once you've run `make youtube-auth` |
 
 ## What's on screen
 
 - **On-air bar:** LIVE (turns DELAYED if the price stalls for 45 s, RECONNECTING if the server connection drops), world clocks, UTC clock.
-- **Header:** logo, live price with a per-tick readout and the 24 h range, six metric plates (market cap, dominance, sats per dollar, 24 h volume, distance from the all-time high, supply mined).
+- **Header:** logo, live price with a per-tick readout and the 24 h range, six metric plates (market cap, dominance, sats per dollar, 24 h volume, distance from the all-time high, supply mined). Moments get a five-second tag: the price crossing a round number ("▲ CROSSED $83,000"), a new 24 h high or low.
 - **Chart:** candles that rotate through 5M / 1H / 4H / 1D / 1W every 60 s, with a logo wipe on each switch. The last candle follows the live price. Also volume, a 20-period average, high/low markers, a plain-language legend and a candle-close countdown.
-- **Network panel:** last block, fees, mempool, difficulty adjustment and halving countdowns.
+- **Network panel:** last block, fees in sat/vB and what a transfer costs in dollars, transactions waiting, difficulty change and halving countdowns.
 - **Bitcoin on X:** rotating hand-picked posts with the author's photo, the post date and its replies and likes; longer posts stay up longer.
-- **Ticker:** only facts not shown anywhere else on screen.
+- **Ticker:** one fact at a time (block reward, block pace, the whole market, data sources) plus the last hour's moments. It flips rather than crawls: cheaper to encode and readable on any screen.
 
 ## Architecture
 
@@ -112,6 +113,14 @@ Then put your stream key in `streamer/stream.env` (git ignores it). In YouTube S
 | Chrome's memory creeps up over days | Chrome restarts once a day (`CHROME_RESTART_HOURS`) |
 | The Mac wants to sleep | The streamer holds a `caffeinate` assertion (idle, disk and system sleep, on AC power) while it streams; the display can still turn off |
 | Logs grow | Both logs rotate at 10 MB, keeping 3 old copies |
+
+### Music
+
+Put audio files in `streamer/music/` (mp3, m4a, aac, wav, flac, ogg, opus, aiff). At start the streamer levels each track to -16 LUFS once (two-pass, cached in `~/Library/Caches/liberator-stream/music`), then ffmpeg loops the shuffled list with no re-encoding. Without files the stream is silent. After changing the folder, `make services-restart`. [streamer/music/README.md](streamer/music/README.md) lists sources that are safe on YouTube; `MUSIC_VOLUME` and `MUSIC_LOUDNORM` are in `stream.env.example`.
+
+### Live title
+
+The streamer can keep the broadcast title current with the price, e.g. "Bitcoin $82,201 ▲ 0.8% · live 24/7", every 10 minutes. One-time setup: in Google Cloud, enable the YouTube Data API v3 and create an OAuth client of type "Desktop app"; put its id and secret in `streamer/stream.env` (`YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`), then run `make youtube-auth` and sign in with the channel's account. The template and interval are `YOUTUBE_TITLE_TEMPLATE` and `TITLE_UPDATE_MINUTES`; each update costs 51 of the API's 10,000 daily quota units.
 
 ### Day to day
 
