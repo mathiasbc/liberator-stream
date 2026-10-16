@@ -42,7 +42,7 @@ The UI is an "On Air" broadcast designed on a fixed 1920×1080 canvas (the frame
 - `frontend/src/components/OnAirBar.js`: LIVE / DELAYED / RECONNECTING block, world clocks, UTC clock
 - `frontend/src/components/PriceSection.js`: Logo, live price with day range, sketched metric plates
 - `frontend/src/components/Chart.js`: Lightweight Charts candles + volume + MA 20, live last candle, timeframe switch wipe
-- `frontend/src/components/SocialWire.js`: Rotating selected-posts loop over the backend's `tweets` (falls back to `frontend/src/data/sampleTweets.js` with a SAMPLE tag). Old posts show their date; time on screen grows with length (8–20 s); the text size starts from an estimate in `frontend/src/utils/posts.js` and steps down after layout until nothing is clipped
+- `frontend/src/components/SocialWire.js`: The "BITCOIN ON X" panel (called ON X in code and docs): a rotating loop over the backend's `tweets`, with no post counter (falls back to `frontend/src/data/sampleTweets.js` with a SAMPLE tag). Old posts show their date; time on screen grows with length (8–20 s); the text size starts from an estimate in `frontend/src/utils/posts.js` and steps down after layout until nothing is clipped
 - `frontend/src/components/NetworkPulse.js`: Last block, fees, mempool, difficulty and halving countdowns
 - `frontend/src/components/Ticker.js`: Bottom news crawl
 - `frontend/src/components/Logo.js`: The original logo recoloured to the palette (`frontend/public/assets/the_liberator_neon.png`; the untouched original artwork is `frontend/assets/the_liberator_horizontal.png`)

@@ -179,15 +179,7 @@ const SocialWire = ({ tweets }) => {
           <XMark size={18} />
         </Flex>
         <Text fontSize='25px' fontWeight='800' letterSpacing='0.12em'>
-          ON X
-        </Text>
-        <Text
-          fontSize='17px'
-          fontWeight='600'
-          letterSpacing='0.18em'
-          color={palette.dim}
-        >
-          SELECTED POSTS
+          BITCOIN ON X
         </Text>
         <Box flex='1' />
         {isSample && (
@@ -203,9 +195,6 @@ const SocialWire = ({ tweets }) => {
             SAMPLE
           </Text>
         )}
-        <Text fontFamily={fonts.mono} fontSize='17px' color={palette.mute}>
-          {i + 1}/{posts.length}
-        </Text>
       </Flex>
 
       <Flex
