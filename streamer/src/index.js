@@ -2,7 +2,12 @@ const { loadConfig, outputUrl } = require('./config');
 const log = require('./log');
 const { rotateLogs } = require('./log-rotate');
 const Streamer = require('./streamer');
+const path = require('path');
 const { TitleUpdater } = require('./youtube-title');
+const { BroadcastKeeper } = require('./youtube-broadcast');
+
+// How often to make sure a broadcast is live while we stream (1 quota unit)
+const KEEPER_EVERY_MS = 3 * 60 * 1000;
 
 const KEY_POLL_MS = 30000;
 const ROTATE_EVERY_MS = 60 * 60 * 1000;
@@ -64,8 +69,31 @@ const main = async () => {
           dashboardUrl: config.dashboardUrl,
         })
       : null;
+  // Opens a new broadcast if YouTube ended ours (see youtube-broadcast.js)
+  const keeper = title
+    ? new BroadcastKeeper({
+        getToken: () => title.accessToken(),
+        thumbnailFile: path.join(
+          __dirname,
+          '..',
+          '..',
+          'content',
+          'youtube-thumbnail.png'
+        ),
+      })
+    : null;
+  let keeperTimer = null;
+  const keep = async () => {
+    try {
+      const result = await keeper.ensureLive();
+      if (result === 'created') title.lastTitle = null;
+    } catch (err) {
+      log.warn(`Broadcast keeper: ${err.message}`);
+    }
+  };
   const shutdown = async (signal) => {
     log.info(`${signal} received, stopping`);
+    clearInterval(keeperTimer);
     title?.stop();
     await streamer.stop();
     process.exit(0);
@@ -74,6 +102,7 @@ const main = async () => {
   process.once('SIGINT', () => shutdown('SIGINT'));
 
   await streamer.start();
+  if (keeper) keeperTimer = setInterval(keep, KEEPER_EVERY_MS);
   if (title) title.start();
   else if (!config.output) {
     log.info('Live title updates off: run `make youtube-auth` to turn them on');

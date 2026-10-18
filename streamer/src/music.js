@@ -33,7 +33,7 @@ const PLAYLIST_FILE = path.join(CACHE_DIR, 'playlist.txt');
 // YouTube's own loudness target
 const LOUDNESS = 'I=-16:TP=-1.5:LRA=11';
 // Bump when the prepared format changes, so old cache files are redone
-const PREP_VERSION = 2;
+const PREP_VERSION = 3;
 
 // Audio files in the music folder, in name order. Missing folder: no tracks.
 const findTracks = (dir) => {
@@ -104,8 +104,9 @@ const fadeFilters = (duration, fade) => {
 };
 
 /**
- * Encodes one track to the stream's audio format: 44.1 kHz stereo AAC in a
- * raw ADTS stream, levelled with two-pass loudnorm (linear gain, so no
+ * Encodes one track to the stream's audio format: 44.1 kHz stereo AAC in an
+ * M4A file (it records the exact length; raw ADTS doesn't, which made the
+ * timestamps jump backwards at each track change in the looped playlist), levelled with two-pass loudnorm (linear gain, so no
  * pumping), the user's volume on top, and a fade at each end.
  */
 const transcode = async (src, target, opts) => {
@@ -138,14 +139,14 @@ const transcode = async (src, target, opts) => {
     const ffprobePath = ffmpegPath.replace(/ffmpeg$/, 'ffprobe');
     filters.push(...fadeFilters(await probeDuration(src, ffprobePath), fade));
   }
-  const tmp = `${target}.tmp.aac`;
+  const tmp = `${target}.tmp.m4a`;
   // prettier-ignore
   await run(ffmpegPath, [
     '-hide_banner', '-nostats', '-loglevel', 'error', '-y',
     '-i', src, '-vn',
     ...(filters.length ? ['-af', filters.join(',')] : []),
     '-ar', '44100', '-ac', '2', '-c:a', 'aac', '-b:a', '160k',
-    '-f', 'adts', tmp,
+    '-movflags', '+faststart', '-f', 'mp4', tmp,
   ]);
   fs.renameSync(tmp, target);
 };
@@ -175,7 +176,7 @@ const prepareTracks = async ({
         `${src}|${stat.size}|${stat.mtimeMs}|${loudnorm}|${volume}|${fade}|${PREP_VERSION}`
       )
       .digest('hex');
-    const target = path.join(cacheDir, `${key}.aac`);
+    const target = path.join(cacheDir, `${key}.m4a`);
     if (!fs.existsSync(target)) {
       log.info(`Music: preparing ${path.basename(src)}`);
       try {

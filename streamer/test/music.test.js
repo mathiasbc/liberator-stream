@@ -96,7 +96,7 @@ test(
 
     const first = await prepareTracks({ dir, cacheDir });
     assert.equal(first.length, 1);
-    assert.match(first[0], /\.aac$/);
+    assert.match(first[0], /\.m4a$/);
     const stamp = fs.statSync(first[0]).mtimeMs;
 
     const second = await prepareTracks({ dir, cacheDir });

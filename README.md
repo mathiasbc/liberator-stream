@@ -108,6 +108,7 @@ Then put your stream key in `streamer/stream.env` (git ignores it). In YouTube S
 | --- | --- |
 | A service exits or crashes | `launchd` restarts it after 10 s |
 | ffmpeg exits (upload dropped, YouTube hiccup) | Restarted with backoff: 2 s, 4 s … up to 60 s |
+| YouTube ends the broadcast after a drop | Every 3 minutes the streamer checks a broadcast is live; if YouTube is receiving video but none is, it opens a new one with auto-stop off, copying the last one's title, description, settings and `content/youtube-thumbnail.png` (needs `make youtube-auth`) |
 | ffmpeg hangs (no progress for 30 s) | Killed and restarted |
 | Chrome crashes, or the page stops producing frames for 20 s | Chrome is restarted; meanwhile ffmpeg repeats the last frame, so the stream stays up |
 | Chrome's memory creeps up over days | Chrome restarts once a day (`CHROME_RESTART_HOURS`) |
