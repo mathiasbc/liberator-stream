@@ -21,6 +21,12 @@ song by the time of the warning in the streamer log:
 (times are UTC). Move that file into `removed/` here, which the streamer
 ignores, and run `make services-restart`.
 
+To check every track at once, before YouTube interrupts the stream: join
+them into one video with each track's name on screen, upload it as private
+and open its Claims page in YouTube Studio. Claims on a private video carry
+no penalty. In November 2026 this found five claimed Pixabay tracks out of
+19: Pixabay doesn't say which of its tracks are registered with Content ID.
+
 ## Where to get tracks that are safe on YouTube
 
 - **YouTube Audio Library** (YouTube Studio → Audio Library): the only source
