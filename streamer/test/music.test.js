@@ -5,6 +5,7 @@ const path = require('node:path');
 const { test } = require('node:test');
 const { execFileSync } = require('node:child_process');
 const {
+  buildRounds,
   fadeFilters,
   findTracks,
   parseMeasurement,
@@ -60,6 +61,17 @@ test('fades each end, shorter on short tracks', () => {
   assert.deepEqual(fadeFilters(180, 0), []);
 });
 
+test('builds many rounds with no track twice in a row', () => {
+  const tracks = ['a', 'b', 'c'];
+  const list = buildRounds(tracks, 50);
+  assert.equal(list.length, 150);
+  for (let i = 1; i < list.length; i += 1)
+    assert.notEqual(list[i], list[i - 1]);
+  for (let r = 0; r < 50; r += 1) {
+    assert.deepEqual([...list.slice(r * 3, r * 3 + 3)].sort(), tracks);
+  }
+});
+
 test('reads the loudness ffmpeg measured', () => {
   const stderr =
     'noise\n[Parsed_loudnorm_0 @ 0x1] \n{\n\t"input_i" : "-23.5",\n\t"input_tp" : "-5.0",\n\t"input_lra" : "7.1",\n\t"input_thresh" : "-33.6",\n\t"target_offset" : "0.2"\n}\n';
@@ -96,12 +108,14 @@ test(
 
     const first = await prepareTracks({ dir, cacheDir });
     assert.equal(first.length, 1);
-    assert.match(first[0], /\.m4a$/);
-    const stamp = fs.statSync(first[0]).mtimeMs;
+    assert.match(first[0].file, /\.m4a$/);
+    assert.equal(first[0].name, 'tone.wav');
+    assert.ok(Math.abs(first[0].duration - 2) < 0.1);
+    const stamp = fs.statSync(first[0].file).mtimeMs;
 
     const second = await prepareTracks({ dir, cacheDir });
     assert.deepEqual(second, first);
-    assert.equal(fs.statSync(first[0]).mtimeMs, stamp);
-    assert.deepEqual(fs.readdirSync(cacheDir), [path.basename(first[0])]);
+    assert.equal(fs.statSync(first[0].file).mtimeMs, stamp);
+    assert.deepEqual(fs.readdirSync(cacheDir), [path.basename(first[0].file)]);
   }
 );

@@ -4,7 +4,10 @@ const { ChromeCapture } = require('./browser');
 const { outputUrl } = require('./config');
 const { FfmpegProcess, buildFfmpegArgs } = require('./ffmpeg');
 const { FrameClock } = require('./frame-clock');
-const { prepareTracks, shuffle, writePlaylist } = require('./music');
+const { buildRounds, prepareTracks, writePlaylist } = require('./music');
+
+// ~4 days of music per ffmpeg run (19 tracks ≈ 62 min a round)
+const PLAYLIST_ROUNDS = 100;
 const log = require('./log');
 
 const CHECK_EVERY_MS = 5000;
@@ -165,8 +168,11 @@ class Streamer {
 
   startFfmpeg() {
     if (this.stopping) return;
-    const playlist = this.tracks.length
-      ? writePlaylist(shuffle(this.tracks))
+    const schedule = this.tracks.length
+      ? buildRounds(this.tracks, PLAYLIST_ROUNDS)
+      : [];
+    const playlist = schedule.length
+      ? writePlaylist(schedule.map((t) => t.file))
       : null;
     const ffmpeg = new FfmpegProcess({
       ffmpegPath: this.config.ffmpegPath,
@@ -174,6 +180,7 @@ class Streamer {
     });
     ffmpeg.on('exit', ({ code, signal, error }) => {
       this.clock.stop();
+      clearTimeout(this.nowPlayingTimer);
       this.ffmpeg = null;
       if (this.stopping) return;
       this.restarts.ffmpeg += 1;
@@ -188,6 +195,20 @@ class Streamer {
     this.ffmpegBackoff.started();
     this.clock.start();
     log.info('ffmpeg started');
+    this.logNowPlaying(schedule, 0);
+  }
+
+  // Logs each track as it starts, so a YouTube copyright warning can be
+  // matched to the song that was playing at that time
+  logNowPlaying(schedule, index) {
+    const track = schedule[index];
+    if (!track || this.stopping) return;
+    log.info(`Now playing: ${track.name}`);
+    if (!track.duration) return;
+    this.nowPlayingTimer = setTimeout(
+      () => this.logNowPlaying(schedule, index + 1),
+      track.duration * 1000
+    );
   }
 
   sendFrame() {
@@ -234,6 +255,7 @@ class Streamer {
     this.stopping = true;
     this.timers.forEach(clearInterval);
     clearTimeout(this.ffmpegTimer);
+    clearTimeout(this.nowPlayingTimer);
     this.clock?.stop();
     await this.ffmpeg?.stop();
     await this.capture?.stop();

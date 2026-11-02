@@ -10,6 +10,17 @@ files, the stream is silent.
 After adding or removing tracks, run `make services-restart`: ffmpeg reads
 the folder when it starts.
 
+## When YouTube flags a song
+
+A live stream that plays a song registered with Content ID gets interrupted
+("third-party content"), usually without a claim on the video. Find the
+song by the time of the warning in the streamer log:
+
+    grep "Now playing" ~/Library/Logs/liberator-stream/streamer.log | tail
+
+(times are UTC). Move that file into `removed/` here, which the streamer
+ignores, and run `make services-restart`.
+
 ## Where to get tracks that are safe on YouTube
 
 - **YouTube Audio Library** (YouTube Studio → Audio Library): the only source

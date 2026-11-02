@@ -153,8 +153,9 @@ const transcode = async (src, target, opts) => {
 
 /**
  * Prepares every track in `dir` once (cached by file size, date and
- * settings) and returns the prepared files, skipping any that fail. Stale
- * cache files are removed.
+ * settings) and returns them as { file, name, duration }, where `name` is
+ * the original file name; tracks that fail are skipped. Stale cache files
+ * are removed.
  */
 const prepareTracks = async ({
   dir,
@@ -188,17 +189,42 @@ const prepareTracks = async ({
         continue;
       }
     }
-    prepared.push(target);
+    let duration = null;
+    try {
+      duration = await probeDuration(
+        target,
+        ffmpegPath.replace(/ffmpeg$/, 'ffprobe')
+      );
+    } catch {
+      // unknown length: the track still plays, it just isn't scheduled in the log
+    }
+    prepared.push({ file: target, name: path.basename(src), duration });
   }
-  const keep = new Set(prepared.map((f) => path.basename(f)));
+  const keep = new Set(prepared.map((t) => path.basename(t.file)));
   for (const name of fs.readdirSync(cacheDir)) {
     if (!keep.has(name)) fs.rmSync(path.join(cacheDir, name), { force: true });
   }
   return prepared;
 };
 
+// One long playlist of `rounds` reshuffles, so ffmpeg never reaches the end
+// while streaming (its concat input can't loop back), and the same track
+// never plays twice in a row across a round boundary
+const buildRounds = (tracks, rounds, random = Math.random) => {
+  const out = [];
+  for (let r = 0; r < rounds; r += 1) {
+    const round = shuffle(tracks, random);
+    if (out.length && round.length > 1 && round[0] === out[out.length - 1]) {
+      round.push(round.shift());
+    }
+    out.push(...round);
+  }
+  return out;
+};
+
 module.exports = {
   AUDIO_EXT,
+  buildRounds,
   PLAYLIST_FILE,
   PREPARED_DIR,
   findTracks,

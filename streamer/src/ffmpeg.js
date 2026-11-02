@@ -25,7 +25,7 @@ const buildFfmpegArgs = (config, output, { playlist = null } = {}) => {
     // expects an audio track). No -shortest: it buffers ~10 s of raw frames,
     // close to 1 GB at 1080p.
     ...(playlist
-      ? ['-stream_loop', '-1', '-f', 'concat', '-safe', '0', '-i', playlist]
+      ? ['-f', 'concat', '-safe', '0', '-i', playlist]
       : ['-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=44100']),
     '-map', '0:v', '-map', '1:a',
     // Chrome's JPEGs are full-range BT.601; YouTube expects limited-range BT.709

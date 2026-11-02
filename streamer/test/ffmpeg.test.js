@@ -29,13 +29,13 @@ test('adds silent audio', () => {
   assert.equal(valueAfter(args, '-c:a'), 'aac');
 });
 
-test('plays the music playlist on a loop when there is one', () => {
+test('plays the music playlist when there is one', () => {
   const args = buildFfmpegArgs(
     { ...config, musicLoudnorm: true, musicVolume: 0.8 },
     '/tmp/out.flv',
     { playlist: '/tmp/playlist.txt' }
   );
-  assert.equal(valueAfter(args, '-stream_loop'), '-1');
+  assert.ok(!args.includes('-stream_loop'));
   assert.equal(valueAfter(args, '-f', 1), 'concat');
   assert.ok(args.includes('/tmp/playlist.txt'));
   assert.ok(!args.some((arg) => arg.startsWith('anullsrc')));
