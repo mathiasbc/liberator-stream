@@ -11,6 +11,7 @@ const {
   parseMeasurement,
   playlistText,
   prepareTracks,
+  roundsFor,
   shuffle,
   writePlaylist,
 } = require('../src/music');
@@ -70,6 +71,15 @@ test('builds many rounds with no track twice in a row', () => {
   for (let r = 0; r < 50; r += 1) {
     assert.deepEqual([...list.slice(r * 3, r * 3 + 3)].sort(), tracks);
   }
+});
+
+test('sizes the playlist by length, with a cap on entries', () => {
+  const tracks = [{ duration: 180 }, { duration: 120 }]; // 5 min a round
+  assert.equal(roundsFor(tracks, 3600, 20000), 12);
+  assert.equal(roundsFor(tracks, 3601, 20000), 13);
+  assert.equal(roundsFor(tracks, 30 * 24 * 3600, 1000), 500);
+  assert.equal(roundsFor(tracks, 30 * 24 * 3600, 1), 1);
+  assert.equal(roundsFor([], 3600, 20000), 0);
 });
 
 test('reads the loudness ffmpeg measured', () => {

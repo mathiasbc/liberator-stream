@@ -4,11 +4,19 @@ const { ChromeCapture } = require('./browser');
 const { outputUrl } = require('./config');
 const { FfmpegProcess, buildFfmpegArgs } = require('./ffmpeg');
 const { FrameClock } = require('./frame-clock');
-const { buildRounds, prepareTracks, writePlaylist } = require('./music');
-
-// ~4 days of music per ffmpeg run (19 tracks ≈ 62 min a round)
-const PLAYLIST_ROUNDS = 100;
+const {
+  buildRounds,
+  prepareTracks,
+  roundsFor,
+  writePlaylist,
+} = require('./music');
 const log = require('./log');
+
+// Each ffmpeg run gets one long playlist, about a month of music. When it
+// ends, ffmpeg restarts with a new one: if the audio stops while video keeps
+// arriving, YouTube stops publishing the stream and viewers see a spinner.
+const PLAYLIST_SECONDS = 30 * 24 * 3600;
+const MAX_PLAYLIST_TRACKS = 20000;
 
 const CHECK_EVERY_MS = 5000;
 // The dashboard's UTC clock changes every second, so a healthy page produces
@@ -168,9 +176,10 @@ class Streamer {
 
   startFfmpeg() {
     if (this.stopping) return;
-    const schedule = this.tracks.length
-      ? buildRounds(this.tracks, PLAYLIST_ROUNDS)
-      : [];
+    const schedule = buildRounds(
+      this.tracks,
+      roundsFor(this.tracks, PLAYLIST_SECONDS, MAX_PLAYLIST_TRACKS)
+    );
     const playlist = schedule.length
       ? writePlaylist(schedule.map((t) => t.file))
       : null;
@@ -195,19 +204,26 @@ class Streamer {
     this.ffmpegBackoff.started();
     this.clock.start();
     log.info('ffmpeg started');
-    this.logNowPlaying(schedule, 0);
+    this.logNowPlaying(schedule, 0, Date.now());
   }
 
   // Logs each track as it starts, so a YouTube copyright warning can be
-  // matched to the song that was playing at that time
-  logNowPlaying(schedule, index) {
+  // matched to the song that was playing at that time. Timed from the
+  // list's start, so the timers don't drift over a month. At the end of the
+  // list, ffmpeg restarts with a new one.
+  logNowPlaying(schedule, index, startsAt) {
+    if (this.stopping || !schedule.length) return;
     const track = schedule[index];
-    if (!track || this.stopping) return;
+    if (!track) {
+      log.info('Music: end of the playlist, restarting ffmpeg with a new one');
+      this.ffmpeg?.stop();
+      return;
+    }
     log.info(`Now playing: ${track.name}`);
-    if (!track.duration) return;
+    const next = startsAt + track.duration * 1000;
     this.nowPlayingTimer = setTimeout(
-      () => this.logNowPlaying(schedule, index + 1),
-      track.duration * 1000
+      () => this.logNowPlaying(schedule, index + 1, next),
+      Math.max(0, next - Date.now())
     );
   }
 

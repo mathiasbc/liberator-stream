@@ -189,14 +189,17 @@ const prepareTracks = async ({
         continue;
       }
     }
-    let duration = null;
+    let duration;
     try {
       duration = await probeDuration(
         target,
         ffmpegPath.replace(/ffmpeg$/, 'ffprobe')
       );
     } catch {
-      // unknown length: the track still plays, it just isn't scheduled in the log
+      // The streamer times the playlist by these lengths, so a track without
+      // one can't go in it
+      log.warn(`Music: skipping ${path.basename(src)}: unknown length`);
+      continue;
     }
     prepared.push({ file: target, name: path.basename(src), duration });
   }
@@ -222,9 +225,18 @@ const buildRounds = (tracks, rounds, random = Math.random) => {
   return out;
 };
 
+// Rounds needed to fill `seconds`, but at most `maxTracks` entries in all
+const roundsFor = (tracks, seconds, maxTracks) => {
+  const round = tracks.reduce((sum, t) => sum + t.duration, 0);
+  if (!(round > 0)) return 0;
+  const wanted = Math.ceil(seconds / round);
+  return Math.max(1, Math.min(wanted, Math.floor(maxTracks / tracks.length)));
+};
+
 module.exports = {
   AUDIO_EXT,
   buildRounds,
+  roundsFor,
   PLAYLIST_FILE,
   PREPARED_DIR,
   findTracks,
